@@ -1,0 +1,351 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Transacao, User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { 
+  CreditCard, 
+  CheckCircle,
+  Loader2,
+  AlertCircle,
+  Mail,
+  ShoppingCart,
+  Newspaper,
+  Shield,
+  Zap
+} from 'lucide-react';
+
+export default function Checkout() {
+  const [transacao, setTransacao] = useState(null);
+  const [user, setUser] = useState(null);
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+  
+  const navigate = useNavigate();
+  const sessionId = new URLSearchParams(window.location.search).get('sessionId');
+
+  useEffect(() => {
+    if (!sessionId) {
+      navigate(createPageUrl('Buscar'));
+      return;
+    }
+    loadData();
+  }, [sessionId, navigate]);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      
+      const currentUser = await User.me();
+      setUser(currentUser);
+      
+      const transacoes = await Transacao.filter({ session_id: sessionId });
+      if (transacoes.length === 0) {
+        setError('Transação não encontrada');
+        return;
+      }
+
+      const currentTransacao = transacoes[0];
+      setTransacao(currentTransacao);
+
+      if (!currentTransacao.startups_selecionadas?.length) {
+        setError('Nenhuma startup selecionada. Retorne à página de resultados.');
+        return;
+      }
+
+      setEmail(currentUser.email || '');
+
+      // 📊 TRACKING: Usuário chegou no checkout
+      await base44.entities.Transacao.update(currentTransacao.id, {
+        checkout_viewed_at: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Erro ao carregar dados do checkout:', error);
+      setError('Erro ao carregar dados. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (!email.trim()) {
+      setErrorMessage('Email é obrigatório');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage('Email inválido');
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      await Transacao.update(transacao.id, {
+        cliente_email: email.trim(),
+        cliente_nome: user.full_name || email.split('@')[0],
+        cliente_cpf: '00000000000', // CPF dummy para MP não reclamar
+        status_pagamento: 'processando'
+      });
+
+      const { data: paymentData } = await base44.functions.invoke('createPaymentLink', { sessionId });
+      
+      if (paymentData.success && paymentData.paymentUrl) {
+        window.location.href = paymentData.paymentUrl;
+      } else {
+        throw new Error('Erro ao criar link de pagamento');
+      }
+
+    } catch (error) {
+      console.error('Erro no checkout:', error);
+      setErrorMessage('Erro ao processar pagamento. Tente novamente.');
+      setIsProcessing(false);
+    }
+  };
+
+  const getAnonymizedTitle = (startup, index) => {
+    const categoryMap = {
+      'gestao': 'Gestão',
+      'vendas': 'Vendas', 
+      'marketing': 'Marketing',
+      'financeiro': 'Financeiro',
+      'operacional': 'Operacional',
+      'rh': 'Recursos Humanos',
+      'tecnologia': 'Tecnologia',
+      'logistica': 'Logística'
+    };
+    
+    const categoryName = startup.categoria ? (categoryMap[startup.categoria] || startup.categoria) : 'Solução';
+    return `${categoryName} #${index + 1}`;
+  };
+
+  const selectedStartups = transacao?.startups_detalhadas || 
+                          transacao?.startups_sugeridas?.filter(s => 
+                            transacao.startups_selecionadas?.includes(s.startup_id)
+                          ) || [];
+
+  const valorPorStartup = transacao?.valor_por_startup || 5.00;
+  const quantidadeSelecionada = selectedStartups.length;
+  const valorTotal = quantidadeSelecionada * valorPorStartup;
+  
+  // BUNDLE: 5 soluções = R$ 22 (desconto de R$ 3)
+  const valorFinal = quantidadeSelecionada === 5 ? 22.00 : valorTotal;
+  const temDesconto = quantidadeSelecionada === 5;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Carregando dados do pagamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <Card className="max-w-md w-full border-red-200 bg-red-50">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-red-900 mb-2">Erro no Checkout</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <Button onClick={() => navigate(createPageUrl(`Resultados?sessionId=${sessionId}`))} variant="outline">
+              Voltar aos Resultados
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Finalizar Pagamento</h1>
+          <p className="text-slate-600">
+            Confirme seu email para desbloquear {selectedStartups.length} solução{selectedStartups.length !== 1 ? 'ões' : ''}
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* COLUNA ESQUERDA - Dados Simplificados */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                Confirme seu Email
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  Email para receber os contatos *
+                </label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  required
+                  disabled={isProcessing}
+                  className="bg-white border-slate-200 text-lg"
+                />
+                <p className="text-xs text-slate-500 mt-2">
+                  Os contatos das startups serão enviados para este email
+                </p>
+              </div>
+
+              {/* SELOS DE CONFIANÇA */}
+              <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm">Pagamento 100% Seguro</p>
+                    <p className="text-xs text-slate-600">Processado via Mercado Pago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm">Acesso Instantâneo</p>
+                    <p className="text-xs text-slate-600">Contatos liberados imediatamente após o pagamento</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm">Startups Verificadas</p>
+                    <p className="text-xs text-slate-600">Todas validadas pela nossa equipe</p>
+                  </div>
+                </div>
+              </div>
+
+              {errorMessage && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-red-800">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">{errorMessage}</span>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={!email.trim() || isProcessing || selectedStartups.length === 0}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-semibold"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Pagar R$ {valorFinal.toFixed(2).replace('.', ',')}
+                  </>
+                )}
+              </Button>
+              
+              <p className="text-center text-xs text-slate-500">
+                Ao continuar, você concorda com nossos <a href={createPageUrl('TermosDeUso')} className="underline">Termos de Uso</a>
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* COLUNA DIREITA - Resumo */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5" />
+                Resumo do Pedido
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedStartups.map((startup, index) => (
+                <div key={startup.id || index} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200/60">
+                  <div className="flex items-center gap-3">
+                    <Newspaper className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-slate-800 text-sm">
+                        {getAnonymizedTitle(startup, index)}
+                      </p>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs mt-1">
+                        {startup.match_percentage}% match
+                      </Badge>
+                    </div>
+                  </div>
+                  <p className="font-semibold text-slate-800">
+                    R$ {valorPorStartup.toFixed(2).replace('.', ',')}
+                  </p>
+                </div>
+              ))}
+              
+              <div className="border-t border-slate-200 pt-4 space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-600">Subtotal ({quantidadeSelecionada} {quantidadeSelecionada === 1 ? 'solução' : 'soluções'})</span>
+                  <span className={temDesconto ? 'line-through text-slate-400' : 'text-slate-900'}>
+                    R$ {valorTotal.toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+                
+                {temDesconto && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-emerald-600 font-semibold">Desconto Bundle (5 soluções)</span>
+                    <span className="text-emerald-600 font-semibold">- R$ 3,00</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center text-xl font-bold pt-2">
+                  <span>Total:</span>
+                  <span className="text-emerald-600">
+                    R$ {valorFinal.toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+                
+                {temDesconto && (
+                  <p className="text-xs text-emerald-600 text-center mt-2">
+                    🎉 Você economizou R$ 3,00 no pacote completo!
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2">O que você receberá:</h4>
+                <ul className="space-y-1 text-sm text-slate-700">
+                  <li>• Contatos diretos das {selectedStartups.length} startup{selectedStartups.length !== 1 ? 's' : ''}</li>
+                  <li>• Email, WhatsApp e LinkedIn de cada uma</li>
+                  <li>• Informações detalhadas das soluções</li>
+                  <li>• Acesso permanente em "Minhas Buscas"</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
