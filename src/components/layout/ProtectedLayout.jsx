@@ -23,7 +23,7 @@ import {
 
 const AdminNav = ({ navItems }) => {
   const adminGroups = [
-    { title: 'Dashboard', items: ['Dashboard'] },
+    { title: 'Dashboard', items: ['Dashboard', 'Meu Dashboard'] },
     { title: 'Visão do Usuário', items: ['Painel de Usuário', 'Nova Busca (IA)', 'Busca Rápida', 'Minhas Buscas'] },
     { title: 'Gestão', items: ['Startups', 'Laboratório', 'Transações', 'Conversas', 'Usuários', 'Parceiros'] },
     { title: 'Ferramentas', items: ['Ferramentas'] }
@@ -61,7 +61,7 @@ const AdminNav = ({ navItems }) => {
 
 const UserNav = ({ navItems }) => {
   const userGroups = [
-    { title: 'Menu', items: ['Painel de Usuário', 'Nova Busca (IA)', 'Busca Rápida', 'Minhas Buscas'] }
+    { title: 'Menu', items: ['Meu Dashboard', 'Painel de Usuário', 'Nova Busca (IA)', 'Busca Rápida', 'Minhas Buscas'] }
   ];
 
   return (
@@ -102,6 +102,7 @@ export default function ProtectedLayout({ children, pageName }) {
 
   const navItems = [
     { name: 'Dashboard', path: 'dashboard', icon: BarChart3, section: 'admin', group: 'Dashboard' },
+    { name: 'Meu Dashboard', path: 'DashboardUsuario', icon: UserOutlineIcon, section: 'user', group: 'Visão do Usuário' },
     { name: 'Painel de Usuário', path: 'Painel', icon: UserOutlineIcon, section: 'user', group: 'Visão do Usuário' },
     { name: 'Nova Busca (IA)', path: 'Assistente', icon: Brain, section: 'user', group: 'Visão do Usuário' },
     { name: 'Busca Rápida', path: 'Buscar', icon: Search, section: 'user', group: 'Visão do Usuário' },
@@ -126,7 +127,7 @@ export default function ProtectedLayout({ children, pageName }) {
           if (userData.role === 'admin') {
             navigate(createPageUrl('dashboard'), { replace: true });
           } else {
-            navigate(createPageUrl('Painel'), { replace: true });
+            navigate(createPageUrl('DashboardUsuario'), { replace: true });
           }
         }
       } catch (e) {
@@ -169,7 +170,7 @@ export default function ProtectedLayout({ children, pageName }) {
                   </nav>
                 </SheetContent>
               </Sheet>
-              <Link to={createPageUrl(user?.role === 'admin' ? 'dashboard' : 'Painel')}>
+              <Link to={createPageUrl(user?.role === 'admin' ? 'dashboard' : 'DashboardUsuario')}>
                 <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/02b71dae4_Logo_expandido_3-removebg-preview.png" alt="EncontrAI" className="h-10 w-auto"/>
               </Link>
             </div>
