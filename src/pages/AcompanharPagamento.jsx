@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Transacao, Configuracao } from '@/entities/all';
-import { InvokeLLM } from '@/integrations/Core';
+import { Transacao } from '@/entities/all';
+import { checkPaymentStatus } from '@/functions/checkPaymentStatus';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -42,42 +42,15 @@ export default function AcompanharPagamento() {
   const verificarStatusPagamento = async () => {
     setIsChecking(true);
     try {
-      // Buscar configurações do Asaas
-      const configs = await Configuracao.list();
-      const asaasApiKey = configs.find(c => c.chave === 'asaas_api_key')?.valor;
-      
-      if (!asaasApiKey) {
-        console.error('Chave API do Asaas não configurada');
-        return;
-      }
+      const response = await checkPaymentStatus({ paymentId });
 
-      // Usar a IA para fazer a consulta HTTP (contorna CORS)
-      const response = await InvokeLLM({
-        prompt: `Faça uma requisição HTTP GET para consultar o status de um pagamento no Asaas:
-        
-        URL: https://www.asaas.com/api/v3/payments/${paymentId}
-        Headers:
-        - access_token: ${asaasApiKey}
-        
-        Retorne apenas o JSON de resposta da API com os campos: id, status, invoiceUrl, value`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            id: { type: "string" },
-            status: { type: "string" },
-            invoiceUrl: { type: "string" },
-            value: { type: "number" }
-          }
-        }
-      });
-
-      if (response.status) {
-        const novoStatus = response.status.toLowerCase();
-        setStatusPagamento(novoStatus);
-        setLinkPagamento(response.invoiceUrl);
+      if (response.data) {
+        const { status, init_point } = response.data;
+        setStatusPagamento(status);
+        setLinkPagamento(init_point);
 
         // Se foi pago, atualizar transação e redirecionar
-        if (novoStatus === 'received') {
+        if (status === 'approved') {
           await finalizarTransacao();
         }
       }
@@ -131,10 +104,10 @@ export default function AcompanharPagamento() {
         return {
           icon: <Clock className="w-8 h-8 text-amber-500" />,
           title: 'Aguardando Pagamento',
-          description: 'Sua cobrança foi gerada. Use Pix para aprovação instantânea ou cartão para aprovação imediata.',
+          description: 'Sua cobrança foi gerada. Clique no link para pagar via Mercado Pago.',
           color: 'amber'
         };
-      case 'received':
+      case 'approved':
       case 'pago':
         return {
           icon: <CheckCircle className="w-8 h-8 text-emerald-500" />,
@@ -142,11 +115,12 @@ export default function AcompanharPagamento() {
           description: 'Seu pagamento foi aprovado. Redirecionando para os contatos...',
           color: 'emerald'
         };
-      case 'overdue':
+      case 'rejected':
+      case 'cancelled':
         return {
           icon: <AlertCircle className="w-8 h-8 text-red-500" />,
-          title: 'Cobrança Vencida',
-          description: 'O prazo para pagamento expirou. Faça uma nova busca para gerar nova cobrança.',
+          title: 'Pagamento Não Aprovado',
+          description: 'O pagamento foi recusado. Faça uma nova busca para tentar novamente.',
           color: 'red'
         };
       default:
@@ -235,15 +209,13 @@ export default function AcompanharPagamento() {
                 </div>
                 
                 <div className="bg-white/80 p-4 rounded-lg border border-amber-200">
-                  <h3 className="font-medium text-amber-900 mb-2">Métodos Disponíveis:</h3>
-                  <div className="text-sm text-amber-800 space-y-1">
-                    <div>• <strong>Pix:</strong> Aprovação em segundos ⚡</div>
-                    <div>• <strong>Cartão:</strong> Aprovação imediata 💳</div>
-                    <div>• <strong>Boleto:</strong> 1-2 dias úteis 🏦</div>
+                  <h3 className="font-medium text-amber-900 mb-2">💳 Mercado Pago</h3>
+                  <div className="text-sm text-amber-800">
+                    Pague com segurança através do Mercado Pago
                   </div>
                 </div>
               </div>
-            ) : statusPagamento === 'overdue' ? (
+            ) : (statusPagamento === 'rejected' || statusPagamento === 'cancelled') ? (
               <Button onClick={() => navigate(createPageUrl("Buscar"))}>
                 Fazer Nova Busca
               </Button>
