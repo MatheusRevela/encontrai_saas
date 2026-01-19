@@ -149,38 +149,61 @@ Deno.serve(async (req) => {
 
                 console.log(`🔄 Status atualizado para: ${newStatus}`);
 
-                // Se aprovado, desbloqueia as startups
-                if (payment.status === 'approved' && transaction.startups_selecionadas?.length > 0) {
-                    console.log('🚀 Desbloqueando startups...');
+                // Se aprovado, verifica tipo de pagamento
+                if (payment.status === 'approved') {
+                    const tipoTransacao = payment.metadata?.tipo;
                     
-                    const startups = await base44.entities.Startup.filter({
-                        id: { $in: transaction.startups_selecionadas }
-                    });
+                    if (tipoTransacao === 'similares') {
+                        // Pagamento de similares
+                        console.log('🔍 Desbloqueando similares...');
+                        const startupId = payment.metadata?.startup_id;
+                        
+                        if (startupId) {
+                            const similaresDesbloqueadas = transaction.similares_desbloqueadas || [];
+                            similaresDesbloqueadas.push({
+                                startup_original_id: startupId,
+                                pago_em: new Date().toISOString()
+                            });
 
-                    const unlockedStartups = startups.map(s => ({
-                        startup_id: s.id,
-                        nome: s.nome,
-                        descricao: s.descricao,
-                        categoria: s.categoria,
-                        vertical_atuacao: s.vertical_atuacao,
-                        modelo_negocio: s.modelo_negocio,
-                        site: s.site,
-                        email: s.email,
-                        whatsapp: s.whatsapp,
-                        linkedin: s.linkedin,
-                        preco_base: s.preco_base,
-                        logo_url: s.logo_url
-                    }));
+                            await base44.entities.Transacao.update(transaction.id, {
+                                similares_desbloqueadas: similaresDesbloqueadas
+                            });
 
-                    await base44.entities.Transacao.update(transaction.id, {
-                        startups_desbloqueadas: unlockedStartups
-                    });
+                            console.log('✅ Similares desbloqueadas com sucesso');
+                        }
+                    } else if (transaction.startups_selecionadas?.length > 0) {
+                        // Pagamento normal de startups
+                        console.log('🚀 Desbloqueando startups...');
+                        
+                        const startups = await base44.entities.Startup.filter({
+                            id: { $in: transaction.startups_selecionadas }
+                        });
 
-                    console.log(`✅ ${unlockedStartups.length} startups desbloqueadas`);
-                    
-                    // Envia email de sucesso
-                    await sendSuccessEmail(transaction, unlockedStartups);
-                    console.log('📧 Email de sucesso enviado');
+                        const unlockedStartups = startups.map(s => ({
+                            startup_id: s.id,
+                            nome: s.nome,
+                            descricao: s.descricao,
+                            categoria: s.categoria,
+                            vertical_atuacao: s.vertical_atuacao,
+                            modelo_negocio: s.modelo_negocio,
+                            site: s.site,
+                            email: s.email,
+                            whatsapp: s.whatsapp,
+                            linkedin: s.linkedin,
+                            preco_base: s.preco_base,
+                            logo_url: s.logo_url
+                        }));
+
+                        await base44.entities.Transacao.update(transaction.id, {
+                            startups_desbloqueadas: unlockedStartups
+                        });
+
+                        console.log(`✅ ${unlockedStartups.length} startups desbloqueadas`);
+                        
+                        // Envia email de sucesso
+                        await sendSuccessEmail(transaction, unlockedStartups);
+                        console.log('📧 Email de sucesso enviado');
+                    }
                 }
             } else {
                 console.error('❌ Transação não encontrada:', externalReference);
