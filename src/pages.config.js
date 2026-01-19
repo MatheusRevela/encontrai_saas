@@ -1,65 +1,65 @@
-import Conversas from './pages/Conversas';
+import AcompanharPagamento from './pages/AcompanharPagamento';
 import Assistente from './pages/Assistente';
 import Buscar from './pages/Buscar';
-import Resultados from './pages/Resultados';
 import Checkout from './pages/Checkout';
-import Sucesso from './pages/Sucesso';
-import AcompanharPagamento from './pages/AcompanharPagamento';
-import StatusPagamento from './pages/StatusPagamento';
-import MinhasBuscas from './pages/MinhasBuscas';
-import DetalhesBusca from './pages/DetalhesBusca';
-import Feedback from './pages/Feedback';
-import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contato from './pages/Contato';
-import TermosDeUso from './pages/TermosDeUso';
-import dashboard from './pages/dashboard';
-import users from './pages/users';
-import startups from './pages/startups';
-import transacoes from './pages/transacoes';
-import analytics from './pages/analytics';
-import Startups from './pages/Startups';
+import Conversas from './pages/Conversas';
+import Dashboard from './pages/Dashboard';
+import DetalhesBusca from './pages/DetalhesBusca';
 import FAQ from './pages/FAQ';
+import Feedback from './pages/Feedback';
+import Ferramentas from './pages/Ferramentas';
 import Growth from './pages/Growth';
-import Parceiros from './pages/Parceiros';
-import Painel from './pages/Painel';
-import index from './pages/index';
 import HomePublica from './pages/HomePublica';
 import LaboratorioStartups from './pages/LaboratorioStartups';
-import Ferramentas from './pages/Ferramentas';
-import Dashboard from './pages/Dashboard';
+import MinhasBuscas from './pages/MinhasBuscas';
+import Painel from './pages/Painel';
+import Parceiros from './pages/Parceiros';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Resultados from './pages/Resultados';
+import Startups from './pages/Startups';
+import StatusPagamento from './pages/StatusPagamento';
+import Sucesso from './pages/Sucesso';
+import TermosDeUso from './pages/TermosDeUso';
+import analytics from './pages/analytics';
+import dashboard from './pages/dashboard';
+import index from './pages/index';
+import startups from './pages/startups';
+import transacoes from './pages/transacoes';
+import users from './pages/users';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Conversas": Conversas,
+    "AcompanharPagamento": AcompanharPagamento,
     "Assistente": Assistente,
     "Buscar": Buscar,
-    "Resultados": Resultados,
     "Checkout": Checkout,
-    "Sucesso": Sucesso,
-    "AcompanharPagamento": AcompanharPagamento,
-    "StatusPagamento": StatusPagamento,
-    "MinhasBuscas": MinhasBuscas,
-    "DetalhesBusca": DetalhesBusca,
-    "Feedback": Feedback,
-    "PrivacyPolicy": PrivacyPolicy,
     "Contato": Contato,
-    "TermosDeUso": TermosDeUso,
-    "dashboard": dashboard,
-    "users": users,
-    "startups": startups,
-    "transacoes": transacoes,
-    "analytics": analytics,
-    "Startups": Startups,
+    "Conversas": Conversas,
+    "Dashboard": Dashboard,
+    "DetalhesBusca": DetalhesBusca,
     "FAQ": FAQ,
+    "Feedback": Feedback,
+    "Ferramentas": Ferramentas,
     "Growth": Growth,
-    "Parceiros": Parceiros,
-    "Painel": Painel,
-    "index": index,
     "HomePublica": HomePublica,
     "LaboratorioStartups": LaboratorioStartups,
-    "Ferramentas": Ferramentas,
-    "Dashboard": Dashboard,
+    "MinhasBuscas": MinhasBuscas,
+    "Painel": Painel,
+    "Parceiros": Parceiros,
+    "PrivacyPolicy": PrivacyPolicy,
+    "Resultados": Resultados,
+    "Startups": Startups,
+    "StatusPagamento": StatusPagamento,
+    "Sucesso": Sucesso,
+    "TermosDeUso": TermosDeUso,
+    "analytics": analytics,
+    "dashboard": dashboard,
+    "index": index,
+    "startups": startups,
+    "transacoes": transacoes,
+    "users": users,
 }
 
 export const pagesConfig = {

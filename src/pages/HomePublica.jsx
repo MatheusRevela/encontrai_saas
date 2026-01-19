@@ -65,24 +65,46 @@ export default function HomePublica() {
             Simples, rápido e direto ao ponto.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button 
-              size="lg" 
-              className="bg-emerald-600 hover:bg-emerald-700 text-lg px-8 py-6"
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
+            <Card 
+              className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer bg-gradient-to-br from-emerald-50 to-emerald-100"
               onClick={() => handleNavigate('Assistente')}
             >
-              <Brain className="w-5 h-5 mr-2" />
-              Começar com IA
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="text-lg px-8 py-6 border-2"
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-emerald-900 mb-3">
+                  Nova Busca com IA
+                </h3>
+                <p className="text-emerald-700 mb-6">
+                  Use nosso assistente inteligente para uma experiência personalizada
+                </p>
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  Começar Busca
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-indigo-100"
               onClick={() => handleNavigate('Buscar')}
             >
-              <Search className="w-5 h-5 mr-2" />
-              Busca Rápida
-            </Button>
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-900 mb-3">
+                  Busca Rápida
+                </h3>
+                <p className="text-blue-700 mb-6">
+                  Descreva seu desafio e encontre soluções imediatamente
+                </p>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Buscar Agora
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="flex items-center justify-center gap-8 text-sm text-slate-600">
