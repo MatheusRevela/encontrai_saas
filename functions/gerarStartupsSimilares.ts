@@ -73,7 +73,13 @@ Para cada similar, forneça:
 - resumo_match: breve explicação de como resolve problema similar (1-2 frases)
 - razoes_similaridade: lista de 2-3 motivos específicos da similaridade
 
-IMPORTANTE: Retorne APENAS startups com score >= 60. Se nenhuma atingir, retorne lista vazia.`;
+REGRAS CRÍTICAS:
+1. NO resumo_match, NÃO mencione o nome da startup - use termos genéricos como "Esta solução", "A plataforma", "O sistema"
+2. Retorne APENAS startups com score >= 60. Se nenhuma atingir, retorne lista vazia.
+
+EXEMPLO de resumo_match correto:
+❌ ERRADO: "A Inovyo oferece soluções para gestão..."
+✅ CORRETO: "Esta solução oferece ferramentas para gestão..."`;
 
     const resultado = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
