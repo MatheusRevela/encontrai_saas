@@ -28,12 +28,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Startup não encontrada' }, { status: 404 });
     }
 
-    // Buscar todas as startups ativas exceto a original
+    // Buscar IDs das startups já desbloqueadas na transação
+    const startupsJaDesbloqueadas = transacao.startups_desbloqueadas?.map(s => s.startup_id) || [];
+
+    // Buscar todas as startups ativas exceto a original e as já desbloqueadas
     const todasStartups = await base44.asServiceRole.entities.Startup.filter({ 
       ativo: true 
     });
 
-    const startupsCandiatas = todasStartups.filter(s => s.id !== startup_id);
+    const startupsCandiatas = todasStartups.filter(s => 
+      s.id !== startup_id && !startupsJaDesbloqueadas.includes(s.id)
+    );
 
     // Usar IA para encontrar as mais similares
     const prompt = `Você é um especialista em análise de startups e soluções tecnológicas.

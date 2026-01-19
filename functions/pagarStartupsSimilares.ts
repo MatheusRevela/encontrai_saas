@@ -9,9 +9,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { transacao_id, startup_id } = await req.json();
+    const { transacao_id, startup_original_id, similares_selecionadas } = await req.json();
 
-    if (!transacao_id || !startup_id) {
+    if (!transacao_id || !startup_original_id || !similares_selecionadas || similares_selecionadas.length === 0) {
       return Response.json({ error: 'Parâmetros obrigatórios faltando' }, { status: 400 });
     }
 
@@ -23,34 +23,15 @@ Deno.serve(async (req) => {
     // Buscar transação
     const transacao = await base44.asServiceRole.entities.Transacao.get(transacao_id);
     
-    // Verificar se já pagou
-    const jaDesbloqueiuSimilares = transacao.similares_desbloqueadas?.some(
-      s => s.startup_original_id === startup_id
-    );
-
-    if (jaDesbloqueiuSimilares) {
-      return Response.json({ error: 'Similares já desbloqueadas' }, { status: 400 });
-    }
-
-    // Buscar similares para calcular o valor
-    const { data: resultado } = await base44.asServiceRole.functions.invoke('gerarStartupsSimilares', {
-      startup_id: startup_id,
-      transacao_id: transacao_id
-    });
-
-    const quantidadeSimilares = resultado.similares?.length || 0;
-    if (quantidadeSimilares === 0) {
-      return Response.json({ error: 'Nenhuma similar encontrada' }, { status: 400 });
-    }
-
-    const valorTotal = quantidadeSimilares * 4.00;
+    const quantidadeSelecionada = similares_selecionadas.length;
+    const valorTotal = quantidadeSelecionada * 4.00;
 
     // Criar preferência de pagamento no Mercado Pago
     const preference = {
       items: [
         {
-          title: `${quantidadeSimilares} Startups Similares - ${transacao.id.substring(0, 8)}`,
-          quantity: quantidadeSimilares,
+          title: `${quantidadeSelecionada} Startup${quantidadeSelecionada > 1 ? 's' : ''} Similar${quantidadeSelecionada > 1 ? 'es' : ''} - ${transacao.id.substring(0, 8)}`,
+          quantity: quantidadeSelecionada,
           unit_price: 4.00,
           currency_id: 'BRL'
         }
@@ -68,7 +49,8 @@ Deno.serve(async (req) => {
       notification_url: `${req.headers.get('origin')}/api/handleMercadoPagoWebhook`,
       metadata: {
         transacao_id: transacao.id,
-        startup_id: startup_id,
+        startup_original_id: startup_original_id,
+        similares_selecionadas: JSON.stringify(similares_selecionadas),
         tipo: 'similares',
         user_email: user.email
       }
@@ -95,7 +77,8 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.Transacao.update(transacao.id, {
       mp_preference_similares: {
         preference_id: mpData.id,
-        startup_id: startup_id,
+        startup_original_id: startup_original_id,
+        similares_selecionadas: similares_selecionadas,
         init_point: mpData.init_point,
         created_at: new Date().toISOString()
       }

@@ -156,12 +156,34 @@ Deno.serve(async (req) => {
                     if (tipoTransacao === 'similares') {
                         // Pagamento de similares
                         console.log('🔍 Desbloqueando similares...');
-                        const startupId = payment.metadata?.startup_id;
+                        const startupOriginalId = payment.metadata?.startup_original_id;
+                        const similaresSelecionadas = JSON.parse(payment.metadata?.similares_selecionadas || '[]');
                         
-                        if (startupId) {
+                        if (startupOriginalId && similaresSelecionadas.length > 0) {
+                            // Buscar dados completos das startups selecionadas
+                            const startupsCompletas = await base44.entities.Startup.filter({
+                                id: { $in: similaresSelecionadas }
+                            });
+
+                            const similaresData = startupsCompletas.map(s => ({
+                                startup_id: s.id,
+                                nome: s.nome,
+                                descricao: s.descricao,
+                                categoria: s.categoria,
+                                vertical_atuacao: s.vertical_atuacao,
+                                modelo_negocio: s.modelo_negocio,
+                                site: s.site,
+                                email: s.email,
+                                whatsapp: s.whatsapp,
+                                linkedin: s.linkedin,
+                                preco_base: s.preco_base,
+                                logo_url: s.logo_url
+                            }));
+
                             const similaresDesbloqueadas = transaction.similares_desbloqueadas || [];
                             similaresDesbloqueadas.push({
-                                startup_original_id: startupId,
+                                startup_original_id: startupOriginalId,
+                                startups_similares: similaresData,
                                 pago_em: new Date().toISOString()
                             });
 
@@ -169,7 +191,7 @@ Deno.serve(async (req) => {
                                 similares_desbloqueadas: similaresDesbloqueadas
                             });
 
-                            console.log('✅ Similares desbloqueadas com sucesso');
+                            console.log(`✅ ${similaresData.length} similares desbloqueadas com sucesso`);
                         }
                     } else if (transaction.startups_selecionadas?.length > 0) {
                         // Pagamento normal de startups

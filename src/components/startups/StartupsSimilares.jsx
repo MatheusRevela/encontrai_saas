@@ -26,6 +26,7 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
   const [processandoPagamento, setProcessandoPagamento] = useState(false);
   const [feedbacks, setFeedbacks] = useState({});
   const [comentarios, setComentarios] = useState({});
+  const [selectedSimilares, setSelectedSimilares] = useState([]);
 
   useEffect(() => {
     carregarSimilares();
@@ -56,6 +57,11 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
       });
       setFeedbacks(feedbacksMap);
 
+      // Auto-selecionar todas se ainda não pagou
+      if (!result.pago && result.similares) {
+        setSelectedSimilares(result.similares.map(s => s.startup_id));
+      }
+
     } catch (error) {
       console.error('Erro ao carregar similares:', error);
     } finally {
@@ -63,12 +69,26 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
     }
   };
 
+  const toggleSimilarSelection = (similarId) => {
+    setSelectedSimilares(prev => 
+      prev.includes(similarId) 
+        ? prev.filter(id => id !== similarId)
+        : [...prev, similarId]
+    );
+  };
+
   const handlePagarSimilares = async () => {
+    if (selectedSimilares.length === 0) {
+      alert('Selecione pelo menos uma startup similar para desbloquear.');
+      return;
+    }
+
     try {
       setProcessandoPagamento(true);
       const { data: result } = await base44.functions.invoke('pagarStartupsSimilares', {
         transacao_id: transacaoId,
-        startup_id: startupOriginal.startup_id
+        startup_original_id: startupOriginal.startup_id,
+        similares_selecionadas: selectedSimilares
       });
 
       if (result.payment_url) {
@@ -135,23 +155,31 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
               </div>
               <div className="flex-1">
                 <h4 className="font-bold text-slate-900 text-lg mb-2">
-                  Desbloqueie {similares.length} Alternativa{similares.length > 1 ? 's' : ''} Similar{similares.length > 1 ? 'es' : ''}
+                  Selecione as Alternativas que Deseja Desbloquear
                 </h4>
                 <p className="text-slate-600 mb-4">
-                  Veja contatos completos e detalhes de outras startups que resolvem o mesmo problema com abordagens diferentes
+                  Escolha quantas startups similares você quer ver os contatos completos (R$ 4,00 cada)
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-3xl font-bold text-purple-600">
-                      R$ {(similares.length * 4).toFixed(2).replace('.', ',')}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      R$ 4,00 por startup • {similares.length} similar{similares.length > 1 ? 'es' : ''}
-                    </p>
+                    {selectedSimilares.length > 0 ? (
+                      <>
+                        <p className="text-3xl font-bold text-purple-600">
+                          R$ {(selectedSimilares.length * 4).toFixed(2).replace('.', ',')}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {selectedSimilares.length} startup{selectedSimilares.length > 1 ? 's' : ''} selecionada{selectedSimilares.length > 1 ? 's' : ''} × R$ 4,00
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-500">
+                        Selecione as startups abaixo para ver o valor total
+                      </p>
+                    )}
                   </div>
                   <Button
                     onClick={handlePagarSimilares}
-                    disabled={processandoPagamento}
+                    disabled={processandoPagamento || selectedSimilares.length === 0}
                     className="bg-purple-600 hover:bg-purple-700"
                     size="lg"
                   >
@@ -163,7 +191,7 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
                     ) : (
                       <>
                         <Eye className="w-4 h-4 mr-2" />
-                        Desbloquear Agora
+                        Desbloquear Selecionadas
                       </>
                     )}
                   </Button>
@@ -181,9 +209,19 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className={`relative ${!isPago ? 'opacity-75' : ''}`}>
+              <Card className={`relative ${!isPago ? 'border-2 border-purple-200' : ''} ${!isPago && selectedSimilares.includes(similar.startup_id) ? 'border-purple-500 bg-purple-50' : ''}`}>
                 <CardContent className="p-4">
                   <div className="flex gap-4">
+                    {!isPago && (
+                      <div className="flex items-start pt-1">
+                        <input
+                          type="checkbox"
+                          checked={selectedSimilares.includes(similar.startup_id)}
+                          onChange={() => toggleSimilarSelection(similar.startup_id)}
+                          className="w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                        />
+                      </div>
+                    )}
                     <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       {similar.logo_url && isPago ? (
                         <img src={similar.logo_url} alt="" className="w-14 h-14 object-contain" />
@@ -195,7 +233,7 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h4 className="font-bold text-slate-900">
-                            {isPago ? similar.nome : `Solução Similar #${index + 1}`}
+                            Solução Similar #{index + 1}
                           </h4>
                           <div className="flex gap-2 mt-1">
                             <Badge variant="outline" className="text-xs">
@@ -212,8 +250,14 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
                       </div>
                       
                       <p className="text-sm text-slate-600 mb-3">
-                        {isPago ? similar.descricao : similar.resumo_match}
+                        {similar.resumo_match}
                       </p>
+
+                      {isPago && similar.descricao && (
+                        <p className="text-sm text-slate-700 mb-3 bg-slate-50 p-3 rounded-lg">
+                          <strong>Sobre a solução:</strong> {similar.descricao}
+                        </p>
+                      )}
 
                       {isPago && (
                         <>
