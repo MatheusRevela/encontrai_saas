@@ -22,14 +22,25 @@ import {
 } from "@/components/ui/accordion";
 import { motion } from 'framer-motion'; // Added for animations
 import BuscaLoadingAnimation from '../components/common/BuscaLoadingAnimation';
+import BuscaInterativa from '../components/busca/BuscaInterativa';
+import FiltrosAvancados from '../components/busca/FiltrosAvancados';
 import { buildMatchingPrompt, buildMatchingJsonSchema } from '../components/utils/promptBuilder';
 
 export default function Resultados() {
   const [transacao, setTransacao] = useState(null);
   const [startupsSugeridas, setStartupsSugeridas] = useState([]);
+  const [startupsOriginais, setStartupsOriginais] = useState([]);
   const [selectedStartups, setSelectedStartups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mostrarBuscaInterativa, setMostrarBuscaInterativa] = useState(false);
+  const [analiseEnriquecida, setAnaliseEnriquecida] = useState(null);
+  const [filtros, setFiltros] = useState({
+    categorias: [],
+    verticais: [],
+    modelosNegocio: [],
+    matchMinimo: 50
+  });
   const navigate = useNavigate();
 
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
@@ -57,6 +68,7 @@ export default function Resultados() {
       // If suggestions already exist, use them
       if (currentTransacao.startups_sugeridas?.length > 0) {
         setStartupsSugeridas(currentTransacao.startups_sugeridas);
+        setStartupsOriginais(currentTransacao.startups_sugeridas);
         // Also load previously selected startups if any
         if (currentTransacao.startups_selecionadas?.length > 0) {
             setSelectedStartups(currentTransacao.startups_selecionadas);
@@ -65,8 +77,9 @@ export default function Resultados() {
         return;
       }
 
-      // Otherwise, generate new suggestions
-      await gerarSugestoes(currentTransacao);
+      // Oferecer busca interativa para refinar
+      setMostrarBuscaInterativa(true);
+      setIsLoading(false);
     } catch (error) {
       console.error('Erro ao carregar transação:', error);
       setError('Erro ao carregar dados da busca.');
@@ -74,7 +87,13 @@ export default function Resultados() {
     }
   };
 
-  const gerarSugestoes = async (currentTransacao) => {
+  const handleAnaliseCompleta = async (dadosAnalise) => {
+    setMostrarBuscaInterativa(false);
+    setAnaliseEnriquecida(dadosAnalise);
+    await gerarSugestoes(transacao, dadosAnalise);
+  };
+
+  const gerarSugestoes = async (currentTransacao, dadosAnalise = null) => {
     try {
       setIsLoading(true);
 
@@ -85,11 +104,18 @@ export default function Resultados() {
         throw new Error('Nenhuma startup ativa encontrada na base de dados.');
       }
 
-      // Build intelligent prompt
+      const problemaCompleto = dadosAnalise?.problemCompleto || currentTransacao.dor_relatada;
+      const insights = dadosAnalise?.insights || [];
+      const filtrosIA = dadosAnalise?.filtros || {};
+      const perfilCliente = dadosAnalise?.perfilCliente || currentTransacao.perfil_cliente || 'pessoa_fisica';
+
+      // Build intelligent prompt with enriched context
       const prompt = buildMatchingPrompt(
-        currentTransacao.dor_relatada,
+        problemaCompleto,
         todasStartups,
-        currentTransacao.perfil_cliente || 'pessoa_fisica'
+        perfilCliente,
+        insights,
+        filtrosIA
       );
 
       console.log('🔍 Executando matching inteligente...');
@@ -125,6 +151,8 @@ export default function Resultados() {
             match_percentage: Math.round(match.match_percentage),
             resumo_personalizado: match.resumo_personalizado,
             pontos_fortes: match.pontos_fortes || [],
+            como_resolve: match.como_resolve || '',
+            beneficios_tangiveis: match.beneficios_tangiveis || [],
             implementacao_estimada: match.implementacao_estimada || '1-2 semanas'
           };
         })
@@ -140,10 +168,12 @@ export default function Resultados() {
       // Save to transaction
       await Transacao.update(currentTransacao.id, {
         startups_sugeridas: matchesValidos,
-        insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.'
+        insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.',
+        perfil_cliente: perfilCliente
       });
 
       setStartupsSugeridas(matchesValidos);
+      setStartupsOriginais(matchesValidos);
       console.log(`✅ ${matchesValidos.length} startups encontradas com sucesso`);
 
     } catch (error) {
@@ -209,7 +239,34 @@ export default function Resultados() {
 
   // Memoize insight and startups for rendering
   const insight = useMemo(() => transacao?.insight_gerado || '', [transacao?.insight_gerado]);
-  const enrichedStartups = useMemo(() => startupsSugeridas, [startupsSugeridas]);
+  
+  // Apply filters to startups
+  const enrichedStartups = useMemo(() => {
+    let resultado = [...startupsSugeridas];
+
+    // Filter by categories
+    if (filtros.categorias.length > 0) {
+      resultado = resultado.filter(s => filtros.categorias.includes(s.categoria));
+    }
+
+    // Filter by verticals
+    if (filtros.verticais.length > 0) {
+      resultado = resultado.filter(s => filtros.verticais.includes(s.vertical_atuacao));
+    }
+
+    // Filter by business models
+    if (filtros.modelosNegocio.length > 0) {
+      resultado = resultado.filter(s => {
+        const startupCompleta = startupsOriginais.find(so => so.startup_id === s.startup_id);
+        return startupCompleta && filtros.modelosNegocio.includes(startupCompleta.modelo_negocio);
+      });
+    }
+
+    // Filter by minimum match
+    resultado = resultado.filter(s => s.match_percentage >= filtros.matchMinimo);
+
+    return resultado;
+  }, [startupsSugeridas, filtros, startupsOriginais]);
 
   const anonymizeName = (name) => {
       // Fallback para caso o nome da startup vaze no texto da IA
@@ -218,6 +275,27 @@ export default function Resultados() {
 
   if (isLoading) {
     return <BuscaLoadingAnimation />;
+  }
+
+  if (mostrarBuscaInterativa && transacao) {
+    return (
+      <div className="min-h-screen py-8 px-4 bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-slate-900 mb-4">
+              Vamos refinar sua busca
+            </h1>
+            <p className="text-slate-600">
+              Responda algumas perguntas rápidas para encontrar as soluções perfeitas
+            </p>
+          </div>
+          <BuscaInterativa
+            problemInicial={transacao.dor_relatada}
+            onAnaliseCompleta={handleAnaliseCompleta}
+          />
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -326,21 +404,52 @@ export default function Resultados() {
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="item-1" className="border-b-0">
                             <AccordionTrigger className="text-sm font-semibold text-emerald-700 hover:no-underline">
-                              Ver detalhes da recomendação
+                              Ver detalhes completos da solução
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="p-4 bg-slate-50 rounded-lg space-y-2">
-                                <h4 className="font-semibold text-slate-800">Pontos Fortes para você:</h4>
-                                <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
-                                  {recomendacao?.pontos_fortes?.map((ponto, i) => (
-                                    <li key={i}>{anonymizeName(ponto)}</li>
-                                  ))}
-                                </ul>
+                              <div className="p-4 bg-slate-50 rounded-lg space-y-4">
+                                {recomendacao?.pontos_fortes?.length > 0 && (
+                                  <div>
+                                    <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                                      <span className="text-emerald-600">✓</span> Pontos Fortes
+                                    </h4>
+                                    <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                      {recomendacao.pontos_fortes.map((ponto, i) => (
+                                        <li key={i}>{anonymizeName(ponto)}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                
+                                {recomendacao?.como_resolve && (
+                                  <div>
+                                    <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                                      <span className="text-blue-600">⚙️</span> Como Resolve Seu Problema
+                                    </h4>
+                                    <p className="text-sm text-slate-600 leading-relaxed">
+                                      {anonymizeName(recomendacao.como_resolve)}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {recomendacao?.beneficios_tangiveis?.length > 0 && (
+                                  <div>
+                                    <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                                      <span className="text-purple-600">🎯</span> Benefícios Esperados
+                                    </h4>
+                                    <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                      {recomendacao.beneficios_tangiveis.map((beneficio, i) => (
+                                        <li key={i}>{anonymizeName(beneficio)}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
                                 {recomendacao.descricao && (
-                                  <>
-                                    <h4 className="font-semibold text-slate-800 mt-3">Sobre a Solução:</h4>
+                                  <div>
+                                    <h4 className="font-semibold text-slate-800 mb-2">Sobre a Solução</h4>
                                     <p className="text-sm text-slate-600 leading-relaxed">{recomendacao.descricao}</p>
-                                  </>
+                                  </div>
                                 )}
                               </div>
                             </AccordionContent>

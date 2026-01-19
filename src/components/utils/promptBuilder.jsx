@@ -1,14 +1,23 @@
-export const buildMatchingPrompt = (problema, startups, perfilCliente) => {
+export const buildMatchingPrompt = (problema, startups, perfilCliente, insights = [], filtros = {}) => {
+  const insightsTexto = insights.length > 0 
+    ? `\n### INSIGHTS CONTEXTUAIS EXTRAÍDOS\n${insights.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}\n`
+    : '';
+
+  const filtrosTexto = Object.keys(filtros).length > 0 
+    ? `\n### FILTROS APLICADOS\n- Categorias prioritárias: ${filtros.categorias?.join(', ') || 'Todas'}\n- Verticais prioritárias: ${filtros.verticais?.join(', ') || 'Todas'}\n- Características: ${filtros.caracteristicas?.join(', ') || 'Não especificadas'}\n`
+    : '';
+
   return `
 ### PERSONA
 Você atua como um consultor de inovação e transformação digital com 15 anos de experiência. Sua especialidade é mapear problemas de negócio, entender contextos complexos e indicar soluções inovadoras e viáveis. Seu papel é ser preciso, consistente e sempre justificar a escolha.
 
 ### OBJETIVO
-Interpretar a dor do cliente de forma profunda e semântica, cruzar com a base de startups e retornar ATÉ 5 soluções mais relevantes, com explicações personalizadas.
+Interpretar a dor do cliente de forma profunda e semântica, cruzar com a base de startups e retornar ATÉ 5 soluções mais relevantes, com explicações personalizadas e justificativas sólidas.
 
 ### CONTEXTO DO CLIENTE
 - **Perfil:** ${perfilCliente === 'pme' ? 'Pequena/Média Empresa com foco em crescimento e eficiência.' : 'Pessoa Física buscando ferramentas para produtividade e organização.'}
 - **Problema Relatado:** "${problema}"
+${insightsTexto}${filtrosTexto}
 
 ### BASE DE STARTUPS DISPONÍVEIS
 ${startups.map((s, i) => `
@@ -30,10 +39,12 @@ Primeiro, crie uma lista curta de startups candidatas, eliminando as irrelevante
 
 #### ETAPA 2: MATCHING SEMÂNTICO E PONTUAÇÃO
 Para cada startup pré-selecionada, calcule um \`match_percentage\` (0 a 100) com base nestes pesos exatos:
-- **Relevância Funcional (40%):** A solução resolve DIRETAMENTE o problema central?
-- **Adequação ao Perfil do Cliente (40%):** É compatível com o porte (PME/PF), maturidade e orçamento implícito?
-- **Facilidade de Implementação (10%):** É simples para este perfil de cliente?
-- **Custo-Benefício (10%):** O valor gerado justifica o investimento?
+- **Relevância Funcional (45%):** A solução resolve DIRETAMENTE o problema central descrito pelo cliente?
+- **Adequação ao Perfil do Cliente (35%):** É compatível com o porte (PME/PF), maturidade, contexto e orçamento implícito?
+- **Facilidade de Implementação (10%):** É simples e rápida de adotar para este perfil?
+- **Custo-Benefício e ROI (10%):** O valor gerado justifica claramente o investimento?
+
+**IMPORTANTE:** Se houver insights contextuais ou filtros aplicados, dê peso adicional a startups que se alinham com esses critérios.
 
 #### ETAPA 3: SELEÇÃO FINAL
 1.  Ordene as startups pelo \`match_percentage\` final.
@@ -42,9 +53,11 @@ Para cada startup pré-selecionada, calcule um \`match_percentage\` (0 a 100) co
 
 ### PRODUÇÃO DAS JUSTIFICATIVAS
 Para cada startup retornada:
-- **resumo_personalizado:** Explique por que a solução é ideal para o caso específico do cliente (use "Esta solução" em vez do nome da startup).
-- **pontos_fortes:** Apresente de 3 a 5 pontos fortes claros e relevantes.
-- **insight_geral:** Gere uma análise macro sobre o desafio do cliente e possíveis caminhos.
+- **resumo_personalizado:** Explique de forma clara e convincente por que esta solução é ideal para o caso específico do cliente, mencionando aspectos do problema relatado. Use "Esta solução" em vez do nome da startup.
+- **pontos_fortes:** Liste de 3 a 5 pontos fortes ESPECÍFICOS e RELEVANTES ao contexto do cliente (não seja genérico).
+- **como_resolve:** Explique COMO exatamente a solução resolve o problema mencionado (passo a passo simplificado).
+- **beneficios_tangíveis:** Liste 2-3 resultados concretos que o cliente pode esperar.
+- **insight_geral:** Gere uma análise estratégica sobre o desafio e recomendações de próximos passos.
 
 ### FORMATO DA RESPOSTA
 Retorne APENAS o JSON válido, sem nenhum texto ou explicação adicional fora do JSON.`;
@@ -73,13 +86,24 @@ export const buildMatchingJsonSchema = () => ({
             items: { type: "string" },
             description: "3 a 5 principais vantagens desta solução para este caso específico."
           },
+          como_resolve: {
+            type: "string",
+            description: "Explicação de COMO a solução resolve o problema do cliente."
+          },
+          beneficios_tangiveis: {
+            type: "array",
+            minItems: 2,
+            maxItems: 3,
+            items: { type: "string" },
+            description: "Resultados concretos que o cliente pode esperar."
+          },
           implementacao_estimada: {
             type: "string",
             enum: ["1-7 dias", "1-2 semanas", "2-4 semanas", "1-2 meses"],
             description: "Tempo estimado para ver primeiros resultados."
           }
         },
-        required: ["startup_id", "match_percentage", "resumo_personalizado", "pontos_fortes", "implementacao_estimada"]
+        required: ["startup_id", "match_percentage", "resumo_personalizado", "pontos_fortes", "como_resolve", "beneficios_tangiveis", "implementacao_estimada"]
       }
     },
     insight_geral: {
