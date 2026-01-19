@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -159,6 +158,9 @@ export default function Resultados() {
     setSelectedStartups(prev => {
       if (prev.includes(startupId)) {
         return prev.filter(id => id !== startupId);
+      }
+      if (prev.length >= 5) {
+        return prev;
       }
       return [...prev, startupId];
     });
