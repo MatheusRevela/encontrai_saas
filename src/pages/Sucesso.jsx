@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Transacao } from '@/entities/all';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ExternalLink, Mail, Phone, Globe, Star, Rocket, Building2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import StartupsSimilares from '../components/startups/StartupsSimilares';
 
 export default function Sucesso() {
   const [transacao, setTransacao] = useState(null);
@@ -274,6 +274,14 @@ export default function Sucesso() {
                           </a>
                         )}
                       </div>
+                    </div>
+
+                    {/* Startups Similares */}
+                    <div className="mt-6">
+                      <StartupsSimilares
+                        startupOriginal={startup}
+                        transacaoId={transacao.id}
+                      />
                     </div>
                   </CardContent>
                 </Card>
