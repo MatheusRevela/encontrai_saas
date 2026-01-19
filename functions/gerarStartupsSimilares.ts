@@ -21,6 +21,32 @@ Deno.serve(async (req) => {
       s => s.startup_original_id === startup_id
     );
 
+    // CACHE: Verificar se similares foram geradas recentemente (últimas 24h)
+    const similarExistente = transacao.similares_desbloqueadas?.find(
+      s => s.startup_original_id === startup_id
+    );
+    
+    if (similarExistente) {
+      const pagoEm = new Date(similarExistente.pago_em);
+      const agora = new Date();
+      const diferencaHoras = (agora - pagoEm) / (1000 * 60 * 60);
+      
+      if (diferencaHoras < 24 && similarExistente.startups_similares) {
+        // Retornar cache
+        return Response.json({
+          similares: similarExistente.startups_similares.map(s => ({
+            ...s,
+            logo_url: s.logo_url,
+            site: s.site,
+            email: s.email,
+            whatsapp: s.whatsapp
+          })),
+          pago: true,
+          cached: true
+        });
+      }
+    }
+
     // Buscar startup original
     const startupOriginal = await base44.asServiceRole.entities.Startup.get(startup_id);
     
@@ -30,6 +56,23 @@ Deno.serve(async (req) => {
 
     // Buscar IDs das startups já desbloqueadas na transação
     const startupsJaDesbloqueadas = transacao.startups_desbloqueadas?.map(s => s.startup_id) || [];
+    
+    // DUPLICATAS: Buscar startups que já apareceram como similares de outras
+    const startupsJaSimilares = [];
+    transacao.similares_desbloqueadas?.forEach(similar => {
+      if (similar.startup_original_id !== startup_id && similar.startups_similares) {
+        similar.startups_similares.forEach(s => {
+          if (s.startup_id) startupsJaSimilares.push(s.startup_id);
+        });
+      }
+    });
+    
+    // APRENDIZADO: Buscar feedbacks negativos do usuário
+    const feedbacksNegativos = await base44.asServiceRole.entities.FeedbackSimilaridade.filter({
+      transacao_id: transacao_id,
+      tipo_feedback: { $in: ['ja_conheco', 'nao_relevante'] }
+    });
+    const startupsComFeedbackNegativo = feedbacksNegativos.map(f => f.startup_similar_id);
 
     // Buscar todas as startups ativas exceto a original e as já desbloqueadas
     const todasStartups = await base44.asServiceRole.entities.Startup.filter({ 
@@ -37,7 +80,10 @@ Deno.serve(async (req) => {
     });
 
     const startupsCandiatas = todasStartups.filter(s => 
-      s.id !== startup_id && !startupsJaDesbloqueadas.includes(s.id)
+      s.id !== startup_id && 
+      !startupsJaDesbloqueadas.includes(s.id) &&
+      !startupsJaSimilares.includes(s.id) &&
+      !startupsComFeedbackNegativo.includes(s.id)
     );
 
     // Usar IA para encontrar as mais similares
