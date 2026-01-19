@@ -27,6 +27,7 @@ import index from './pages/index';
 import startups from './pages/startups';
 import transacoes from './pages/transacoes';
 import users from './pages/users';
+import DashboardUsuario from './pages/DashboardUsuario';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "startups": startups,
     "transacoes": transacoes,
     "users": users,
+    "DashboardUsuario": DashboardUsuario,
 }
 
 export const pagesConfig = {
