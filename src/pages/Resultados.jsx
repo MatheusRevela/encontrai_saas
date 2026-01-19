@@ -155,15 +155,21 @@ export default function Resultados() {
   };
 
   const toggleStartupSelection = (startupId) => {
-    setSelectedStartups(prev => {
-      if (prev.includes(startupId)) {
-        return prev.filter(id => id !== startupId);
-      }
-      if (prev.length >= 5) {
-        return prev;
-      }
-      return [...prev, startupId];
-    });
+    try {
+      setSelectedStartups(prev => {
+        const newSelection = prev.includes(startupId) 
+          ? prev.filter(id => id !== startupId)
+          : prev.length >= 5 
+            ? prev 
+            : [...prev, startupId];
+        
+        console.log('Seleção atualizada:', newSelection.length, 'startups');
+        return newSelection;
+      });
+    } catch (error) {
+      console.error('Erro ao selecionar startup:', error);
+      alert('Erro ao selecionar startup. Tente novamente.');
+    }
   };
 
   const handleProceedToCheckout = async () => {
@@ -173,23 +179,31 @@ export default function Resultados() {
     }
 
     try {
-      // CRÍTICO: Passa os IDs E os dados completos das startups
       const startupsCompletas = startupsSugeridas.filter(s =>
         selectedStartups.includes(s.startup_id)
       );
 
+      const valorTotal = selectedStartups.length === 5 
+        ? 22.00 
+        : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
+
+      console.log('Procedendo para checkout:', {
+        quantidade: selectedStartups.length,
+        valorTotal,
+        startupsCompletas: startupsCompletas.length
+      });
+
       await Transacao.update(transacao.id, {
         startups_selecionadas: selectedStartups,
         quantidade_selecionada: selectedStartups.length,
-        valor_total: selectedStartups.length === 5 ? 22.00 : selectedStartups.length * (transacao?.valor_por_startup || 5.00), // Use value from transacao or default to 5.00
-        // IMPORTANTE: Salva os dados completos para o checkout acessar
+        valor_total: valorTotal,
         startups_detalhadas: startupsCompletas
       });
 
       navigate(createPageUrl(`Checkout?sessionId=${sessionId}`));
     } catch (error) {
       console.error('Erro ao prosseguir para checkout:', error);
-      alert('Erro ao prosseguir. Tente novamente.');
+      alert(`Erro ao prosseguir: ${error.message}`);
     }
   };
 
@@ -359,7 +373,7 @@ export default function Resultados() {
                       <span className="text-purple-600">(economize R$ 3,00!)</span>
                     </>
                   ) : (
-                    `Total: R$ ${(selectedStartups.length * (transacao?.valor_por_startup || 5.00)).toFixed(2).replace('.', ',')}`
+                    <>Total: R$ {((selectedStartups.length * (transacao?.valor_por_startup || 5.00)).toFixed(2) || '0.00').replace('.', ',')}</>
                   )}
                   {selectedStartups.length > 0 && <span className="block text-emerald-600 font-semibold mt-1">🎁 Primeira solução grátis (desconto no checkout)</span>}
                 </div>
