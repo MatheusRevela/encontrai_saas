@@ -32,12 +32,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Similares já desbloqueadas' }, { status: 400 });
     }
 
+    // Buscar similares para calcular o valor
+    const { data: resultado } = await base44.asServiceRole.functions.invoke('gerarStartupsSimilares', {
+      startup_id: startup_id,
+      transacao_id: transacao_id
+    });
+
+    const quantidadeSimilares = resultado.similares?.length || 0;
+    if (quantidadeSimilares === 0) {
+      return Response.json({ error: 'Nenhuma similar encontrada' }, { status: 400 });
+    }
+
+    const valorTotal = quantidadeSimilares * 4.00;
+
     // Criar preferência de pagamento no Mercado Pago
     const preference = {
       items: [
         {
-          title: `Startups Similares - ${transacao.id.substring(0, 8)}`,
-          quantity: 1,
+          title: `${quantidadeSimilares} Startups Similares - ${transacao.id.substring(0, 8)}`,
+          quantity: quantidadeSimilares,
           unit_price: 4.00,
           currency_id: 'BRL'
         }

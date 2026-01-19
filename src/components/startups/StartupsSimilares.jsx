@@ -142,8 +142,12 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-3xl font-bold text-purple-600">R$ 4,00</p>
-                    <p className="text-sm text-slate-500">pagamento único via Mercado Pago</p>
+                    <p className="text-3xl font-bold text-purple-600">
+                      R$ {(similares.length * 4).toFixed(2).replace('.', ',')}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      R$ 4,00 por startup • {similares.length} similar{similares.length > 1 ? 'es' : ''}
+                    </p>
                   </div>
                   <Button
                     onClick={handlePagarSimilares}
