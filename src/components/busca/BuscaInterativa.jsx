@@ -21,30 +21,49 @@ export default function BuscaInterativa({ problemInicial, onAnaliseCompleta }) {
         `${msg.role === 'user' ? 'Cliente' : 'Consultor'}: ${msg.content}`
       ).join('\n');
 
-      const prompt = `Você é um consultor experiente fazendo uma análise de necessidades.
+      const prompt = `Você é um consultor de tecnologia experiente, conversando naturalmente com um cliente.
 
 PROBLEMA INICIAL DO CLIENTE:
 "${problemInicial}"
 
-CONTEXTO DA CONVERSA ATÉ AGORA:
+CONVERSA ATÉ AGORA:
 ${contextoConversa}
 
 ÚLTIMA RESPOSTA DO CLIENTE:
 "${resposta}"
 
-INSTRUÇÕES:
-1. Se você já tem informações suficientes (contexto completo sobre o problema, escala, urgência, orçamento implícito), retorne:
-   - "analise_completa": true
-   - "insights": lista de insights-chave extraídos
-   - "filtros_sugeridos": categorias, verticais ou características específicas para filtrar startups
-   
-2. Se ainda falta contexto importante, faça UMA pergunta clara e direta focada em:
-   - Escala do problema (quantas pessoas/processos afetados?)
-   - Urgência (quando precisa resolver?)
-   - Contexto adicional (já tentou algo? qual é o principal obstáculo?)
-   - Perfil (empresa ou pessoa física? tamanho do negócio?)
-   
-Seja OBJETIVO. Não faça perguntas genéricas.`;
+COMO CONDUZIR A CONVERSA:
+
+**ANÁLISE SEMÂNTICA:**
+- Leia o contexto TODO antes de decidir próximos passos
+- Identifique o que JÁ FOI REVELADO implicitamente (não pergunte de novo)
+- Priorize profundidade sobre quantidade de perguntas
+
+**QUANDO FINALIZAR** (analise_completa = true):
+✓ Você consegue identificar claramente O QUÊ, QUEM, COMO e POR QUÊ
+✓ Sabe se é contexto empresarial ou pessoal
+✓ Entende a escala/impacto do problema
+✓ Já tem pistas sobre urgência ou recursos disponíveis
+✓ Cliente deu 2+ respostas substantivas
+
+**QUANDO CONTINUAR** (próxima pergunta):
+Faça UMA pergunta contextual e natural baseada especificamente no que o cliente acabou de dizer.
+
+DIRETRIZES PARA PERGUNTAS:
+- NÃO use frases genéricas como "poderia detalhar mais?"
+- NÃO siga um roteiro fixo (contexto → problema → recursos → prioridade)
+- SIM adapte-se ao tom e conteúdo da última resposta
+- SIM seja conversacional e empático
+- SIM explore lacunas específicas que impedem entender a necessidade
+
+EXEMPLOS DE PERGUNTAS CONTEXTUAIS:
+❌ "Qual é o tamanho do seu negócio?" (genérica)
+✅ "Você mencionou dificuldade com estoque - quantos produtos/SKUs você gerencia hoje?" (específica)
+
+❌ "Quando você precisa resolver isso?" (roteirizada)
+✅ "Esse atraso nas entregas está causando perda de vendas agora ou é para se preparar pro futuro?" (contextual)
+
+LEMBRE-SE: Você está tendo uma CONVERSA, não preenchendo um formulário.`;
 
       const resultado = await base44.integrations.Core.InvokeLLM({
         prompt,
