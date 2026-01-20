@@ -41,8 +41,8 @@ Primeiro, crie uma lista curta de startups candidatas, eliminando as irrelevante
 Para cada startup pré-selecionada, calcule um \`match_percentage\` (0 a 100) com base nestes pesos exatos:
 - **Relevância Funcional (45%):** A solução resolve DIRETAMENTE o problema central descrito pelo cliente?
 - **Adequação ao Perfil do Cliente (35%):** É compatível com o porte (PME/PF), maturidade, contexto e orçamento implícito?
-- **Facilidade de Implementação (10%):** É simples e rápida de adotar para este perfil?
-- **Custo-Benefício e ROI (10%):** O valor gerado justifica claramente o investimento?
+- **Custo-Benefício e ROI (15%):** O valor gerado justifica claramente o investimento? Para PMEs, priorize ROI tangível e mensurável.
+- **Facilidade de Implementação (5%):** É simples e rápida de adotar para este perfil?
 
 **IMPORTANTE:** Se houver insights contextuais ou filtros aplicados, dê peso adicional a startups que se alinham com esses critérios.
 
