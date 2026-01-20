@@ -55,8 +55,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!transacao.cliente_nome || !transacao.cliente_email || !transacao.cliente_cpf) {
+    if (!transacao.cliente_nome || !transacao.cliente_email) {
       return new Response(JSON.stringify({ error: 'Dados do cliente incompletos' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 🔒 SEGURANÇA: Recalcular valor no backend - nunca confie no frontend
+    const PRECO_UNITARIO = 5.00;
+    const quantidadeSelecionada = transacao.startups_selecionadas?.length || 0;
+    
+    if (quantidadeSelecionada === 0) {
+      return new Response(JSON.stringify({ error: 'Nenhuma startup selecionada' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Bundle: 5 soluções = R$ 22 (desconto de R$ 3)
+    const valorTotal = quantidadeSelecionada === 5 ? 22.00 : quantidadeSelecionada * PRECO_UNITARIO;
+
+    // Validar CPF do cliente (Mercado Pago exige CPF válido no Brasil)
+    const cpfCliente = transacao.cliente_cpf?.replace(/\D/g, '');
+    if (!cpfCliente || cpfCliente.length !== 11 || cpfCliente === '00000000000') {
+      return new Response(JSON.stringify({ 
+        error: 'CPF inválido. O Mercado Pago exige um CPF válido para processar pagamentos.',
+        field: 'cpf'
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -65,10 +91,10 @@ Deno.serve(async (req) => {
     const preference = {
       items: [
         {
-          title: `Desbloqueio de ${transacao.quantidade_selecionada} soluç${transacao.quantidade_selecionada > 1 ? 'ões' : 'ão'} - EncontrAI`,
+          title: `Desbloqueio de ${quantidadeSelecionada} soluç${quantidadeSelecionada > 1 ? 'ões' : 'ão'} - EncontrAI`,
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: parseFloat(transacao.valor_total.toFixed(2))
+          unit_price: parseFloat(valorTotal.toFixed(2))
         }
       ],
       payer: {
@@ -76,7 +102,7 @@ Deno.serve(async (req) => {
         email: transacao.cliente_email,
         identification: {
           type: 'CPF',
-          number: transacao.cliente_cpf
+          number: cpfCliente
         }
       },
       payment_methods: {
@@ -126,7 +152,8 @@ Deno.serve(async (req) => {
     await base44.entities.Transacao.update(transacao.id, {
       mp_preference_id: mpData.id,
       mp_init_point: mpData.init_point,
-      status_pagamento: 'processando'
+      status_pagamento: 'processando',
+      valor_total: valorTotal // Salvar valor recalculado
     });
 
     return new Response(JSON.stringify({ 

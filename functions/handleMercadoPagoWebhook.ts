@@ -1,5 +1,4 @@
 import { createClient } from 'npm:@base44/sdk@0.1.0';
-import { createHmac } from 'node:crypto';
 
 const base44 = createClient({
     appId: Deno.env.get('BASE44_APP_ID'),
@@ -72,14 +71,27 @@ Deno.serve(async (req) => {
             return new Response('Webhook secret not configured', { status: 500, headers: corsHeaders });
         }
 
-        // Validação de assinatura
+        // 🔒 SEGURANÇA: Validação de assinatura usando Web Crypto API (Deno nativo)
         const signature = req.headers.get('x-signature');
         const requestId = req.headers.get('x-request-id');
         
         if (signature && requestId) {
-            const expectedSignature = createHmac('sha256', webhookSecret)
-                .update(requestId + body)
-                .digest('hex');
+            const encoder = new TextEncoder();
+            const keyData = encoder.encode(webhookSecret);
+            const message = encoder.encode(requestId + body);
+            
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyData,
+                { name: 'HMAC', hash: 'SHA-256' },
+                false,
+                ['sign']
+            );
+            
+            const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, message);
+            const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
 
             const receivedSignature = signature.replace('sha256=', '');
             
@@ -87,6 +99,7 @@ Deno.serve(async (req) => {
                 console.error('❌ Assinatura inválida');
                 return new Response('Invalid signature', { status: 401, headers: corsHeaders });
             }
+            console.log('✅ Assinatura validada com sucesso');
         }
 
         const data = JSON.parse(body);
@@ -122,7 +135,7 @@ Deno.serve(async (req) => {
                 return new Response('External reference not found', { status: 400, headers: corsHeaders });
             }
 
-            // Busca a transação
+            // 🔒 SEGURANÇA: Busca e validação robusta da transação
             const transactions = await base44.entities.Transacao.filter({ id: externalReference });
             console.log('🔍 Transações encontradas:', transactions.length);
 
@@ -130,10 +143,24 @@ Deno.serve(async (req) => {
                 const transaction = transactions[0];
                 console.log('📊 Transação atual:', JSON.stringify(transaction, null, 2));
 
-                // Evita processamento duplicado
+                // 🔒 SEGURANÇA: Verificações de integridade
+                // 1. Evitar processamento duplicado (idempotência)
                 if (transaction.status_pagamento === 'pago') {
-                    console.log('✅ Pagamento já processado');
+                    console.log('⚠️ Pagamento já processado - webhook duplicado ignorado');
                     return new Response('Payment already processed', { status: 200, headers: corsHeaders });
+                }
+
+                // 2. Validar que a preferência MP pertence a esta transação
+                if (transaction.mp_preference_id && payment.preference_id && 
+                    transaction.mp_preference_id !== payment.preference_id) {
+                    console.error('❌ Preference ID não corresponde à transação');
+                    return new Response('Invalid preference ID', { status: 400, headers: corsHeaders });
+                }
+
+                // 3. Verificar race conditions (múltiplos webhooks simultâneos)
+                if (transaction.mp_payment_id && transaction.mp_payment_id !== payment.id.toString()) {
+                    console.error('❌ Payment ID conflitante - possível race condition');
+                    return new Response('Payment ID mismatch', { status: 409, headers: corsHeaders });
                 }
                 
                 // Atualiza status do pagamento
