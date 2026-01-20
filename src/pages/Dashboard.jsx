@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { User, Transacao, Startup } from "@/entities/all";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MetricCard from "../components/dashboard/MetricCard";
@@ -25,7 +26,6 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { base44 } from '@/api/base44Client';
 
 const HealthCheckWidget = ({ stats }) => (
     <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
@@ -65,164 +65,83 @@ const HealthCheckWidget = ({ stats }) => (
 );
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
+  // React Query: Buscar estatísticas do dashboard
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const { data } = await base44.functions.invoke('getDashboardStats');
+      return data;
+    },
+    staleTime: 2 * 60 * 1000, // Cache por 2 minutos
+    refetchInterval: 5 * 60 * 1000 // Atualizar a cada 5 minutos
+  });
+
+  const stats = dashboardData?.stats || {
     totalUsers: 0,
     totalRevenue: 0,
     totalTransactions: 0,
-    conversionRate: 0,
-  });
-  const [growthMetrics, setGrowthMetrics] = useState({
+    conversionRate: 0
+  };
+
+  const growthMetrics = dashboardData?.growthMetrics || {
     conversion_rate: 0,
     avg_time_to_convert: 0,
     cart_abandonment_rate: 0,
     returning_users: 0
-  });
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const [verificationStats, setVerificationStats] = useState({
+  };
+
+  const verificationStats = dashboardData?.verificationStats || {
     needsVerification: 0,
     withIssues: 0,
     verifiedLast30Days: 0,
     startupsWithIssues: [],
     total: 0,
     newUsers: 0
+  };
+
+  const recentTransactions = dashboardData?.recentTransactions || [];
+
+  // Mutation para enviar follow-ups
+  const followUpMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await base44.functions.invoke('sendFollowUpEmails');
+      return data;
+    },
+    onSuccess: (data) => {
+      alert(data.message);
+    },
+    onError: (error) => {
+      console.error('Erro ao enviar follow-ups:', error);
+      alert('Ocorreu um erro ao enviar os e-mails.');
+    }
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSendingFollowUp, setIsSendingFollowUp] = useState(false);
-  const [isOptimizingAI, setIsOptimizingAI] = useState(false);
+
+  // Mutation para otimizar IA
+  const optimizeAIMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await base44.functions.invoke('processMLFeedback');
+      return data;
+    },
+    onSuccess: (data) => {
+      alert(data.message || 'Otimização concluída!');
+    },
+    onError: (error) => {
+      console.error('Erro ao otimizar IA:', error);
+      alert('Ocorreu um erro ao processar o feedback.');
+    }
+  });
 
   const handleSendFollowUps = async () => {
     if (!confirm('Deseja procurar por transações antigas e enviar e-mails de follow-up?')) return;
-    
-    setIsSendingFollowUp(true);
-    try {
-      const response = await base44.functions.invoke('sendFollowUpEmails');
-      alert(response.data.message);
-    } catch (error) {
-      console.error('Erro ao enviar follow-ups:', error);
-      alert('Ocorreu um erro ao enviar os e-mails.');
-    } finally {
-      setIsSendingFollowUp(false);
-    }
+    followUpMutation.mutate();
   };
 
   const handleOptimizeAI = async () => {
     if (!confirm('Deseja iniciar a otimização da IA com base no feedback dos clientes? Isso pode levar alguns instantes.')) return;
-    
-    setIsOptimizingAI(true);
-    try {
-      const response = await base44.functions.invoke('processMLFeedback');
-      alert(response.data.message || 'Otimização concluída!');
-    } catch (error) {
-      console.error('Erro ao otimizar IA:', error);
-      alert('Ocorreu um erro ao processar o feedback.');
-    } finally {
-      setIsOptimizingAI(false);
-    }
+    optimizeAIMutation.mutate();
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const [usersData, transacoesData, startupsData] = await Promise.all([
-          User.list(),
-          Transacao.list('-created_date'),
-          Startup.list()
-        ]);
 
-        // Stats principais
-        const totalUsers = usersData.length;
-        const totalRevenue = transacoesData
-          .filter(t => t.status_pagamento === 'pago')
-          .reduce((sum, t) => sum + (t.valor_total || 0), 0);
-        const totalTransactions = transacoesData.length;
-        const paidTransactions = transacoesData.filter(t => t.status_pagamento === 'pago').length;
-        const conversionRate = totalTransactions > 0 ? (paidTransactions / totalTransactions) * 100 : 0;
-        
-        setStats({
-          totalUsers,
-          totalRevenue,
-          totalTransactions,
-          conversionRate
-        });
-
-        // Growth metrics
-        const paid = transacoesData.filter(t => t.status_pagamento === 'pago');
-        const pending = transacoesData.filter(t => t.status_pagamento === 'pendente');
-        
-        const growthConversionRate = transacoesData.length > 0 
-          ? (paid.length / transacoesData.length) * 100 
-          : 0;
-        
-        const cartAbandonmentRate = transacoesData.length > 0
-          ? (pending.length / transacoesData.length) * 100
-          : 0;
-
-        const avgTimeToConvert = paid.length > 0
-          ? paid.reduce((acc, t) => {
-              const created = new Date(t.created_date);
-              const updated = new Date(t.updated_date);
-              return acc + (updated - created);
-            }, 0) / paid.length / (1000 * 60)
-          : 0;
-
-        setGrowthMetrics({
-          conversion_rate: growthConversionRate,
-          avg_time_to_convert: avgTimeToConvert,
-          cart_abandonment_rate: cartAbandonmentRate,
-          returning_users: 0
-        });
-
-        setRecentTransactions(transacoesData.slice(0, 5));
-
-        // Verification stats
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        let needsVerificationCount = 0;
-        let withIssuesCount = 0;
-        let verifiedLast30DaysCount = 0;
-        const issuesList = [];
-
-        startupsData.forEach(startup => {
-          const lastCheck = startup.ultima_verificacao ? new Date(startup.ultima_verificacao) : null;
-          
-          if (!lastCheck || lastCheck < thirtyDaysAgo) {
-            needsVerificationCount++;
-          } else {
-            verifiedLast30DaysCount++;
-          }
-          
-          if (startup.status_verificacao?.site_online === false || startup.status_verificacao?.ssl_valido === false) {
-            if(!issuesList.some(s => s.id === startup.id)) {
-              withIssuesCount++;
-              if(issuesList.length < 5) issuesList.push(startup);
-            }
-          }
-        });
-        
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        const newUsersCount = usersData.filter(u => new Date(u.created_date) >= weekAgo).length;
-
-        setVerificationStats({
-          needsVerification: needsVerificationCount,
-          withIssues: withIssuesCount,
-          verifiedLast30Days: verifiedLast30DaysCount,
-          startupsWithIssues: issuesList,
-          total: startupsData.length,
-          newUsers: newUsersCount,
-        });
-
-      } catch (error) {
-        console.error("Erro ao carregar dados do dashboard:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
 
   if (isLoading) {
     return (
@@ -243,11 +162,11 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-2">
             <Button
               onClick={handleOptimizeAI}
-              disabled={isOptimizingAI || isSendingFollowUp}
+              disabled={optimizeAIMutation.isPending || followUpMutation.isPending}
               variant="outline"
               className="bg-white/80 border-purple-200 text-purple-700 hover:bg-purple-50"
             >
-              {isOptimizingAI ? (
+              {optimizeAIMutation.isPending ? (
                 <>
                   <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mr-2" />
                   Otimizando...
@@ -261,11 +180,11 @@ export default function Dashboard() {
             </Button>
             <Button
               onClick={handleSendFollowUps}
-              disabled={isSendingFollowUp || isOptimizingAI}
+              disabled={followUpMutation.isPending || optimizeAIMutation.isPending}
               variant="outline"
               className="bg-white/80"
             >
-              {isSendingFollowUp ? (
+              {followUpMutation.isPending ? (
                 <>
                   <div className="w-4 h-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin mr-2" />
                   Enviando...
