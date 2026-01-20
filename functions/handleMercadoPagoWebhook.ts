@@ -15,8 +15,6 @@ const sendSuccessEmail = async (transaction, unlockedStartups) => {
     if (!transaction.cliente_email || unlockedStartups.length === 0) return;
 
     try {
-        const { SendEmail } = await import('@/integrations/Core');
-        
         const emailBody = `
 Olá ${transaction.cliente_nome || 'Cliente'},
 
@@ -41,13 +39,15 @@ https://app--encontr-ai-76824f7d.base44.app/DetalhesBusca?id=${transaction.id}
 Obrigado por usar o EncontrAI!
         `;
 
-        await SendEmail({
+        await base44.integrations.Core.SendEmail({
             to: transaction.cliente_email,
             subject: `🎉 Suas ${unlockedStartups.length} solução${unlockedStartups.length > 1 ? 'ões' : ''} foi${unlockedStartups.length > 1 ? 'ram' : ''} desbloqueada${unlockedStartups.length > 1 ? 's' : ''}!`,
             body: emailBody
         });
+        
+        console.log('✅ Email enviado para:', transaction.cliente_email);
     } catch (error) {
-        console.error('Erro ao enviar email:', error);
+        console.error('❌ Erro ao enviar email:', error);
     }
 };
 
