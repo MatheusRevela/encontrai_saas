@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Transacao, Startup } from '@/entities/all';
-import { InvokeLLM } from '@/integrations/Core';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   ArrowRight,
-  Clock, // Kept for insight icon
-  AlertCircle, // Kept for error state
-  Tag, // New for category
-  Sparkles, // New for advice/insight header
+  Clock,
+  AlertCircle,
+  Tag,
+  Sparkles,
 } from 'lucide-react';
 import {
   Accordion,
@@ -20,19 +20,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { motion } from 'framer-motion'; // Added for animations
+import { motion } from 'framer-motion';
 import BuscaLoadingAnimation from '../components/common/BuscaLoadingAnimation';
 import BuscaInterativa from '../components/busca/BuscaInterativa';
 import FiltrosAvancados from '../components/busca/FiltrosAvancados';
 import { buildMatchingPrompt, buildMatchingJsonSchema } from '../components/utils/promptBuilder';
 
 export default function Resultados() {
-  const [transacao, setTransacao] = useState(null);
-  const [startupsSugeridas, setStartupsSugeridas] = useState([]);
-  const [startupsOriginais, setStartupsOriginais] = useState([]);
   const [selectedStartups, setSelectedStartups] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [mostrarBuscaInterativa, setMostrarBuscaInterativa] = useState(false);
   const [analiseEnriquecida, setAnaliseEnriquecida] = useState(null);
   const [filtros, setFiltros] = useState({
@@ -45,71 +40,48 @@ export default function Resultados() {
 
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
-  useEffect(() => {
-    if (!sessionId) {
-      navigate(createPageUrl('Buscar'));
-      return;
-    }
-    loadTransacao();
-  }, [sessionId, navigate]);
-
-  const loadTransacao = async () => {
-    try {
-      const transacoes = await Transacao.filter({ session_id: sessionId });
+  // React Query: Buscar transação
+  const { data: transacao, isLoading, error } = useQuery({
+    queryKey: ['transacao', sessionId],
+    queryFn: async () => {
+      if (!sessionId) {
+        navigate(createPageUrl('Buscar'));
+        throw new Error('Session ID não encontrado');
+      }
+      
+      const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
       if (transacoes.length === 0) {
-        setError('Transação não encontrada.');
-        setIsLoading(false);
-        return;
+        throw new Error('Transação não encontrada.');
       }
-
-      const currentTransacao = transacoes[0];
-      setTransacao(currentTransacao);
-
-      // If suggestions already exist, use them
-      if (currentTransacao.startups_sugeridas?.length > 0) {
-        setStartupsSugeridas(currentTransacao.startups_sugeridas);
-        setStartupsOriginais(currentTransacao.startups_sugeridas);
-        // Also load previously selected startups if any
-        if (currentTransacao.startups_selecionadas?.length > 0) {
-            setSelectedStartups(currentTransacao.startups_selecionadas);
-        }
-        setIsLoading(false);
-        return;
+      
+      return transacoes[0];
+    },
+    onSuccess: (data) => {
+      if (data.startups_selecionadas?.length > 0) {
+        setSelectedStartups(data.startups_selecionadas);
       }
+      if (!data.startups_sugeridas?.length) {
+        setMostrarBuscaInterativa(true);
+      }
+    },
+    enabled: !!sessionId,
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+  });
 
-      // Oferecer busca interativa para refinar
-      setMostrarBuscaInterativa(true);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Erro ao carregar transação:', error);
-      setError('Erro ao carregar dados da busca.');
-      setIsLoading(false);
-    }
-  };
-
-  const handleAnaliseCompleta = async (dadosAnalise) => {
-    setMostrarBuscaInterativa(false);
-    setAnaliseEnriquecida(dadosAnalise);
-    await gerarSugestoes(transacao, dadosAnalise);
-  };
-
-  const gerarSugestoes = async (currentTransacao, dadosAnalise = null) => {
-    try {
-      setIsLoading(true);
-
-      // Fetch all active startups
-      const todasStartups = await Startup.filter({ ativo: true });
+  // React Query: Mutation para gerar sugestões
+  const gerarSugestoesMutation = useMutation({
+    mutationFn: async (dadosAnalise) => {
+      const todasStartups = await base44.entities.Startup.filter({ ativo: true });
 
       if (todasStartups.length === 0) {
         throw new Error('Nenhuma startup ativa encontrada na base de dados.');
       }
 
-      const problemaCompleto = dadosAnalise?.problemCompleto || currentTransacao.dor_relatada;
+      const problemaCompleto = dadosAnalise?.problemCompleto || transacao.dor_relatada;
       const insights = dadosAnalise?.insights || [];
       const filtrosIA = dadosAnalise?.filtros || {};
-      const perfilCliente = dadosAnalise?.perfilCliente || currentTransacao.perfil_cliente || 'pessoa_fisica';
+      const perfilCliente = dadosAnalise?.perfilCliente || transacao.perfil_cliente || 'pessoa_fisica';
 
-      // Build intelligent prompt with enriched context
       const prompt = buildMatchingPrompt(
         problemaCompleto,
         todasStartups,
@@ -120,8 +92,7 @@ export default function Resultados() {
 
       console.log('🔍 Executando matching inteligente...');
 
-      // Call AI with improved prompt
-      const matchingResult = await InvokeLLM({
+      const matchingResult = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: buildMatchingJsonSchema()
       });
@@ -130,7 +101,6 @@ export default function Resultados() {
         throw new Error('IA não conseguiu encontrar matches adequados.');
       }
 
-      // Enrich data with complete startup information
       const startupsEnriquecidas = await Promise.all(
         matchingResult.matches.map(async (match) => {
           const startupCompleta = todasStartups.find(s => s.id === match.startup_id);
@@ -158,30 +128,29 @@ export default function Resultados() {
         })
       );
 
-      // Remove null matches
       const matchesValidos = startupsEnriquecidas.filter(Boolean);
 
       if (matchesValidos.length === 0) {
         throw new Error('Nenhum match válido foi encontrado.');
       }
 
-      // Save to transaction
-      await Transacao.update(currentTransacao.id, {
+      await base44.entities.Transacao.update(transacao.id, {
         startups_sugeridas: matchesValidos,
         insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.',
         perfil_cliente: perfilCliente
       });
 
-      setStartupsSugeridas(matchesValidos);
-      setStartupsOriginais(matchesValidos);
-      console.log(`✅ ${matchesValidos.length} startups encontradas com sucesso`);
-
-    } catch (error) {
-      console.error('Erro ao gerar sugestões:', error);
-      setError(`Erro no matching: ${error.message}`);
-    } finally {
-      setIsLoading(false);
+      return matchesValidos;
+    },
+    onSuccess: () => {
+      console.log('✅ Sugestões geradas com sucesso');
     }
+  });
+
+  const handleAnaliseCompleta = async (dadosAnalise) => {
+    setMostrarBuscaInterativa(false);
+    setAnaliseEnriquecida(dadosAnalise);
+    await gerarSugestoesMutation.mutateAsync(dadosAnalise);
   };
 
   const toggleStartupSelection = (startupId) => {
@@ -202,13 +171,10 @@ export default function Resultados() {
     }
   };
 
-  const handleProceedToCheckout = async () => {
-    if (selectedStartups.length === 0) {
-      alert('Selecione pelo menos uma startup para continuar.');
-      return;
-    }
-
-    try {
+  // React Query: Mutation para ir ao checkout
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      const startupsSugeridas = transacao?.startups_sugeridas || [];
       const startupsCompletas = startupsSugeridas.filter(s =>
         selectedStartups.includes(s.startup_id)
       );
@@ -217,63 +183,58 @@ export default function Resultados() {
         ? 22.00 
         : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
 
-      console.log('Procedendo para checkout:', {
-        quantidade: selectedStartups.length,
-        valorTotal,
-        startupsCompletas: startupsCompletas.length
-      });
-
-      await Transacao.update(transacao.id, {
+      await base44.entities.Transacao.update(transacao.id, {
         startups_selecionadas: selectedStartups,
         quantidade_selecionada: selectedStartups.length,
         valor_total: valorTotal,
         startups_detalhadas: startupsCompletas
       });
-
+    },
+    onSuccess: () => {
       navigate(createPageUrl(`Checkout?sessionId=${sessionId}`));
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Erro ao prosseguir para checkout:', error);
       alert(`Erro ao prosseguir: ${error.message}`);
     }
+  });
+
+  const handleProceedToCheckout = async () => {
+    if (selectedStartups.length === 0) {
+      alert('Selecione pelo menos uma startup para continuar.');
+      return;
+    }
+    await checkoutMutation.mutateAsync();
   };
 
-  // Memoize insight and startups for rendering
+  const startupsSugeridas = transacao?.startups_sugeridas || [];
   const insight = useMemo(() => transacao?.insight_gerado || '', [transacao?.insight_gerado]);
   
   // Apply filters to startups
   const enrichedStartups = useMemo(() => {
     let resultado = [...startupsSugeridas];
 
-    // Filter by categories
     if (filtros.categorias.length > 0) {
       resultado = resultado.filter(s => filtros.categorias.includes(s.categoria));
     }
 
-    // Filter by verticals
     if (filtros.verticais.length > 0) {
       resultado = resultado.filter(s => filtros.verticais.includes(s.vertical_atuacao));
     }
 
-    // Filter by business models
     if (filtros.modelosNegocio.length > 0) {
       resultado = resultado.filter(s => {
-        const startupCompleta = startupsOriginais.find(so => so.startup_id === s.startup_id);
+        const startupCompleta = startupsSugeridas.find(so => so.startup_id === s.startup_id);
         return startupCompleta && filtros.modelosNegocio.includes(startupCompleta.modelo_negocio);
       });
     }
 
-    // Filter by minimum match
     resultado = resultado.filter(s => s.match_percentage >= filtros.matchMinimo);
 
     return resultado;
-  }, [startupsSugeridas, filtros, startupsOriginais]);
+  }, [startupsSugeridas, filtros]);
 
-  const anonymizeName = (name) => {
-      // Fallback para caso o nome da startup vaze no texto da IA
-      return name.replace(/\[([^\]]+)\]/g, 'Esta solução'); // Specific regex to catch names like [Startup X]
-  };
-
-  if (isLoading) {
+  if (isLoading || gerarSugestoesMutation.isLoading) {
     return <BuscaLoadingAnimation />;
   }
 
@@ -298,14 +259,15 @@ export default function Resultados() {
     );
   }
 
-  if (error) {
+  if (error || gerarSugestoesMutation.isError) {
+    const errorMessage = error?.message || gerarSugestoesMutation.error?.message || 'Erro desconhecido';
     return (
       <div className="min-h-screen p-8 flex items-center justify-center">
         <Card className="max-w-md w-full border-red-200 bg-red-50">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-red-900 mb-2">Erro na Busca</h3>
-            <p className="text-red-700 mb-4">{error}</p>
+            <p className="text-red-700 mb-4">{errorMessage}</p>
             <Button onClick={() => navigate(createPageUrl('Buscar'))} variant="outline">
               Tentar Novamente
             </Button>
@@ -398,7 +360,7 @@ export default function Resultados() {
                         </div>
 
                         <p className="text-slate-700 mb-4">
-                          {anonymizeName(recomendacao?.resumo_personalizado)}
+                          {recomendacao?.resumo_personalizado}
                         </p>
 
                         <Accordion type="single" collapsible className="w-full">
@@ -415,7 +377,7 @@ export default function Resultados() {
                                     </h4>
                                     <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
                                       {recomendacao.pontos_fortes.map((ponto, i) => (
-                                        <li key={i}>{anonymizeName(ponto)}</li>
+                                        <li key={i}>{ponto}</li>
                                       ))}
                                     </ul>
                                   </div>
@@ -427,7 +389,7 @@ export default function Resultados() {
                                       <span className="text-blue-600">⚙️</span> Como Resolve Seu Problema
                                     </h4>
                                     <p className="text-sm text-slate-600 leading-relaxed">
-                                      {anonymizeName(recomendacao.como_resolve)}
+                                      {recomendacao.como_resolve}
                                     </p>
                                   </div>
                                 )}
@@ -439,7 +401,7 @@ export default function Resultados() {
                                     </h4>
                                     <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
                                       {recomendacao.beneficios_tangiveis.map((beneficio, i) => (
-                                        <li key={i}>{anonymizeName(beneficio)}</li>
+                                        <li key={i}>{beneficio}</li>
                                       ))}
                                     </ul>
                                   </div>
@@ -489,18 +451,18 @@ export default function Resultados() {
               </div>
               <Button
                 onClick={handleProceedToCheckout}
-                disabled={selectedStartups.length === 0}
+                disabled={selectedStartups.length === 0 || checkoutMutation.isLoading}
                 size="lg"
                 className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
               >
                 <ArrowRight className="w-5 h-5 mr-2" />
-                Prosseguir para o Pagamento
+                {checkoutMutation.isLoading ? 'Processando...' : 'Prosseguir para o Pagamento'}
               </Button>
             </div>
           </div>
         )}
 
-        {enrichedStartups.length === 0 && !isLoading && !error && (
+        {enrichedStartups.length === 0 && !isLoading && !gerarSugestoesMutation.isLoading && !error && !gerarSugestoesMutation.isError && (
           <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg mt-8">
             <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-800 mb-2">Nenhuma solução encontrada</h3>

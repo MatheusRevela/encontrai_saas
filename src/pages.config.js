@@ -5,6 +5,7 @@ import Checkout from './pages/Checkout';
 import Contato from './pages/Contato';
 import Conversas from './pages/Conversas';
 import Dashboard from './pages/Dashboard';
+import DashboardUsuario from './pages/DashboardUsuario';
 import DetalhesBusca from './pages/DetalhesBusca';
 import FAQ from './pages/FAQ';
 import Feedback from './pages/Feedback';
@@ -27,7 +28,6 @@ import index from './pages/index';
 import startups from './pages/startups';
 import transacoes from './pages/transacoes';
 import users from './pages/users';
-import DashboardUsuario from './pages/DashboardUsuario';
 import __Layout from './Layout.jsx';
 
 
@@ -39,6 +39,7 @@ export const PAGES = {
     "Contato": Contato,
     "Conversas": Conversas,
     "Dashboard": Dashboard,
+    "DashboardUsuario": DashboardUsuario,
     "DetalhesBusca": DetalhesBusca,
     "FAQ": FAQ,
     "Feedback": Feedback,
@@ -61,7 +62,6 @@ export const PAGES = {
     "startups": startups,
     "transacoes": transacoes,
     "users": users,
-    "DashboardUsuario": DashboardUsuario,
 }
 
 export const pagesConfig = {

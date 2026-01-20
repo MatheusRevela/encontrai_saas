@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Transacao, User } from '@/entities/all';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,61 +20,78 @@ import {
 } from 'lucide-react';
 
 export default function Checkout() {
-  const [transacao, setTransacao] = useState(null);
-  const [user, setUser] = useState(null);
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   
   const navigate = useNavigate();
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
-  useEffect(() => {
-    if (!sessionId) {
-      navigate(createPageUrl('Buscar'));
-      return;
-    }
-    loadData();
-  }, [sessionId, navigate]);
+  // React Query: Buscar usuário e transação
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    staleTime: 10 * 60 * 1000, // Cache por 10 minutos
+  });
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage(null);
+  const { data: transacao, isLoading, error } = useQuery({
+    queryKey: ['checkout', sessionId],
+    queryFn: async () => {
+      if (!sessionId) {
+        navigate(createPageUrl('Buscar'));
+        throw new Error('Session ID não encontrado');
+      }
       
-      const currentUser = await User.me();
-      setUser(currentUser);
-      
-      const transacoes = await Transacao.filter({ session_id: sessionId });
+      const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
       if (transacoes.length === 0) {
-        setError('Transação não encontrada');
-        return;
+        throw new Error('Transação não encontrada');
       }
 
       const currentTransacao = transacoes[0];
-      setTransacao(currentTransacao);
 
       if (!currentTransacao.startups_selecionadas?.length) {
-        setError('Nenhuma startup selecionada. Retorne à página de resultados.');
-        return;
+        throw new Error('Nenhuma startup selecionada. Retorne à página de resultados.');
       }
-
-      setEmail(currentUser.email || '');
 
       // 📊 TRACKING: Usuário chegou no checkout
       await base44.entities.Transacao.update(currentTransacao.id, {
         checkout_viewed_at: new Date().toISOString()
       });
 
-    } catch (error) {
-      console.error('Erro ao carregar dados do checkout:', error);
-      setError('Erro ao carregar dados. Tente novamente.');
-    } finally {
-      setIsLoading(false);
+      return currentTransacao;
+    },
+    onSuccess: () => {
+      if (user?.email) setEmail(user.email);
+    },
+    enabled: !!sessionId,
+    staleTime: 1 * 60 * 1000, // Cache por 1 minuto
+  });
+
+  // React Query: Mutation para processar pagamento
+  const paymentMutation = useMutation({
+    mutationFn: async () => {
+      await base44.entities.Transacao.update(transacao.id, {
+        cliente_email: email.trim(),
+        cliente_nome: user?.full_name || email.split('@')[0],
+        cliente_cpf: '00000000000',
+        status_pagamento: 'processando'
+      });
+
+      const { data: paymentData } = await base44.functions.invoke('createPaymentLink', { sessionId });
+      
+      if (!paymentData.success || !paymentData.paymentUrl) {
+        throw new Error('Erro ao criar link de pagamento');
+      }
+
+      return paymentData.paymentUrl;
+    },
+    onSuccess: (paymentUrl) => {
+      window.location.href = paymentUrl;
+    },
+    onError: (error) => {
+      console.error('Erro no checkout:', error);
+      setErrorMessage('Erro ao processar pagamento. Tente novamente.');
     }
-  };
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -91,29 +108,7 @@ export default function Checkout() {
       return;
     }
 
-    setIsProcessing(true);
-    
-    try {
-      await Transacao.update(transacao.id, {
-        cliente_email: email.trim(),
-        cliente_nome: user.full_name || email.split('@')[0],
-        cliente_cpf: '00000000000', // CPF dummy para MP não reclamar
-        status_pagamento: 'processando'
-      });
-
-      const { data: paymentData } = await base44.functions.invoke('createPaymentLink', { sessionId });
-      
-      if (paymentData.success && paymentData.paymentUrl) {
-        window.location.href = paymentData.paymentUrl;
-      } else {
-        throw new Error('Erro ao criar link de pagamento');
-      }
-
-    } catch (error) {
-      console.error('Erro no checkout:', error);
-      setErrorMessage('Erro ao processar pagamento. Tente novamente.');
-      setIsProcessing(false);
-    }
+    await paymentMutation.mutateAsync();
   };
 
   const getAnonymizedTitle = (startup, index) => {
@@ -203,7 +198,7 @@ export default function Checkout() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
                   required
-                  disabled={isProcessing}
+                  disabled={paymentMutation.isLoading}
                   className="bg-white border-slate-200 text-lg"
                 />
                 <p className="text-xs text-slate-500 mt-2">
@@ -254,10 +249,10 @@ export default function Checkout() {
               <Button
                 type="submit"
                 onClick={handleSubmit}
-                disabled={!email.trim() || isProcessing || selectedStartups.length === 0}
+                disabled={!email.trim() || paymentMutation.isLoading || selectedStartups.length === 0}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-semibold"
               >
-                {isProcessing ? (
+                {paymentMutation.isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processando...
