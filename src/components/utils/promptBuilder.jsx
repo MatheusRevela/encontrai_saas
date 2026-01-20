@@ -52,10 +52,28 @@ Para cada startup pré-selecionada, calcule um \`match_percentage\` (0 a 100) co
 3.  Escolha **NO MÁXIMO as 5 melhores** que atenderem a este critério. Se apenas 2 startups tiverem mais de 50%, retorne apenas essas 2. Se nenhuma atingir 50%, retorne uma lista vazia de "matches".
 
 ### PRODUÇÃO DAS JUSTIFICATIVAS
+
+⚠️ **REGRA CRÍTICA - NUNCA MENCIONE O NOME DA STARTUP:**
+Em TODOS os campos abaixo (resumo_personalizado, pontos_fortes, como_resolve, beneficios_tangiveis), você DEVE usar apenas termos genéricos como:
+- "Esta solução"
+- "A plataforma"
+- "O sistema"
+- "Esta ferramenta"
+- "Esta tecnologia"
+
+**NUNCA** escreva o nome específico da startup. O nome será revelado apenas após o pagamento.
+
+**EXEMPLOS:**
+❌ ERRADO: "A Nubank oferece conta digital gratuita..."
+✅ CORRETO: "Esta solução oferece conta digital gratuita..."
+
+❌ ERRADO: "O Stone tem as menores taxas..."
+✅ CORRETO: "Esta plataforma tem as menores taxas..."
+
 Para cada startup retornada:
-- **resumo_personalizado:** Explique de forma clara e convincente por que esta solução é ideal para o caso específico do cliente, mencionando aspectos do problema relatado. Use "Esta solução" em vez do nome da startup.
-- **pontos_fortes:** Liste de 3 a 5 pontos fortes ESPECÍFICOS e RELEVANTES ao contexto do cliente (não seja genérico).
-- **como_resolve:** Explique COMO exatamente a solução resolve o problema mencionado (passo a passo simplificado).
+- **resumo_personalizado:** Explique de forma clara e convincente por que esta solução é ideal para o caso específico do cliente, mencionando aspectos do problema relatado. Use APENAS "Esta solução" ou termos genéricos.
+- **pontos_fortes:** Liste de 3 a 5 pontos fortes ESPECÍFICOS e RELEVANTES ao contexto do cliente (não seja genérico). Use APENAS termos genéricos, SEM mencionar nomes.
+- **como_resolve:** Explique COMO exatamente a solução resolve o problema mencionado (passo a passo simplificado). Use APENAS termos genéricos.
 - **beneficios_tangíveis:** Liste 2-3 resultados concretos que o cliente pode esperar.
 - **insight_geral:** Gere uma análise estratégica sobre o desafio e recomendações de próximos passos.
 
