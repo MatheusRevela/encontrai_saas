@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,6 +37,7 @@ export default function Resultados() {
     matchMinimo: 50
   });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
@@ -54,15 +55,17 @@ export default function Resultados() {
         throw new Error('Transação não encontrada.');
       }
       
-      return transacoes[0];
-    },
-    onSuccess: (data) => {
-      if (data.startups_selecionadas?.length > 0) {
-        setSelectedStartups(data.startups_selecionadas);
+      const currentTransacao = transacoes[0];
+      
+      // Inicializar estados baseados nos dados
+      if (currentTransacao.startups_selecionadas?.length > 0) {
+        setSelectedStartups(currentTransacao.startups_selecionadas);
       }
-      if (!data.startups_sugeridas?.length) {
+      if (!currentTransacao.startups_sugeridas?.length) {
         setMostrarBuscaInterativa(true);
       }
+      
+      return currentTransacao;
     },
     enabled: !!sessionId,
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
@@ -139,6 +142,9 @@ export default function Resultados() {
         insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.',
         perfil_cliente: perfilCliente
       });
+
+      // Invalidar cache para forçar recarregar a transação atualizada
+      queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
 
       return matchesValidos;
     },
