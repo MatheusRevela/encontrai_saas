@@ -41,6 +41,27 @@ export default function Resultados() {
 
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
+  // Verificar se é novo usuário (primeira compra)
+  const { data: isNovoUsuario } = useQuery({
+    queryKey: ['isNovoUsuario'],
+    queryFn: async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user) return true; // Considera novo se não autenticado
+        
+        const comprasAnteriores = await base44.entities.Transacao.filter({
+          created_by: user.email,
+          status_pagamento: 'pago'
+        });
+        
+        return comprasAnteriores.length === 0;
+      } catch {
+        return true;
+      }
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   // React Query: Buscar transação
   const { data: transacao, isLoading, error } = useQuery({
     queryKey: ['transacao', sessionId],
@@ -185,8 +206,11 @@ export default function Resultados() {
         selectedStartups.includes(s.startup_id)
       );
 
-      // Primeira solução GRÁTIS, demais R$ 5 cada
-      const valorTotal = Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00));
+      // Primeira solução GRÁTIS apenas para novos usuários
+      const primeiraGratis = isNovoUsuario === true;
+      const valorTotal = primeiraGratis 
+        ? Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00))
+        : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
 
       await base44.entities.Transacao.update(transacao.id, {
         startups_selecionadas: selectedStartups,
@@ -290,13 +314,15 @@ export default function Resultados() {
             Soluções Encontradas
           </h1>
           
-          {/* 🎁 PRIMEIRA SOLUÇÃO GRÁTIS */}
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-green-100 border-2 border-emerald-300 rounded-full px-6 py-3 mb-4">
-            <Sparkles className="w-5 h-5 text-emerald-600" />
-            <span className="font-bold text-emerald-800">
-              🎁 Primeira solução GRÁTIS • R$ 5,00 cada adicional
-            </span>
-          </div>
+          {/* 🎁 PRIMEIRA SOLUÇÃO GRÁTIS para novos usuários */}
+          {isNovoUsuario && (
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-green-100 border-2 border-emerald-300 rounded-full px-6 py-3 mb-4">
+              <Sparkles className="w-5 h-5 text-emerald-600" />
+              <span className="font-bold text-emerald-800">
+                🎁 Primeira solução GRÁTIS • R$ 5,00 cada adicional
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Insight da IA */}
@@ -438,12 +464,18 @@ export default function Resultados() {
                   {selectedStartups.length} {selectedStartups.length === 1 ? 'solução selecionada' : 'soluções selecionadas'}
                 </div>
                 <div className="text-sm text-slate-600">
-                  {selectedStartups.length === 1 ? (
+                  {isNovoUsuario && selectedStartups.length === 1 ? (
                     <span className="text-emerald-600 font-bold">🎁 GRÁTIS (primeira solução)</span>
                   ) : (
                     <>
-                      Total: R$ {(Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00)).toFixed(2)).replace('.', ',')}
-                      <span className="block text-emerald-600 font-semibold mt-1">🎁 Primeira solução grátis inclusa</span>
+                      Total: R$ {(
+                        isNovoUsuario 
+                          ? Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00))
+                          : selectedStartups.length * (transacao?.valor_por_startup || 5.00)
+                      ).toFixed(2).replace('.', ',')}
+                      {isNovoUsuario && selectedStartups.length > 1 && (
+                        <span className="block text-emerald-600 font-semibold mt-1">🎁 Primeira solução grátis inclusa</span>
+                      )}
                     </>
                   )}
                 </div>

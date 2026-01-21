@@ -33,6 +33,27 @@ export default function Checkout() {
     staleTime: 10 * 60 * 1000, // Cache por 10 minutos
   });
 
+  // Verificar se é novo usuário
+  const { data: isNovoUsuario } = useQuery({
+    queryKey: ['isNovoUsuario'],
+    queryFn: async () => {
+      try {
+        const currentUser = await base44.auth.me();
+        if (!currentUser) return true;
+        
+        const comprasAnteriores = await base44.entities.Transacao.filter({
+          created_by: currentUser.email,
+          status_pagamento: 'pago'
+        });
+        
+        return comprasAnteriores.length === 0;
+      } catch {
+        return true;
+      }
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   const { data: transacao, isLoading, error } = useQuery({
     queryKey: ['checkout', sessionId],
     queryFn: async () => {
@@ -135,9 +156,11 @@ export default function Checkout() {
   const valorPorStartup = transacao?.valor_por_startup || 5.00;
   const quantidadeSelecionada = selectedStartups.length;
   
-  // Primeira solução GRÁTIS, demais R$ 5,00 cada
-  const valorFinal = Math.max(0, (quantidadeSelecionada - 1) * valorPorStartup);
-  const primeiraGratis = quantidadeSelecionada >= 1;
+  // Primeira solução GRÁTIS apenas para novos usuários
+  const primeiraGratis = isNovoUsuario === true && quantidadeSelecionada >= 1;
+  const valorFinal = primeiraGratis 
+    ? Math.max(0, (quantidadeSelecionada - 1) * valorPorStartup)
+    : quantidadeSelecionada * valorPorStartup;
 
   if (isLoading) {
     return (

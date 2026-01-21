@@ -73,8 +73,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Primeira solução GRÁTIS, demais R$ 5,00 cada
-    const valorTotal = Math.max(0, (quantidadeSelecionada - 1) * PRECO_UNITARIO);
+    // Verificar se é novo usuário (primeira compra)
+    const comprasAnteriores = await base44.asServiceRole.entities.Transacao.filter({
+      created_by: user.email,
+      status_pagamento: 'pago'
+    });
+    
+    const isNovoUsuario = comprasAnteriores.length === 0;
+    
+    // Primeira solução GRÁTIS apenas para novos usuários
+    const valorTotal = isNovoUsuario 
+      ? Math.max(0, (quantidadeSelecionada - 1) * PRECO_UNITARIO)
+      : quantidadeSelecionada * PRECO_UNITARIO;
 
     // Validar CPF do cliente (Mercado Pago exige CPF válido no Brasil)
     const cpfCliente = transacao.cliente_cpf?.replace(/\D/g, '');
