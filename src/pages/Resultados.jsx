@@ -185,9 +185,8 @@ export default function Resultados() {
         selectedStartups.includes(s.startup_id)
       );
 
-      const valorTotal = selectedStartups.length === 5 
-        ? 22.00 
-        : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
+      // Primeira solução GRÁTIS, demais R$ 5 cada
+      const valorTotal = Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00));
 
       await base44.entities.Transacao.update(transacao.id, {
         startups_selecionadas: selectedStartups,
@@ -291,15 +290,13 @@ export default function Resultados() {
             Soluções Encontradas
           </h1>
           
-          {/* 🎁 DESTAQUE DO BUNDLE */}
-          {enrichedStartups.length === 5 && (
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300 rounded-full px-6 py-3 mb-4">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              <span className="font-bold text-purple-800">
-                Desbloqueie as 5 soluções por R$ 22,00 (economize R$ 3,00!)
-              </span>
-            </div>
-          )}
+          {/* 🎁 PRIMEIRA SOLUÇÃO GRÁTIS */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-green-100 border-2 border-emerald-300 rounded-full px-6 py-3 mb-4">
+            <Sparkles className="w-5 h-5 text-emerald-600" />
+            <span className="font-bold text-emerald-800">
+              🎁 Primeira solução GRÁTIS • R$ 5,00 cada adicional
+            </span>
+          </div>
         </div>
 
         {/* Insight da IA */}

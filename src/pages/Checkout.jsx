@@ -134,11 +134,10 @@ export default function Checkout() {
 
   const valorPorStartup = transacao?.valor_por_startup || 5.00;
   const quantidadeSelecionada = selectedStartups.length;
-  const valorTotal = quantidadeSelecionada * valorPorStartup;
   
-  // BUNDLE: 5 soluções = R$ 22 (desconto de R$ 3)
-  const valorFinal = quantidadeSelecionada === 5 ? 22.00 : valorTotal;
-  const temDesconto = quantidadeSelecionada === 5;
+  // Primeira solução GRÁTIS, demais R$ 5,00 cada
+  const valorFinal = Math.max(0, (quantidadeSelecionada - 1) * valorPorStartup);
+  const primeiraGratis = quantidadeSelecionada >= 1;
 
   if (isLoading) {
     return (
@@ -302,15 +301,15 @@ export default function Checkout() {
               <div className="border-t border-slate-200 pt-4 space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600">Subtotal ({quantidadeSelecionada} {quantidadeSelecionada === 1 ? 'solução' : 'soluções'})</span>
-                  <span className={temDesconto ? 'line-through text-slate-400' : 'text-slate-900'}>
-                    R$ {valorTotal.toFixed(2).replace('.', ',')}
+                  <span className="text-slate-900">
+                    R$ {(quantidadeSelecionada * valorPorStartup).toFixed(2).replace('.', ',')}
                   </span>
                 </div>
                 
-                {temDesconto && (
+                {primeiraGratis && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-emerald-600 font-semibold">Desconto Bundle (5 soluções)</span>
-                    <span className="text-emerald-600 font-semibold">- R$ 3,00</span>
+                    <span className="text-emerald-600 font-semibold">🎁 Primeira solução GRÁTIS</span>
+                    <span className="text-emerald-600 font-semibold">- R$ {valorPorStartup.toFixed(2).replace('.', ',')}</span>
                   </div>
                 )}
                 
@@ -321,9 +320,9 @@ export default function Checkout() {
                   </span>
                 </div>
                 
-                {temDesconto && (
+                {quantidadeSelecionada === 1 && (
                   <p className="text-xs text-emerald-600 text-center mt-2">
-                    🎉 Você economizou R$ 3,00 no pacote completo!
+                    🎉 Sua primeira solução é totalmente gratuita!
                   </p>
                 )}
               </div>

@@ -73,8 +73,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Bundle: 5 soluções = R$ 22 (desconto de R$ 3)
-    const valorTotal = quantidadeSelecionada === 5 ? 22.00 : quantidadeSelecionada * PRECO_UNITARIO;
+    // Primeira solução GRÁTIS, demais R$ 5,00 cada
+    const valorTotal = Math.max(0, (quantidadeSelecionada - 1) * PRECO_UNITARIO);
 
     // Validar CPF do cliente (Mercado Pago exige CPF válido no Brasil)
     const cpfCliente = transacao.cliente_cpf?.replace(/\D/g, '');
