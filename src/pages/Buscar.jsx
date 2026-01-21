@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Transacao } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,7 @@ export default function Buscar() {
       const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const referralCode = localStorage.getItem('referral_code');
 
-      await Transacao.create({
+      await base44.entities.Transacao.create({
         session_id: sessionId,
         dor_relatada: problema.trim(),
         perfil_cliente: 'pessoa_fisica', // Será deduzido pela IA

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Transacao } from '@/entities/all';
 import { createPageUrl } from '@/utils';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,47 +11,33 @@ import { motion } from 'framer-motion';
 import StartupsSimilares from '../components/startups/StartupsSimilares';
 
 export default function Sucesso() {
-  const [transacao, setTransacao] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
-
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
-  useEffect(() => {
-    const loadTransacao = async () => {
+  const { data: transacao, isLoading, error } = useQuery({
+    queryKey: ['sucesso', sessionId],
+    queryFn: async () => {
       if (!sessionId) {
-        setError('Sessão não encontrada');
-        setIsLoading(false);
-        return;
+        throw new Error('Sessão não encontrada');
       }
 
-      try {
-        const transacoes = await Transacao.filter({ session_id: sessionId });
-        if (transacoes.length === 0) {
-          setError('Transação não encontrada');
-          setIsLoading(false);
-          return;
-        }
-
-        const transacaoAtual = transacoes[0];
-        setTransacao(transacaoAtual);
-        
-        if (transacaoAtual.status_pagamento !== 'pago') {
-          // Se não está pago, redirecionar para checkout
-          navigate(createPageUrl(`Checkout?sessionId=${sessionId}`));
-          return;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar transação:', error);
-        setError('Erro ao carregar detalhes da compra.');
-      } finally {
-        setIsLoading(false);
+      const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
+      if (transacoes.length === 0) {
+        throw new Error('Transação não encontrada');
       }
-    };
 
-    loadTransacao();
-  }, [sessionId, navigate]);
+      const transacaoAtual = transacoes[0];
+      
+      if (transacaoAtual.status_pagamento !== 'pago') {
+        navigate(createPageUrl(`Checkout?sessionId=${sessionId}`));
+        throw new Error('Pagamento pendente');
+      }
+
+      return transacaoAtual;
+    },
+    enabled: !!sessionId,
+    staleTime: 2 * 60 * 1000,
+  });
 
   if (isLoading) {
     return (
@@ -68,7 +55,7 @@ export default function Sucesso() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="text-center p-8">
-            <p className="text-red-600 mb-4">{error}</p>
+            <p className="text-red-600 mb-4">{error?.message || 'Erro ao carregar dados'}</p>
             <Link to={createPageUrl('MinhasBuscas')}>
               <Button variant="outline">Voltar às Minhas Buscas</Button>
             </Link>
