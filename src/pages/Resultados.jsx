@@ -438,18 +438,14 @@ export default function Resultados() {
                   {selectedStartups.length} {selectedStartups.length === 1 ? 'solução selecionada' : 'soluções selecionadas'}
                 </div>
                 <div className="text-sm text-slate-600">
-                  {selectedStartups.length === 5 ? (
-                    <>
-                      <span className="line-through text-slate-400">R$ 25,00</span>
-                      {' '}
-                      <span className="text-emerald-600 font-bold">R$ 22,00</span>
-                      {' '}
-                      <span className="text-purple-600">(economize R$ 3,00!)</span>
-                    </>
+                  {selectedStartups.length === 1 ? (
+                    <span className="text-emerald-600 font-bold">🎁 GRÁTIS (primeira solução)</span>
                   ) : (
-                    <>Total: R$ {((selectedStartups.length * (transacao?.valor_por_startup || 5.00)).toFixed(2) || '0.00').replace('.', ',')}</>
+                    <>
+                      Total: R$ {(Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00)).toFixed(2)).replace('.', ',')}
+                      <span className="block text-emerald-600 font-semibold mt-1">🎁 Primeira solução grátis inclusa</span>
+                    </>
                   )}
-                  {selectedStartups.length > 0 && <span className="block text-emerald-600 font-semibold mt-1">🎁 Primeira solução grátis (desconto no checkout)</span>}
                 </div>
               </div>
               <Button
