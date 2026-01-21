@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -224,8 +223,12 @@ Retorne um JSON com este formato:
         });
 
         if (resultadoTags && resultadoTags.tags) {
-          console.log(`✅ Tags geradas: ${resultadoTags.tags.join(', ')}`);
-          setFormData(prev => ({ ...prev, tags: resultadoTags.tags }));
+          // Normalizar tags para garantir encoding correto
+          const tagsNormalizadas = resultadoTags.tags.map(tag => 
+            tag.normalize('NFC').trim()
+          );
+          console.log(`✅ Tags geradas: ${tagsNormalizadas.join(', ')}`);
+          setFormData(prev => ({ ...prev, tags: tagsNormalizadas }));
         }
       } catch (tagsError) {
         console.error("Erro na geração de tags:", tagsError);
@@ -288,7 +291,7 @@ Retorne um JSON com este formato:
 
     const newTags = inputString
       .split(',')
-      .map(tag => tag.trim())
+      .map(tag => tag.normalize('NFC').trim()) // Normalizar encoding UTF-8
       .filter(tag => tag && !formData.tags.includes(tag));
 
     if (newTags.length > 0) {
