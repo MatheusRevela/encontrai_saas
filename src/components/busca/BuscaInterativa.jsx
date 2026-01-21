@@ -8,11 +8,12 @@ import { base44 } from '@/api/base44Client';
 
 export default function BuscaInterativa({ problemInicial, onAnaliseCompleta }) {
   const [conversacao, setConversacao] = useState([
-    { role: 'assistant', content: 'Vou fazer algumas perguntas para entender melhor sua necessidade e encontrar as soluções ideais.' }
+    { role: 'assistant', content: 'Olá! Sou seu consultor especializado em encontrar soluções para seu negócio ou projeto pessoal. Vou fazer algumas perguntas para entender perfeitamente sua necessidade. Conte-me: qual desafio você precisa resolver?' }
   ]);
   const [resposta, setResposta] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [analiseCompleta, setAnaliseCompleta] = useState(false);
+  const [perguntasFeitas, setPerguntasFeitas] = useState(0);
 
   const gerarProximaPergunta = async () => {
     setIsProcessing(true);
@@ -39,12 +40,15 @@ COMO CONDUZIR A CONVERSA:
 - Identifique o que JÁ FOI REVELADO implicitamente (não pergunte de novo)
 - Priorize profundidade sobre quantidade de perguntas
 
-**QUANDO FINALIZAR** (analise_completa = true):
-✓ Você consegue identificar claramente O QUÊ, QUEM, COMO e POR QUÊ
-✓ Sabe se é contexto empresarial ou pessoal
-✓ Entende a escala/impacto do problema
-✓ Já tem pistas sobre urgência ou recursos disponíveis
-✓ Cliente deu 2+ respostas substantivas
+**CRITÉRIOS PARA FINALIZAR** (analise_completa = true):
+Você DEVE finalizar se QUALQUER um desses for verdadeiro:
+1. Cliente deu informações suficientes sobre contexto, problema e necessidades (2-3 trocas substantivas)
+2. Resposta do cliente foi detalhada o suficiente (150+ caracteres com contexto claro)
+3. Você já tem clareza sobre: O QUÊ (problema), QUEM (perfil), escala e prioridade
+4. Cliente está repetindo informações ou dando sinais de impaciência
+5. Já fizeram mais de 3 trocas de mensagens
+
+IMPORTANTE: Não force 4 perguntas. Se o cliente já deu tudo que você precisa, finalize!
 
 **QUANDO CONTINUAR** (próxima pergunta):
 Faça UMA pergunta contextual e natural baseada especificamente no que o cliente acabou de dizer.
@@ -92,7 +96,7 @@ LEMBRE-SE: Você está tendo uma CONVERSA, não preenchendo um formulário.`;
         }
       });
 
-      if (resultado.analise_completa) {
+      if (resultado.analise_completa || perguntasFeitas >= 3) {
         setAnaliseCompleta(true);
         onAnaliseCompleta({
           problemCompleto: `${problemInicial}\n\nContexto adicional: ${conversacao.filter(m => m.role === 'user').map(m => m.content).join(' ')}`,
@@ -105,6 +109,7 @@ LEMBRE-SE: Você está tendo uma CONVERSA, não preenchendo um formulário.`;
           { role: 'user', content: resposta },
           { role: 'assistant', content: resultado.proxima_pergunta }
         ]);
+        setPerguntasFeitas(prev => prev + 1);
         setResposta('');
       }
     } catch (error) {
@@ -212,7 +217,7 @@ LEMBRE-SE: Você está tendo uma CONVERSA, não preenchendo um formulário.`;
         </div>
 
         <p className="text-xs text-slate-500 text-center">
-          💡 Responda para obter resultados mais precisos, ou pule para ver sugestões gerais
+          💡 Quanto mais detalhes você fornecer, melhores serão as recomendações
         </p>
       </CardContent>
     </Card>
