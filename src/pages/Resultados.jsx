@@ -175,16 +175,15 @@ export default function Resultados() {
 
   const handleAnaliseCompleta = async (dadosAnalise) => {
     try {
+      setMostrarBuscaInterativa(false); // Esconde o chat para mostrar a animação de loading
       setAnaliseEnriquecida(dadosAnalise);
       await gerarSugestoesMutation.mutateAsync(dadosAnalise);
       // Aguardar a invalidação e refetch do cache
       await queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
       await queryClient.refetchQueries({ queryKey: ['transacao', sessionId] });
-      setMostrarBuscaInterativa(false);
     } catch (error) {
       console.error('Erro ao completar análise:', error);
       alert('Erro ao processar análise. Tente novamente.');
-      setMostrarBuscaInterativa(false);
     }
   };
 
