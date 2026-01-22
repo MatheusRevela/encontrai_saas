@@ -166,18 +166,32 @@ export default function Resultados() {
         throw new Error('Nenhum match válido foi encontrado.');
       }
 
+      console.log('💾 Atualizando transação com', matchesValidos.length, 'sugestões');
+      
       const transacaoAtualizada = await base44.entities.Transacao.update(transacao.id, {
         startups_sugeridas: matchesValidos,
         insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.',
         perfil_cliente: perfilCliente
       });
 
-      console.log('✅ Transação atualizada:', transacaoAtualizada);
+      console.log('✅ Transação atualizada com sucesso:', {
+        id: transacaoAtualizada.id,
+        totalSugestoes: transacaoAtualizada.startups_sugeridas?.length || 0
+      });
 
-      return matchesValidos;
+      return transacaoAtualizada;
     },
-    onSuccess: () => {
-      console.log('✅ Sugestões geradas com sucesso');
+    onSuccess: (transacaoAtualizada) => {
+      console.log('✅ onSuccess - Transação retornada:', {
+        temSugestoes: !!transacaoAtualizada.startups_sugeridas,
+        total: transacaoAtualizada.startups_sugeridas?.length
+      });
+      
+      // Forçar atualização imediata do cache
+      queryClient.setQueryData(['transacao', sessionId], transacaoAtualizada);
+    },
+    onError: (error) => {
+      console.error('❌ Erro na mutation:', error);
     }
   });
 
@@ -188,15 +202,15 @@ export default function Resultados() {
       setAnaliseEnriquecida(dadosAnalise);
       
       console.log('🔍 Gerando sugestões...');
-      const resultados = await gerarSugestoesMutation.mutateAsync(dadosAnalise);
-      console.log('✅ Sugestões geradas:', resultados);
+      await gerarSugestoesMutation.mutateAsync(dadosAnalise);
+      console.log('✅ Mutation concluída');
       
-      console.log('🔄 Invalidando cache...');
+      // Forçar recarregamento completo dos dados
+      console.log('🔄 Invalidando e refetchando...');
       await queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
+      await queryClient.refetchQueries({ queryKey: ['transacao', sessionId], type: 'active' });
       
-      console.log('🔄 Refetchando dados...');
-      const refetchResult = await queryClient.refetchQueries({ queryKey: ['transacao', sessionId] });
-      console.log('✅ Refetch concluído:', refetchResult);
+      console.log('✅ Fluxo completo de análise finalizado');
     } catch (error) {
       console.error('❌ Erro ao completar análise:', error);
       alert(`Erro ao processar análise: ${error.message}`);
