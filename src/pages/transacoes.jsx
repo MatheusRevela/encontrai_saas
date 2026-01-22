@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Transacao } from "@/entities/all";
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -56,7 +56,7 @@ export default function Transacoes() {
   const loadTransacoes = async () => {
     setIsLoading(true);
     try {
-      const data = await Transacao.list('-created_date');
+      const data = await base44.entities.Transacao.list('-created_date');
       setTransacoes(data || []);
     } catch (error) {
       console.error("Erro ao carregar transações:", error);

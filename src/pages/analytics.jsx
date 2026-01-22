@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Transacao, Startup } from "@/entities/all";
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardSkeleton } from "../components/SkeletonLoaders";
 import { 
@@ -23,8 +23,8 @@ export default function Analytics() {
     setIsLoading(true);
     try {
       const [transacoesData, startupsData] = await Promise.all([
-        Transacao.list('-created_date'),
-        Startup.list()
+        base44.entities.Transacao.list('-created_date'),
+        base44.entities.Startup.list()
       ]);
       setTransacoes(transacoesData || []);
       setStartups(startupsData || []);

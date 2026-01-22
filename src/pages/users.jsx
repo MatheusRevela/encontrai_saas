@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, Transacao } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +16,6 @@ import {
   TrendingUp, Eye, DollarSign, MessageCircle, Clock
 } from 'lucide-react';
 import { formatDateBrasiliaShort } from '../components/utils/dateUtils';
-import { SendEmail } from '@/integrations/Core';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -43,8 +41,8 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const [usersData, transacoesData] = await Promise.all([
-        User.list('-created_date'),
-        Transacao.list('-created_date')
+        base44.entities.User.list('-created_date'),
+        base44.entities.Transacao.list('-created_date')
       ]);
       setUsers(usersData || []);
       setTransacoes(transacoesData || []);
@@ -158,7 +156,7 @@ export default function UsersPage() {
   const handleEditUser = async (userData) => {
     setIsEditing(true);
     try {
-      await User.update(editingUser.id, userData);
+      await base44.entities.User.update(editingUser.id, userData);
       await loadData();
       setEditingUser(null);
     } catch (error) {
@@ -171,7 +169,7 @@ export default function UsersPage() {
 
   const handleSuspendUser = async (userId, suspend = true) => {
     try {
-      await User.update(userId, { suspended: suspend });
+      await base44.entities.User.update(userId, { suspended: suspend });
       await loadData();
     } catch (error) {
       console.error("Erro ao alterar status:", error);
@@ -182,7 +180,7 @@ export default function UsersPage() {
   const handleDeleteUser = async (userId) => {
     setIsDeleting(true);
     try {
-      await User.delete(userId);
+      await base44.entities.User.delete(userId);
       await loadData();
     } catch (error) {
       console.error("Erro ao excluir usuário:", error);
@@ -208,7 +206,7 @@ export default function UsersPage() {
       }
 
       for (const email of recipients) {
-        await SendEmail({
+        await base44.integrations.Core.SendEmail({
           to: email,
           subject: emailData.subject,
           body: emailData.body

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Startup } from "@/entities/all";
+import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +39,7 @@ export default function Startups() {
   const loadStartups = async () => {
     setIsLoading(true);
     try {
-      const data = await Startup.list('-created_date');
+      const data = await base44.entities.Startup.list('-created_date');
       setStartups(data);
     } catch (error) {
       console.error("Erro ao carregar startups:", error);
@@ -92,9 +91,9 @@ export default function Startups() {
     setIsProcessing(true);
     try {
       if (editingStartup) {
-        await Startup.update(editingStartup.id, startupData);
+        await base44.entities.Startup.update(editingStartup.id, startupData);
       } else {
-        await Startup.create(startupData);
+        await base44.entities.Startup.create(startupData);
       }
       await loadStartups();
       setShowForm(false);
@@ -112,7 +111,7 @@ export default function Startups() {
 
   const toggleStatus = async (startup) => {
     try {
-      await Startup.update(startup.id, { ativo: !startup.ativo });
+      await base44.entities.Startup.update(startup.id, { ativo: !startup.ativo });
       await loadStartups();
     } catch (error) {
       console.error("Erro ao alterar status:", error);

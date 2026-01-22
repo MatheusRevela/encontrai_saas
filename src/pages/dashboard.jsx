@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { User, Transacao, Startup } from "@/entities/all";
+import { base44 } from '@/api/base44Client';
 import MetricCard from "../components/dashboard/MetricCard";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import EvaluationStats from "../components/dashboard/EvaluationStats";
@@ -117,9 +116,9 @@ export default function Dashboard() {
       setIsLoading(true);
       try {
         const [usersData, transacoesData, startupsData] = await Promise.all([
-          User.list(),
-          Transacao.list('-created_date'),
-          Startup.list()
+          base44.entities.User.list(),
+          base44.entities.Transacao.list('-created_date'),
+          base44.entities.Startup.list()
         ]);
 
         const totalUsers = usersData.length;

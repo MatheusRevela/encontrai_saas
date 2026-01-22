@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Partner, Transacao, User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,9 +47,9 @@ export default function PartnersPage() {
     setIsLoading(true);
     try {
       const [partnersData, usersData, transactionsData] = await Promise.all([
-        Partner.list('-created_date'),
-        User.list('-created_date'),
-        Transacao.list('-created_date')
+        base44.entities.Partner.list('-created_date'),
+        base44.entities.User.list('-created_date'),
+        base44.entities.Transacao.list('-created_date')
       ]);
       setPartners(partnersData || []);
       setUsers(usersData || []);
@@ -69,9 +68,9 @@ export default function PartnersPage() {
     setIsSaving(true);
     try {
       if (editingPartner) {
-        await Partner.update(editingPartner.id, formData);
+        await base44.entities.Partner.update(editingPartner.id, formData);
       } else {
-        await Partner.create(formData);
+        await base44.entities.Partner.create(formData);
       }
       await loadData();
       resetForm();
@@ -97,7 +96,7 @@ export default function PartnersPage() {
 
   const handleDelete = async (id) => {
     try {
-      await Partner.delete(id);
+      await base44.entities.Partner.delete(id);
       await loadData();
     } catch (error) {
       console.error("Erro ao excluir parceiro:", error);
@@ -107,7 +106,7 @@ export default function PartnersPage() {
 
   const handleToggleStatus = async (partner) => {
     try {
-      await Partner.update(partner.id, { ativo: !partner.ativo });
+      await base44.entities.Partner.update(partner.id, { ativo: !partner.ativo });
       await loadData();
     } catch (error) {
       console.error("Erro ao alterar status:", error);
