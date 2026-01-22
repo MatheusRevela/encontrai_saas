@@ -1,8 +1,4 @@
-import { createClient } from 'npm:@base44/sdk@0.1.0';
-
-const base44 = createClient({
-  appId: Deno.env.get('BASE44_APP_ID'),
-});
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -40,7 +36,7 @@ https://app--encontr-ai-76824f7d.base44.app/DetalhesBusca?id=${transaction.id}
 Obrigado por usar o EncontrAI!
         `;
 
-        await SendEmail({
+        await base44.integrations.Core.SendEmail({
             to: transaction.cliente_email,
             subject: `🎉 Suas ${unlockedStartups.length} solução${unlockedStartups.length > 1 ? 'ões' : ''} foi${unlockedStartups.length > 1 ? 'ram' : ''} desbloqueada${unlockedStartups.length > 1 ? 's' : ''}!`,
             body: emailBody
@@ -56,16 +52,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    
+    if (!user) {
       return new Response(JSON.stringify({ error: 'Não autorizado' }), { 
         status: 401, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       });
     }
-    
-    const token = authHeader.split(' ')[1];
-    base44.auth.setToken(token);
     
     const { sessionId } = await req.json();
     const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });

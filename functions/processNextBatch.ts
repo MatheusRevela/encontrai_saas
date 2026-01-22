@@ -1,5 +1,4 @@
-
-import { createClientFromRequest } from 'npm:@base44/sdk@0.5.0';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const CATEGORIAS = ["gestao", "vendas", "marketing", "financeiro", "operacional", "rh", "tecnologia", "logistica"];
 const VERTICAIS = ["agtech", "biotech", "ciberseguranca", "cleantech", "construtech", "deeptech", "edtech", "energytech", "fashiontech", "fintech", "foodtech", "govtech", "greentech", "healthtech", "hrtech", "indtech", "insurtech", "legaltech", "logtech", "martech", "mobilidade", "pet_tech", "proptech", "regtech", "retailtech", "salestech", "sportech", "supply_chain", "traveltech"];
@@ -85,7 +84,7 @@ Retorne um JSON com este formato:
   const resultado = await retryWithBackoff(async () => {
     await delay(1500); // Delay base de 1.5s entre chamadas
     
-    return await base44.integrations.Core.InvokeLLM({
+    return await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: promptCompleto,
       add_context_from_internet: true,
       response_json_schema: {

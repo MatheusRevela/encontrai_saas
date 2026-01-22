@@ -1,9 +1,4 @@
-
-import { createClient } from 'npm:@base44/sdk@0.1.0';
-
-const base44 = createClient({
-  appId: Deno.env.get('BASE44_APP_ID'),
-});
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -99,19 +94,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
-    }
-
-    const token = authHeader.split(' ')[1];
-    base44.auth.setToken(token);
-    
+    const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (user.role !== 'admin') {
+    
+    if (!user || user.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Acesso negado' }), { 
         status: 403, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -133,13 +119,13 @@ Deno.serve(async (req) => {
       if (transacao.cliente_email) {
         try {
           const template = getEmailTemplate(15, transacao);
-          await base44.integrations.Core.SendEmail({
+          await base44.asServiceRole.integrations.Core.SendEmail({
             to: transacao.cliente_email,
             subject: template.subject,
             body: template.body
           });
           
-          await base44.entities.Transacao.update(transacao.id, {
+          await base44.asServiceRole.entities.Transacao.update(transacao.id, {
             feedback_15d_sent: true
           });
           emailsSent++;
@@ -151,7 +137,7 @@ Deno.serve(async (req) => {
 
     // 2. Feedback após 30 dias
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const paid30d = await base44.entities.Transacao.filter({
+    const paid30d = await base44.asServiceRole.entities.Transacao.filter({
       status_pagamento: 'pago',
       created_date: { $lte: thirtyDaysAgo.toISOString() },
       feedback_30d_sent: { $ne: true }
@@ -161,13 +147,13 @@ Deno.serve(async (req) => {
       if (transacao.cliente_email) {
         try {
           const template = getEmailTemplate(30, transacao);
-          await base44.integrations.Core.SendEmail({
+          await base44.asServiceRole.integrations.Core.SendEmail({
             to: transacao.cliente_email,
             subject: template.subject,
             body: template.body
           });
           
-          await base44.entities.Transacao.update(transacao.id, {
+          await base44.asServiceRole.entities.Transacao.update(transacao.id, {
             feedback_30d_sent: true
           });
           emailsSent++;
@@ -179,7 +165,7 @@ Deno.serve(async (req) => {
 
     // 3. Case de sucesso após 60 dias
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-    const paid60d = await base44.entities.Transacao.filter({
+    const paid60d = await base44.asServiceRole.entities.Transacao.filter({
       status_pagamento: 'pago',
       created_date: { $lte: sixtyDaysAgo.toISOString() },
       feedback_60d_sent: { $ne: true }
@@ -189,13 +175,13 @@ Deno.serve(async (req) => {
       if (transacao.cliente_email) {
         try {
           const template = getEmailTemplate(60, transacao);
-          await base44.integrations.Core.SendEmail({
+          await base44.asServiceRole.integrations.Core.SendEmail({
             to: transacao.cliente_email,
             subject: template.subject,
             body: template.body
           });
           
-          await base44.entities.Transacao.update(transacao.id, {
+          await base44.asServiceRole.entities.Transacao.update(transacao.id, {
             feedback_60d_sent: true
           });
           emailsSent++;

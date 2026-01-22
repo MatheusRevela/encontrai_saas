@@ -1,9 +1,4 @@
-
-import { createClient } from 'npm:@base44/sdk@0.1.0';
-
-const base44 = createClient({
-  appId: Deno.env.get('BASE44_APP_ID'),
-});
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -86,19 +81,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
-    }
-
-    const token = authHeader.split(' ')[1];
-    base44.auth.setToken(token);
-    
+    const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (user.role !== 'admin') {
+    
+    if (!user || user.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Acesso negado' }), { 
         status: 403, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -110,7 +96,7 @@ Deno.serve(async (req) => {
 
     // 1. Emails após 2 horas
     const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-    const pending2h = await base44.entities.Transacao.filter({
+    const pending2h = await base44.asServiceRole.entities.Transacao.filter({
       status_pagamento: 'pendente',
       created_date: { $lte: twoHoursAgo.toISOString() },
       abandoned_cart_2h_sent: { $ne: true }
@@ -120,13 +106,13 @@ Deno.serve(async (req) => {
       if (transacao.cliente_email) {
         try {
           const template = getEmailTemplate('2h', transacao);
-          await base44.integrations.Core.SendEmail({
+          await base44.asServiceRole.integrations.Core.SendEmail({
             to: transacao.cliente_email,
             subject: template.subject,
             body: template.body
           });
           
-          await base44.entities.Transacao.update(transacao.id, {
+          await base44.asServiceRole.entities.Transacao.update(transacao.id, {
             abandoned_cart_2h_sent: true
           });
           emailsSent++;
@@ -138,7 +124,7 @@ Deno.serve(async (req) => {
 
     // 2. Emails após 24 horas
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const pending24h = await base44.entities.Transacao.filter({
+    const pending24h = await base44.asServiceRole.entities.Transacao.filter({
       status_pagamento: 'pendente',
       created_date: { $lte: twentyFourHoursAgo.toISOString() },
       abandoned_cart_24h_sent: { $ne: true },
@@ -149,13 +135,13 @@ Deno.serve(async (req) => {
       if (transacao.cliente_email) {
         try {
           const template = getEmailTemplate('24h', transacao);
-          await base44.integrations.Core.SendEmail({
+          await base44.asServiceRole.integrations.Core.SendEmail({
             to: transacao.cliente_email,
             subject: template.subject,
             body: template.body
           });
           
-          await base44.entities.Transacao.update(transacao.id, {
+          await base44.asServiceRole.entities.Transacao.update(transacao.id, {
             abandoned_cart_24h_sent: true
           });
           emailsSent++;
@@ -167,7 +153,7 @@ Deno.serve(async (req) => {
 
     // 3. Emails após 3 dias
     const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-    const pending3d = await base44.entities.Transacao.filter({
+    const pending3d = await base44.asServiceRole.entities.Transacao.filter({
       status_pagamento: 'pendente',
       created_date: { $lte: threeDaysAgo.toISOString() },
       abandoned_cart_3d_sent: { $ne: true },
@@ -178,13 +164,13 @@ Deno.serve(async (req) => {
       if (transacao.cliente_email) {
         try {
           const template = getEmailTemplate('3d', transacao);
-          await base44.integrations.Core.SendEmail({
+          await base44.asServiceRole.integrations.Core.SendEmail({
             to: transacao.cliente_email,
             subject: template.subject,
             body: template.body
           });
           
-          await base44.entities.Transacao.update(transacao.id, {
+          await base44.asServiceRole.entities.Transacao.update(transacao.id, {
             abandoned_cart_3d_sent: true
           });
           emailsSent++;
