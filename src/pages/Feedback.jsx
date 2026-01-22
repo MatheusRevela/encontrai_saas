@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Transacao } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -33,7 +31,7 @@ export default function Feedback() {
       }
 
       try {
-        const transacaoEncontrada = await Transacao.get(transactionId);
+        const transacaoEncontrada = await base44.entities.Transacao.get(transactionId);
         
         if (!transacaoEncontrada) {
           setError('Busca não encontrada ou você não tem permissão para acessá-la.');
@@ -102,7 +100,7 @@ export default function Feedback() {
       // Calcular média geral
       const mediaGeral = avaliacoes.reduce((sum, av) => sum + av.avaliacao, 0) / avaliacoes.length;
       
-      await Transacao.update(transacao.id, {
+      await base44.entities.Transacao.update(transacao.id, {
         avaliacoes_individuais: avaliacoes,
         avaliacao: Math.round(mediaGeral), // Manter compatibilidade
         feedback: avaliacoes.map(av => av.feedback).filter(f => f.trim()).join(' | ') // Concatenar feedbacks

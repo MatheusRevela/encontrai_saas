@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { User, Transacao } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,10 +22,10 @@ export default function Painel() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const userData = await User.me();
+        const userData = await base44.auth.me();
         setUser(userData);
         if (userData?.email) {
-          const searches = await Transacao.filter({ created_by: userData.email }, '-created_date', 3);
+          const searches = await base44.entities.Transacao.filter({ created_by: userData.email }, '-created_date', 3);
           setRecentSearches(searches || []);
         }
       } catch (error) {

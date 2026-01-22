@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { Transacao } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,7 +49,7 @@ export default function DetalhesBusca() {
     const loadBusca = async () => {
       setIsLoading(true);
       try {
-        const data = await Transacao.get(transactionId);
+        const data = await base44.entities.Transacao.get(transactionId);
         if (!data) {
           setError("Busca não encontrada ou você não tem permissão para acessá-la.");
         } else {

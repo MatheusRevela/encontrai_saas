@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { X, ArrowRight, Zap, Target, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User } from '@/entities/all'; // Added import for User entity
+import { base44 } from '@/api/base44Client';
 
 const OnboardingStep = ({ step, totalSteps, onNext, onSkip, onComplete }) => {
   const steps = [
@@ -112,8 +111,8 @@ export default function OnboardingTour({ isOpen, onComplete }) {
 
   const finishOnboarding = async (completed = true) => {
     try {
-      const currentUser = await User.me();
-      await User.update(currentUser.id, { onboarding_completed: completed });
+      const currentUser = await base44.auth.me();
+      await base44.auth.updateMe({ onboarding_completed: completed });
     } catch (error) {
       console.error("Erro ao atualizar status do onboarding:", error);
       // Even if backend update fails, mark it locally to prevent repeated display
@@ -133,7 +132,7 @@ export default function OnboardingTour({ isOpen, onComplete }) {
           return;
         }
 
-        const currentUser = await User.me();
+        const currentUser = await base44.auth.me();
         if (currentUser.onboarding_completed) {
           localStorage.setItem('hasSeenOnboarding', 'true'); // Sync localStorage with backend
           onComplete();

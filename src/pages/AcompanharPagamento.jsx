@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Transacao } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { checkPaymentStatus } from '@/functions/checkPaymentStatus';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,7 +63,7 @@ export default function AcompanharPagamento() {
   const finalizarTransacao = async () => {
     try {
       // Buscar transação
-      const transacoes = await Transacao.filter({ session_id: sessionId });
+      const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
       const transacao = transacoes[0];
 
       if (transacao) {
@@ -78,7 +78,7 @@ export default function AcompanharPagamento() {
         }));
 
         // Atualizar transação
-        await Transacao.update(transacao.id, {
+        await base44.entities.Transacao.update(transacao.id, {
           status_pagamento: 'pago',
           startups_desbloqueadas: startupsDesbloqueadas
         });

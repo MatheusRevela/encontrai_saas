@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Transacao } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,7 +43,7 @@ export default function DashboardUsuario() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
-      const userTransacoes = await Transacao.filter(
+      const userTransacoes = await base44.entities.Transacao.filter(
         { created_by: currentUser.email },
         '-created_date',
         50

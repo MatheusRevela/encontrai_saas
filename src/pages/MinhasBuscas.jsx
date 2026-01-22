@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Transacao, User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,8 +104,8 @@ export default function MinhasBuscas() {
         const loadBuscas = async () => {
             setIsLoading(true);
             try {
-                const currentUser = await User.me();
-                const userBuscas = await Transacao.filter({ created_by: currentUser.email }, '-created_date');
+                const currentUser = await base44.auth.me();
+                const userBuscas = await base44.entities.Transacao.filter({ created_by: currentUser.email }, '-created_date');
                 setBuscas(userBuscas);
             } catch (err) {
                 console.error("Erro ao carregar buscas:", err);

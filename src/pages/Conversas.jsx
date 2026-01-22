@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useCallback } from "react";
-import { Transacao } from "@/entities/Transacao";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -89,7 +88,7 @@ export default function Conversas() {
     setIsLoading(true);
     try {
       const timestamp = Date.now();
-      const data = await Transacao.list(`-created_date?_t=${timestamp}`);
+      const data = await base44.entities.Transacao.list(`-created_date?_t=${timestamp}`);
       setConversas(data || []);
     } catch (error) {
       console.error("Erro ao carregar conversas:", error);
@@ -132,7 +131,7 @@ export default function Conversas() {
   const handleToggleDestaque = async (conversa) => {
     try {
       const novoEstado = !conversa.destaque_home;
-      await Transacao.update(conversa.id, { destaque_home: novoEstado });
+      await base44.entities.Transacao.update(conversa.id, { destaque_home: novoEstado });
       setConversas(prev =>
         prev.map(c =>
           c.id === conversa.id ? { ...c, destaque_home: novoEstado } : c
