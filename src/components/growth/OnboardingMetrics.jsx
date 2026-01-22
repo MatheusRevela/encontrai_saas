@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CheckCircle } from 'lucide-react';
 
@@ -19,7 +19,7 @@ export default function OnboardingMetrics() {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const allUsers = await User.list();
+      const allUsers = await base44.entities.User.list();
       const newUsers = allUsers.filter(u => new Date(u.created_date) >= sevenDaysAgo);
       const completed = newUsers.filter(u => u.onboarding_completed === true);
 

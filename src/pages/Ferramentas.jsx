@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Download, Loader2, Hammer, FileText, Play, Pause, RotateCcw, CheckCircle, XCircle, History, Database } from 'lucide-react';
 import { searchSingleStartupSite } from '@/functions/searchSingleStartupSite';
-import { BatchSearch, StartupFound } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 
 export default function Ferramentas() {
   const [file, setFile] = useState(null);
@@ -27,7 +27,7 @@ export default function Ferramentas() {
 
   const loadPreviousBatches = async () => {
     try {
-      const batches = await BatchSearch.list('-created_date', 10);
+      const batches = await base44.entities.BatchSearch.list('-created_date', 10);
       setPreviousBatches(batches || []);
     } catch (error) {
       console.error('Erro ao carregar lotes anteriores:', error);
@@ -37,7 +37,7 @@ export default function Ferramentas() {
 
   const loadBatchResults = async (batchId) => {
     try {
-      const batchResults = await StartupFound.filter({ batch_id: batchId });
+      const batchResults = await base44.entities.StartupFound.filter({ batch_id: batchId });
       setResults(batchResults || []);
     } catch (error) {
       console.error('Erro ao carregar resultados do lote:', error);
@@ -80,7 +80,7 @@ export default function Ferramentas() {
         setProgress(0);
         
         // Cria um novo lote no banco de dados
-        const batch = await BatchSearch.create({
+        const batch = await base44.entities.BatchSearch.create({
           nome_arquivo: file.name,
           total_startups: names.length,
           startups_originais: names,
@@ -111,7 +111,7 @@ export default function Ferramentas() {
     setError('');
 
     // Atualiza status do lote
-    await BatchSearch.update(currentBatch.id, { status: 'processando' });
+    await base44.entities.BatchSearch.update(currentBatch.id, { status: 'processando' });
 
     // Continua de onde parou ou começa do início
     const startFrom = currentIndex;
@@ -143,7 +143,7 @@ export default function Ferramentas() {
             setError('⏸️ Rate limit atingido! Processamento pausado. Aguarde alguns minutos e clique em "Continuar".');
             setIsPaused(true);
             setIsProcessing(false);
-            await BatchSearch.update(currentBatch.id, { 
+            await base44.entities.BatchSearch.update(currentBatch.id, { 
               status: 'pausado', 
               processadas: i 
             });
@@ -151,7 +151,7 @@ export default function Ferramentas() {
           }
           
           // SALVA IMEDIATAMENTE NO BANCO
-          const startupResult = await StartupFound.create({
+          const startupResult = await base44.entities.StartupFound.create({
             batch_id: currentBatch.id,
             nome_startup: resultado.nome,
             site_encontrado: resultado.site || '',
@@ -166,7 +166,7 @@ export default function Ferramentas() {
           
         } else {
           // Se a chamada falhar, salva com erro
-          const startupResult = await StartupFound.create({
+          const startupResult = await base44.entities.StartupFound.create({
             batch_id: currentBatch.id,
             nome_startup: nomeStartup,
             site_encontrado: '',
@@ -184,7 +184,7 @@ export default function Ferramentas() {
         console.error(`Erro ao processar ${nomeStartup}:`, error);
         
         // Salva o erro no banco
-        const startupResult = await StartupFound.create({
+        const startupResult = await base44.entities.StartupFound.create({
           batch_id: currentBatch.id,
           nome_startup: nomeStartup,
           site_encontrado: '',
@@ -203,7 +203,7 @@ export default function Ferramentas() {
       const newProgress = ((i + 1) / startupNames.length) * 100;
       setProgress(newProgress);
       
-      await BatchSearch.update(currentBatch.id, { 
+      await base44.entities.BatchSearch.update(currentBatch.id, { 
         processadas: i + 1,
         sites_encontrados: results.filter(r => r.site_encontrado && r.site_encontrado.length > 0).length + 1
       });
@@ -216,7 +216,7 @@ export default function Ferramentas() {
     if (!isPaused) {
       setCurrentIndex(startupNames.length);
       setIsProcessing(false);
-      await BatchSearch.update(currentBatch.id, { 
+      await base44.entities.BatchSearch.update(currentBatch.id, { 
         status: 'concluido',
         concluido_em: new Date().toISOString(),
         processadas: startupNames.length

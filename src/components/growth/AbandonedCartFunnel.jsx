@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Transacao } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShoppingCart, AlertCircle } from 'lucide-react';
 
@@ -18,7 +18,7 @@ export default function AbandonedCartFunnel() {
 
   const loadMetrics = async () => {
     try {
-      const allTransactions = await Transacao.list();
+      const allTransactions = await base44.entities.Transacao.list();
       const abandoned = allTransactions.filter(t => t.status_pagamento === 'pendente');
       
       const email2h = abandoned.filter(t => t.abandoned_cart_2h_sent === true);

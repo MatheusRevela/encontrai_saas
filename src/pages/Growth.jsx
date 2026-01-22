@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Transacao } from "@/entities/all";
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import OnboardingMetrics from '../components/growth/OnboardingMetrics';
@@ -22,7 +22,7 @@ export default function Growth() {
   const loadMetrics = async () => {
     setIsLoading(true);
     try {
-      const allTransactions = await Transacao.list('-created_date');
+      const allTransactions = await base44.entities.Transacao.list('-created_date');
       const paid = allTransactions.filter(t => t.status_pagamento === 'pago');
       const pending = allTransactions.filter(t => t.status_pagamento === 'pendente');
       
