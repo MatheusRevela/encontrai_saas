@@ -180,7 +180,7 @@ export default function Checkout() {
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-red-900 mb-2">Erro no Checkout</h3>
-            <p className="text-red-700 mb-4">{error}</p>
+            <p className="text-red-700 mb-4">{error?.message || String(error)}</p>
             <Button onClick={() => navigate(createPageUrl(`Resultados?sessionId=${sessionId}`))} variant="outline">
               Voltar aos Resultados
             </Button>
@@ -263,7 +263,7 @@ export default function Checkout() {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-red-800">
                     <AlertCircle className="w-4 h-4" />
-                    <span className="text-sm font-medium">{errorMessage}</span>
+                    <span className="text-sm font-medium">{String(errorMessage)}</span>
                   </div>
                 </div>
               )}
