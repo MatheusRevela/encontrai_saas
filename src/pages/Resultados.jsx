@@ -78,11 +78,19 @@ export default function Resultados() {
       
       const currentTransacao = transacoes[0];
       
+      console.log('📊 Transação carregada:', {
+        id: currentTransacao.id,
+        temSugestoes: !!currentTransacao.startups_sugeridas?.length,
+        totalSugestoes: currentTransacao.startups_sugeridas?.length || 0,
+        selecionadas: currentTransacao.startups_selecionadas?.length || 0
+      });
+      
       // Inicializar estados baseados nos dados
       if (currentTransacao.startups_selecionadas?.length > 0) {
         setSelectedStartups(currentTransacao.startups_selecionadas);
       }
       if (!currentTransacao.startups_sugeridas?.length) {
+        console.log('⚠️ Nenhuma sugestão encontrada, ativando busca interativa');
         setMostrarBuscaInterativa(true);
       }
       
@@ -174,16 +182,25 @@ export default function Resultados() {
   });
 
   const handleAnaliseCompleta = async (dadosAnalise) => {
+    console.log('🔄 Iniciando análise completa...', dadosAnalise);
     try {
-      setMostrarBuscaInterativa(false); // Esconde o chat para mostrar a animação de loading
+      setMostrarBuscaInterativa(false);
       setAnaliseEnriquecida(dadosAnalise);
-      await gerarSugestoesMutation.mutateAsync(dadosAnalise);
-      // Aguardar a invalidação e refetch do cache
+      
+      console.log('🔍 Gerando sugestões...');
+      const resultados = await gerarSugestoesMutation.mutateAsync(dadosAnalise);
+      console.log('✅ Sugestões geradas:', resultados);
+      
+      console.log('🔄 Invalidando cache...');
       await queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
-      await queryClient.refetchQueries({ queryKey: ['transacao', sessionId] });
+      
+      console.log('🔄 Refetchando dados...');
+      const refetchResult = await queryClient.refetchQueries({ queryKey: ['transacao', sessionId] });
+      console.log('✅ Refetch concluído:', refetchResult);
     } catch (error) {
-      console.error('Erro ao completar análise:', error);
-      alert('Erro ao processar análise. Tente novamente.');
+      console.error('❌ Erro ao completar análise:', error);
+      alert(`Erro ao processar análise: ${error.message}`);
+      setMostrarBuscaInterativa(true);
     }
   };
 
@@ -245,6 +262,13 @@ export default function Resultados() {
 
   const startupsSugeridas = transacao?.startups_sugeridas || [];
   const insight = useMemo(() => transacao?.insight_gerado || '', [transacao?.insight_gerado]);
+  
+  console.log('🎯 Estado atual:', {
+    totalSugestoes: startupsSugeridas.length,
+    isLoading,
+    isMutating: gerarSugestoesMutation.isLoading,
+    mostrarChat: mostrarBuscaInterativa
+  });
   
   // Apply filters to startups
   const enrichedStartups = useMemo(() => {
@@ -506,7 +530,7 @@ export default function Resultados() {
           </div>
         )}
 
-        {enrichedStartups.length === 0 && !isLoading && !gerarSugestoesMutation.isLoading && !error && !gerarSugestoesMutation.isError && (
+        {enrichedStartups.length === 0 && !isLoading && !gerarSugestoesMutation.isLoading && !mostrarBuscaInterativa && !error && !gerarSugestoesMutation.isError && (
           <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg mt-8">
             <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-800 mb-2">Nenhuma solução encontrada</h3>
@@ -514,9 +538,14 @@ export default function Resultados() {
               Não conseguimos encontrar soluções ideais com base na sua descrição.
               Tente refinar sua busca ou entre em contato para um atendimento personalizado.
             </p>
-            <Button onClick={() => navigate(createPageUrl('Buscar'))} variant="outline">
-              Nova Busca
-            </Button>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={() => setMostrarBuscaInterativa(true)} className="bg-emerald-600 hover:bg-emerald-700">
+                Refinar Busca
+              </Button>
+              <Button onClick={() => navigate(createPageUrl('Buscar'))} variant="outline">
+                Nova Busca
+              </Button>
+            </div>
           </div>
         )}
       </div>
