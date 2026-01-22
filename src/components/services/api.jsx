@@ -1,5 +1,4 @@
-
-import { InvokeLLM } from '@/integrations/Core';
+import { base44 } from '@/api/base44Client';
 import { LIMITS } from '../utils/constants';
 
 class ApiService {
@@ -9,7 +8,7 @@ class ApiService {
    * @returns {Promise<string>} - O insight gerado pela IA.
    */
   async generateInsight(problema) {
-    const insightResponse = await InvokeLLM({
+    const insightResponse = await base44.integrations.Core.InvokeLLM({
       prompt: `Como um consultor experiente em negócios para PMEs, analise este problema: "${problema}". 
       Gere um conselho motivacional e prático em português do Brasil, com tom informal e próximo (como "É ótimo que você esteja buscando melhorar isso!"). 
       O conselho deve ter no máximo 3 frases e reconhecer a importância do problema relatado.`,
@@ -24,7 +23,7 @@ class ApiService {
    * @returns {Promise<Array<object>>} - A lista de startups correspondentes.
    */
   async matchStartups(problema, activeStartups) {
-    const matchingResponse = await InvokeLLM({
+    const matchingResponse = await base44.integrations.Core.InvokeLLM({
       prompt: `Analise este problema de uma PME: "${problema}"
       
       Aqui estão as startups disponíveis:

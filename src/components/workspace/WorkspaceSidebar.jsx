@@ -19,7 +19,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 
 export default function WorkspaceSidebar({ user }) {
   const location = useLocation();
@@ -32,10 +32,10 @@ export default function WorkspaceSidebar({ user }) {
 
   const handleLogout = async () => {
     try {
-      await User.logout();
-      window.top.location.href = createPageUrl('Home');
+      await base44.auth.logout(createPageUrl('HomePublica'));
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      window.location.reload();
     }
   };
 

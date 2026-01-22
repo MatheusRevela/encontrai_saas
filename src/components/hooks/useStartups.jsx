@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Startup } from "@/entities/all";
+import { base44 } from '@/api/base44Client';
 
 export function useStartups() {
   const [startups, setStartups] = useState([]);
@@ -21,7 +20,7 @@ export function useStartups() {
     setIsLoading(true);
     try {
       // CÓDIGO ORIGINAL - SEM QUALQUER LIMITE OU PAGINAÇÃO
-      const data = await Startup.list('-created_date');
+      const data = await base44.entities.Startup.list('-created_date');
       setStartups(data || []);
     } catch (error) {
       console.error("Erro ao carregar startups:", error);
@@ -38,7 +37,7 @@ export function useStartups() {
   const updateStartupStatus = async (startupId, updates) => {
     setIsProcessing(true);
     try {
-      await Startup.update(startupId, updates);
+      await base44.entities.Startup.update(startupId, updates);
       await loadStartups();
     } catch (error) {
       console.error("Erro ao atualizar startup:", error);
@@ -51,7 +50,7 @@ export function useStartups() {
   const deleteStartupById = async (startupId) => {
     setIsProcessing(true);
     try {
-      await Startup.delete(startupId);
+      await base44.entities.Startup.delete(startupId);
       await loadStartups();
       alert('Startup excluída com sucesso.');
     } catch (error) {

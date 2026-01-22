@@ -8,7 +8,7 @@ import {
   CheckCircle, XCircle, AlertTriangle, Globe, Mail, MessageSquare, Tag, CircleDollarSign, CalendarClock, Star, Award, CheckCheck
 } from "lucide-react";
 import { formatDateBrasiliaShort } from '../utils/dateUtils';
-import { Startup } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 
 export default function StartupCard({ startup, onEdit, onDelete, onToggleStatus, onManualVerify, isProcessing, onMarkResolved }) {
   const [isUpdatingRating, setIsUpdatingRating] = useState(false);
@@ -38,10 +38,10 @@ export default function StartupCard({ startup, onEdit, onDelete, onToggleStatus,
     
     setIsUpdatingRating(true);
     try {
-      await Startup.update(startup.id, {
+      await base44.entities.Startup.update(startup.id, {
         avaliacao_especialista: rating,
         data_avaliacao_especialista: new Date().toISOString(),
-        avaliado_por: 'admin' // Você pode pegar o email do usuário logado se necessário
+        avaliado_por: 'admin'
       });
       
       // Atualiza localmente para feedback imediato

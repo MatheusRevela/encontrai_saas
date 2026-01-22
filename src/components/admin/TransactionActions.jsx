@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,10 +6,9 @@ import {
   XCircle,
   Building2,
   Loader2,
-  Star // Added Star icon
+  Star
 } from 'lucide-react';
-import { Transacao, Startup } from '@/entities/all';
-import { SendEmail } from '@/integrations/Core';
+import { base44 } from '@/api/base44Client';
 
 export default function TransactionActions({ transaction, onUpdate }) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,7 +17,7 @@ export default function TransactionActions({ transaction, onUpdate }) {
   const handleMarkAsPaid = async () => {
     setIsProcessing(true);
     try {
-      const startups = await Startup.list();
+      const startups = await base44.entities.Startup.list();
       const startupsCompletas = startups.filter(s => transaction.startups_selecionadas?.includes(s.id));
       
       const dadosDesbloqueados = startupsCompletas.map(startup => ({
@@ -37,7 +35,7 @@ export default function TransactionActions({ transaction, onUpdate }) {
         logo_url: startup.logo_url
       }));
 
-      await Transacao.update(transaction.id, {
+      await base44.entities.Transacao.update(transaction.id, {
         status_pagamento: 'pago',
         startups_desbloqueadas: dadosDesbloqueados
       });
@@ -69,7 +67,7 @@ Obrigado por usar o EncontrAI!
 P.S. Todas as nossas startups são verificadas mensalmente para garantir que estão ativas e atualizadas.
         `;
 
-        await SendEmail({
+        await base44.integrations.Core.SendEmail({
           to: transaction.cliente_email,
           subject: `🎉 Suas ${dadosDesbloqueados.length} solução${dadosDesbloqueados.length > 1 ? 'ões' : ''} foi${dadosDesbloqueados.length > 1 ? 'ram' : ''} desbloqueada${dadosDesbloqueados.length > 1 ? 's' : ''}!`,
           body: emailBody
@@ -87,7 +85,7 @@ P.S. Todas as nossas startups são verificadas mensalmente para garantir que est
   const handleMarkAsRejected = async () => {
     setIsProcessing(true);
     try {
-      await Transacao.update(transaction.id, {
+      await base44.entities.Transacao.update(transaction.id, {
         status_pagamento: 'cancelado'
       });
       onUpdate();
@@ -101,7 +99,7 @@ P.S. Todas as nossas startups são verificadas mensalmente para garantir que est
   const handleToggleFeature = async () => {
     setIsFeaturing(true);
     try {
-      await Transacao.update(transaction.id, {
+      await base44.entities.Transacao.update(transaction.id, {
         destaque_home: !transaction.destaque_home,
       });
       onUpdate();

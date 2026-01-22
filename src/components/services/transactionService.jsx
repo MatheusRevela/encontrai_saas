@@ -1,5 +1,4 @@
-
-import { Transacao, Startup } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { apiService } from './api';
 import { validateSessionId, generateSecureSessionId } from '../utils/validation';
 import { LIMITS } from '../utils/constants';
@@ -19,7 +18,7 @@ class TransactionService {
     expiresAt.setHours(expiresAt.getHours() + LIMITS.TRANSACAO_EXPIRY_HOURS);
 
     try {
-      const startups = await Startup.list();
+      const startups = await base44.entities.Startup.list();
       const activeStartups = startups.filter(s => s.ativo);
 
       if (activeStartups.length === 0) {
@@ -61,12 +60,12 @@ class TransactionService {
         status_pagamento: 'pendente'
       };
 
-      const existing = await Transacao.filter({ session_id: sessionId });
+      const existing = await base44.entities.Transacao.filter({ session_id: sessionId });
       let transacao;
       if (existing.length > 0) {
-        transacao = await Transacao.update(existing[0].id, transacaoData);
+        transacao = await base44.entities.Transacao.update(existing[0].id, transacaoData);
       } else {
-        transacao = await Transacao.create(transacaoData);
+        transacao = await base44.entities.Transacao.create(transacaoData);
       }
 
       return {
@@ -86,7 +85,7 @@ class TransactionService {
     if (!sessionId) {
       throw new Error("Session ID é obrigatório");
     }
-    const transacoes = await Transacao.filter({ session_id: sessionId });
+    const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
     if (transacoes.length === 0) {
       throw new Error("Transação não encontrada");
     }
@@ -117,7 +116,7 @@ class TransactionService {
 
     const valorTotal = selectedStartupIds.length * valorPorStartup;
 
-    const updatedTransaction = await Transacao.update(transacao.id, {
+    const updatedTransaction = await base44.entities.Transacao.update(transacao.id, {
       startups_selecionadas: selectedStartupIds,
       valor_total: valorTotal,
       valor_por_startup: valorPorStartup
