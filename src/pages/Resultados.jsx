@@ -400,60 +400,66 @@ export default function Resultados() {
                           {recomendacao?.resumo_personalizado}
                         </p>
 
-                        <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="item-1" className="border-b-0">
-                            <AccordionTrigger className="text-sm font-semibold text-emerald-700 hover:no-underline">
-                              Ver detalhes completos da solução
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="p-4 bg-slate-50 rounded-lg space-y-4">
-                                {recomendacao?.pontos_fortes?.length > 0 && (
-                                  <div>
-                                    <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
-                                      <span className="text-emerald-600">✓</span> Pontos Fortes
-                                    </h4>
-                                    <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
-                                      {recomendacao.pontos_fortes.map((ponto, i) => (
-                                        <li key={i}>{ponto}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                                
-                                {recomendacao?.como_resolve && (
-                                  <div>
-                                    <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
-                                      <span className="text-blue-600">⚙️</span> Como Resolve Seu Problema
-                                    </h4>
-                                    <p className="text-sm text-slate-600 leading-relaxed">
-                                      {recomendacao.como_resolve}
-                                    </p>
-                                  </div>
-                                )}
+                        {/* Só mostrar accordion se houver conteúdo */}
+                        {(recomendacao?.pontos_fortes?.length > 0 || 
+                          recomendacao?.como_resolve || 
+                          recomendacao?.beneficios_tangiveis?.length > 0 || 
+                          recomendacao?.descricao) && (
+                          <Accordion type="single" collapsible className="w-full">
+                            <AccordionItem value="item-1" className="border-b-0">
+                              <AccordionTrigger className="text-sm font-semibold text-emerald-700 hover:no-underline">
+                                Ver detalhes completos da solução
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <div className="p-4 bg-slate-50 rounded-lg space-y-4">
+                                  {recomendacao?.pontos_fortes?.length > 0 && (
+                                    <div>
+                                      <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                                        <span className="text-emerald-600">✓</span> Pontos Fortes
+                                      </h4>
+                                      <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                        {recomendacao.pontos_fortes.map((ponto, i) => (
+                                          <li key={i}>{ponto}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  
+                                  {recomendacao?.como_resolve && (
+                                    <div>
+                                      <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                                        <span className="text-blue-600">⚙️</span> Como Resolve Seu Problema
+                                      </h4>
+                                      <p className="text-sm text-slate-600 leading-relaxed">
+                                        {recomendacao.como_resolve}
+                                      </p>
+                                    </div>
+                                  )}
 
-                                {recomendacao?.beneficios_tangiveis?.length > 0 && (
-                                  <div>
-                                    <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
-                                      <span className="text-purple-600">🎯</span> Benefícios Esperados
-                                    </h4>
-                                    <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
-                                      {recomendacao.beneficios_tangiveis.map((beneficio, i) => (
-                                        <li key={i}>{beneficio}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
+                                  {recomendacao?.beneficios_tangiveis?.length > 0 && (
+                                    <div>
+                                      <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                                        <span className="text-purple-600">🎯</span> Benefícios Esperados
+                                      </h4>
+                                      <ul className="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                        {recomendacao.beneficios_tangiveis.map((beneficio, i) => (
+                                          <li key={i}>{beneficio}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
 
-                                {recomendacao.descricao && (
-                                  <div>
-                                    <h4 className="font-semibold text-slate-800 mb-2">Sobre a Solução</h4>
-                                    <p className="text-sm text-slate-600 leading-relaxed">{recomendacao.descricao}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
+                                  {recomendacao?.descricao && (
+                                    <div>
+                                      <h4 className="font-semibold text-slate-800 mb-2">Sobre a Solução</h4>
+                                      <p className="text-sm text-slate-600 leading-relaxed">{recomendacao.descricao}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        )}
                       </div>
                     </div>
                   </CardContent>
