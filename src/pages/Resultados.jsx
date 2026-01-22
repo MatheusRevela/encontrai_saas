@@ -158,14 +158,13 @@ export default function Resultados() {
         throw new Error('Nenhum match válido foi encontrado.');
       }
 
-      await base44.entities.Transacao.update(transacao.id, {
+      const transacaoAtualizada = await base44.entities.Transacao.update(transacao.id, {
         startups_sugeridas: matchesValidos,
         insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.',
         perfil_cliente: perfilCliente
       });
 
-      // Invalidar cache para forçar recarregar a transação atualizada
-      queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
+      console.log('✅ Transação atualizada:', transacaoAtualizada);
 
       return matchesValidos;
     },
@@ -175,9 +174,18 @@ export default function Resultados() {
   });
 
   const handleAnaliseCompleta = async (dadosAnalise) => {
-    setMostrarBuscaInterativa(false);
-    setAnaliseEnriquecida(dadosAnalise);
-    await gerarSugestoesMutation.mutateAsync(dadosAnalise);
+    try {
+      setAnaliseEnriquecida(dadosAnalise);
+      await gerarSugestoesMutation.mutateAsync(dadosAnalise);
+      // Aguardar a invalidação e refetch do cache
+      await queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
+      await queryClient.refetchQueries({ queryKey: ['transacao', sessionId] });
+      setMostrarBuscaInterativa(false);
+    } catch (error) {
+      console.error('Erro ao completar análise:', error);
+      alert('Erro ao processar análise. Tente novamente.');
+      setMostrarBuscaInterativa(false);
+    }
   };
 
   const toggleStartupSelection = (startupId) => {
