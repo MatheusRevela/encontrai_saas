@@ -30,6 +30,7 @@ export default function Resultados() {
   const [selectedStartups, setSelectedStartups] = useState([]);
   const [mostrarBuscaInterativa, setMostrarBuscaInterativa] = useState(false);
   const [analiseEnriquecida, setAnaliseEnriquecida] = useState(null);
+  const [autoGeracaoTentada, setAutoGeracaoTentada] = useState(false);
   const [filtros, setFiltros] = useState({
     categorias: [],
     verticais: [],
@@ -88,18 +89,6 @@ export default function Resultados() {
       // Inicializar estados baseados nos dados
       if (currentTransacao.startups_selecionadas?.length > 0) {
         setSelectedStartups(currentTransacao.startups_selecionadas);
-      }
-      
-      // 🔥 CRÍTICO: Se não tem sugestões, gerar automaticamente (não esperar interação)
-      if (!currentTransacao.startups_sugeridas?.length) {
-        console.log('⚠️ Nenhuma sugestão encontrada, gerando automaticamente...');
-        // Trigger automático da mutation após o componente renderizar
-        setTimeout(() => {
-          gerarSugestoesMutation.mutate({
-            problemCompleto: currentTransacao.dor_relatada,
-            perfilCliente: currentTransacao.perfil_cliente || 'pessoa_fisica'
-          });
-        }, 100);
       }
       
       return currentTransacao;
@@ -209,6 +198,20 @@ export default function Resultados() {
       console.error('❌ Erro na mutation:', error);
     }
   });
+
+  // 🔥 useEffect para gerar sugestões automaticamente
+  React.useEffect(() => {
+    if (transacao && !transacao.startups_sugeridas?.length && !autoGeracaoTentada && !gerarSugestoesMutation.isLoading) {
+      console.log('🚀 Iniciando geração automática de sugestões...');
+      setAutoGeracaoTentada(true);
+      gerarSugestoesMutation.mutate({
+        problemCompleto: transacao.dor_relatada,
+        perfilCliente: transacao.perfil_cliente || 'pessoa_fisica',
+        insights: [],
+        filtros: {}
+      });
+    }
+  }, [transacao, autoGeracaoTentada]);
 
   const handleAnaliseCompleta = async (dadosAnalise) => {
     console.log('🔄 Iniciando análise completa...', dadosAnalise);
