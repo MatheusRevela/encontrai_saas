@@ -131,7 +131,10 @@ export default function ProtectedLayout({ children, pageName }) {
           }
         }
       } catch (e) {
-        window.location.href = createPageUrl('HomePublica');
+        // Redireciona para home pública sem criar loop
+        if (!location.pathname.includes('HomePublica')) {
+          navigate(createPageUrl('HomePublica'), { replace: true });
+        }
       } finally {
         setIsLoading(false);
       }
