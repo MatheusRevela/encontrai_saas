@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Transacao } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,11 +26,13 @@ export default function HomePublica() {
 
   const loadTestimonials = async () => {
     try {
-      const transacoes = await Transacao.filter({ 
+      const transacoes = await base44.entities.Transacao.filter({ 
         destaque_home: true,
         avaliacao: { $gte: 4 }
-      }, '-created_date', 6);
-      setTestimonials(transacoes);
+      });
+      // Ordenar manualmente e limitar a 6
+      const sorted = transacoes.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 6);
+      setTestimonials(sorted);
     } catch (error) {
       console.error('Erro ao carregar depoimentos:', error);
     }
