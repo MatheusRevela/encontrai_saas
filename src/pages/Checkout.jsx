@@ -158,9 +158,13 @@ export default function Checkout() {
   
   // Primeira solução GRÁTIS apenas para novos usuários
   const primeiraGratis = isNovoUsuario === true && quantidadeSelecionada >= 1;
-  const valorFinal = primeiraGratis 
+  let valorFinal = primeiraGratis 
     ? Math.max(0, (quantidadeSelecionada - 1) * valorPorStartup)
     : quantidadeSelecionada * valorPorStartup;
+  
+  // Desconto de R$ 3,00 ao selecionar todas as 5 soluções
+  const descontoCincoSolucoes = quantidadeSelecionada === 5 ? 3.00 : 0;
+  valorFinal = Math.max(0, valorFinal - descontoCincoSolucoes);
 
   if (isLoading) {
     return (
@@ -333,6 +337,13 @@ export default function Checkout() {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-emerald-600 font-semibold">🎁 Primeira solução GRÁTIS</span>
                     <span className="text-emerald-600 font-semibold">- R$ {valorPorStartup.toFixed(2).replace('.', ',')}</span>
+                  </div>
+                )}
+                
+                {descontoCincoSolucoes > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-emerald-600 font-semibold">🎉 Desconto 5 soluções</span>
+                    <span className="text-emerald-600 font-semibold">- R$ {descontoCincoSolucoes.toFixed(2).replace('.', ',')}</span>
                   </div>
                 )}
                 
