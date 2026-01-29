@@ -16,7 +16,6 @@ import {
   EyeOff
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { FeedbackSimilaridade } from '@/entities/all';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function StartupsSimilares({ startupOriginal, transacaoId }) {
@@ -46,7 +45,7 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
       }
 
       // Carregar feedbacks existentes
-      const feedbacksExistentes = await FeedbackSimilaridade.filter({
+      const feedbacksExistentes = await base44.entities.FeedbackSimilaridade.filter({
         transacao_id: transacaoId,
         startup_original_id: startupOriginal.startup_id
       });
@@ -105,7 +104,7 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
   const handleFeedback = async (similarId, tipoFeedback) => {
     try {
       // Salvar feedback
-      await FeedbackSimilaridade.create({
+      await base44.entities.FeedbackSimilaridade.create({
         transacao_id: transacaoId,
         startup_original_id: startupOriginal.startup_id,
         startup_similar_id: similarId,

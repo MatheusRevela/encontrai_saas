@@ -7,9 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Save, XCircle, Loader2, Sparkles, Globe, AlertCircle, AlertTriangle } from "lucide-react";
-import { UploadFile, InvokeLLM } from '@/integrations/Core';
+import { base44 } from '@/api/base44Client';
 import { useDebounce } from '../hooks/useDebounce';
-import { Startup } from '@/entities/all';
 
 const CATEGORIAS = [
   { value: "gestao", label: "Gestão" },
@@ -98,7 +97,7 @@ export default function StartupForm({ startup, onSave, onCancel, isProcessing })
 
       setDuplicateCheck({ checking: true, error: null });
       try {
-        const results = await Startup.filter({ site: debouncedSite.trim() });
+        const results = await base44.entities.Startup.filter({ site: debouncedSite.trim() });
         const foundDuplicate = results.find(s => s.id !== startup?.id);
 
         if (foundDuplicate) {
@@ -158,7 +157,7 @@ Retorne um JSON com este formato:
   "preco_base": "formato R$XX,XX - R$XX,XX/mês ou null se não encontrar"
 }`;
 
-      const resultadoGeral = await InvokeLLM({
+      const resultadoGeral = await base44.integrations.Core.InvokeLLM({
         prompt: promptGeral,
         add_context_from_internet: true,
         response_json_schema: {
@@ -211,7 +210,7 @@ Retorne um JSON com este formato:
 }`;
 
       try {
-        const resultadoTags = await InvokeLLM({
+        const resultadoTags = await base44.integrations.Core.InvokeLLM({
           prompt: promptTags,
           add_context_from_internet: true,
           response_json_schema: {
@@ -336,7 +335,7 @@ Retorne um JSON com este formato:
 
     setIsUploadingLogo(true);
     try {
-      const { file_url } = await UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       handleInputChange('logo_url', file_url);
     } catch (error) {
       console.error('Erro ao fazer upload da logo:', error);
