@@ -322,9 +322,13 @@ export default function Resultados() {
 
       // Primeira solução GRÁTIS apenas para novos usuários
       const primeiraGratis = isNovoUsuario === true;
-      const valorTotal = primeiraGratis 
+      let valorTotal = primeiraGratis 
         ? Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00))
         : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
+
+      // Desconto de R$ 3,00 ao selecionar todas as 5 soluções
+      const descontoCincoSolucoes = selectedStartups.length === 5 ? 3.00 : 0;
+      valorTotal = Math.max(0, valorTotal - descontoCincoSolucoes);
 
       await base44.entities.Transacao.update(transacao.id, {
         startups_selecionadas: selectedStartups,
@@ -588,11 +592,30 @@ export default function Resultados() {
                     <span className="text-emerald-600 font-bold">🎁 GRÁTIS (primeira solução)</span>
                   ) : (
                     <>
-                      Total: R$ {(
-                        isNovoUsuario 
+                      {(() => {
+                        let valorBase = isNovoUsuario 
                           ? Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00))
-                          : selectedStartups.length * (transacao?.valor_por_startup || 5.00)
-                      ).toFixed(2).replace('.', ',')}
+                          : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
+                        
+                        const descontoCinco = selectedStartups.length === 5 ? 3.00 : 0;
+                        const valorFinal = Math.max(0, valorBase - descontoCinco);
+                        
+                        return (
+                          <>
+                            {descontoCinco > 0 && (
+                              <span className="line-through text-slate-400 mr-2">
+                                R$ {valorBase.toFixed(2).replace('.', ',')}
+                              </span>
+                            )}
+                            <span className={descontoCinco > 0 ? 'text-emerald-600 font-bold text-lg' : ''}>
+                              Total: R$ {valorFinal.toFixed(2).replace('.', ',')}
+                            </span>
+                          </>
+                        );
+                      })()}
+                      {selectedStartups.length === 5 && (
+                        <span className="block text-emerald-600 font-semibold mt-1">🎉 R$ 3,00 de desconto aplicado!</span>
+                      )}
                       {isNovoUsuario && selectedStartups.length > 1 && (
                         <span className="block text-emerald-600 font-semibold mt-1">🎁 Primeira solução grátis inclusa</span>
                       )}
