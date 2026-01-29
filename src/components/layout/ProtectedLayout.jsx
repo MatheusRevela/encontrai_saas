@@ -121,6 +121,7 @@ export default function ProtectedLayout({ children, pageName }) {
       try {
         const userData = await base44.auth.me();
         setUser(userData);
+        setIsLoading(false);
         
         // 🎯 ROLE-BASED HOMEPAGE
         if (location.pathname === '/' || location.pathname === '/index') {
@@ -131,16 +132,14 @@ export default function ProtectedLayout({ children, pageName }) {
           }
         }
       } catch (e) {
-        // Redireciona para home pública sem criar loop
-        if (!location.pathname.includes('HomePublica')) {
-          navigate(createPageUrl('HomePublica'), { replace: true });
-        }
-      } finally {
+        // Usuário não autenticado - redireciona imediatamente
         setIsLoading(false);
+        const publicUrl = createPageUrl('HomePublica');
+        window.location.replace(publicUrl);
       }
     };
     checkUser();
-  }, [location.pathname, navigate]);
+  }, []);
 
   if (isLoading) {
     return (
