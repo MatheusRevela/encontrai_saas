@@ -89,20 +89,32 @@ export default function Resultados() {
       if (currentTransacao.startups_selecionadas?.length > 0) {
         setSelectedStartups(currentTransacao.startups_selecionadas);
       }
+      
+      // 🔥 CRÍTICO: Se não tem sugestões, gerar automaticamente (não esperar interação)
       if (!currentTransacao.startups_sugeridas?.length) {
-        console.log('⚠️ Nenhuma sugestão encontrada, ativando busca interativa');
-        setMostrarBuscaInterativa(true);
+        console.log('⚠️ Nenhuma sugestão encontrada, gerando automaticamente...');
+        // Trigger automático da mutation após o componente renderizar
+        setTimeout(() => {
+          gerarSugestoesMutation.mutate({
+            problemCompleto: currentTransacao.dor_relatada,
+            perfilCliente: currentTransacao.perfil_cliente || 'pessoa_fisica'
+          });
+        }, 100);
       }
       
       return currentTransacao;
     },
     enabled: !!sessionId,
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    staleTime: 5 * 60 * 1000,
   });
 
   // React Query: Mutation para gerar sugestões
   const gerarSugestoesMutation = useMutation({
     mutationFn: async (dadosAnalise) => {
+      if (!transacao) {
+        throw new Error('Transação não encontrada');
+      }
+      
       const todasStartups = await base44.entities.Startup.filter({ ativo: true });
 
       if (todasStartups.length === 0) {
@@ -189,6 +201,9 @@ export default function Resultados() {
       
       // Forçar atualização imediata do cache
       queryClient.setQueryData(['transacao', sessionId], transacaoAtualizada);
+      
+      // Desativar busca interativa se estava ativa
+      setMostrarBuscaInterativa(false);
     },
     onError: (error) => {
       console.error('❌ Erro na mutation:', error);
