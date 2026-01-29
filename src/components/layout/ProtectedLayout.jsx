@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
-import { User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Menu,
@@ -119,7 +119,7 @@ export default function ProtectedLayout({ children, pageName }) {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const userData = await User.me();
+        const userData = await base44.auth.me();
         setUser(userData);
         
         // 🎯 ROLE-BASED HOMEPAGE
@@ -148,8 +148,7 @@ export default function ProtectedLayout({ children, pageName }) {
   }
 
   const handleLogout = async () => {
-    await User.logout();
-    window.location.href = createPageUrl('HomePublica');
+    await base44.auth.logout(createPageUrl('HomePublica'));
   };
 
   return (
