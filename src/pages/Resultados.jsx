@@ -30,7 +30,7 @@ export default function Resultados() {
   const [selectedStartups, setSelectedStartups] = useState([]);
   const [mostrarBuscaInterativa, setMostrarBuscaInterativa] = useState(false);
   const [analiseEnriquecida, setAnaliseEnriquecida] = useState(null);
-  const [autoGeracaoTentada, setAutoGeracaoTentada] = useState(false);
+  const [gerandoSugestoes, setGerandoSugestoes] = useState(false);
   const [filtros, setFiltros] = useState({
     categorias: [],
     verticais: [],
@@ -63,7 +63,7 @@ export default function Resultados() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // React Query: Buscar transação
+  // React Query: Buscar transação E gerar sugestões se necessário
   const { data: transacao, isLoading, error } = useQuery({
     queryKey: ['transacao', sessionId],
     queryFn: async () => {
@@ -77,7 +77,7 @@ export default function Resultados() {
         throw new Error('Transação não encontrada.');
       }
       
-      const currentTransacao = transacoes[0];
+      let currentTransacao = transacoes[0];
       
       console.log('📊 Transação carregada:', {
         id: currentTransacao.id,
@@ -85,6 +85,82 @@ export default function Resultados() {
         totalSugestoes: currentTransacao.startups_sugeridas?.length || 0,
         selecionadas: currentTransacao.startups_selecionadas?.length || 0
       });
+      
+      // 🔥 SE NÃO TEM SUGESTÕES, GERAR DE FORMA SÍNCRONA AQUI MESMO
+      if (!currentTransacao.startups_sugeridas?.length) {
+        console.log('⚠️ Nenhuma sugestão encontrada, gerando agora...');
+        
+        const todasStartups = await base44.entities.Startup.filter({ ativo: true });
+        
+        if (todasStartups.length === 0) {
+          throw new Error('Nenhuma startup ativa encontrada na base de dados.');
+        }
+
+        const problemaCompleto = currentTransacao.dor_relatada;
+        const perfilCliente = currentTransacao.perfil_cliente || 'pessoa_fisica';
+
+        const prompt = buildMatchingPrompt(
+          problemaCompleto,
+          todasStartups,
+          perfilCliente,
+          [],
+          {}
+        );
+
+        console.log('🔍 Executando matching inteligente...');
+
+        const matchingResult = await base44.integrations.Core.InvokeLLM({
+          prompt,
+          response_json_schema: buildMatchingJsonSchema()
+        });
+
+        if (!matchingResult.matches || matchingResult.matches.length === 0) {
+          throw new Error('IA não conseguiu encontrar matches adequados.');
+        }
+
+        const startupsEnriquecidas = matchingResult.matches
+          .map((match) => {
+            const startupCompleta = todasStartups.find(s => s.id === match.startup_id);
+            if (!startupCompleta) {
+              console.warn(`Startup ${match.startup_id} não encontrada`);
+              return null;
+            }
+
+            return {
+              startup_id: startupCompleta.id,
+              nome: startupCompleta.nome,
+              descricao: startupCompleta.descricao,
+              categoria: startupCompleta.categoria,
+              vertical_atuacao: startupCompleta.vertical_atuacao,
+              site: startupCompleta.site || null,
+              logo_url: startupCompleta.logo_url || null,
+              preco_base: startupCompleta.preco_base || null,
+              match_percentage: Math.round(match.match_percentage),
+              resumo_personalizado: match.resumo_personalizado,
+              pontos_fortes: match.pontos_fortes || [],
+              como_resolve: match.como_resolve || '',
+              beneficios_tangiveis: match.beneficios_tangiveis || [],
+              implementacao_estimada: match.implementacao_estimada || '1-2 semanas'
+            };
+          })
+          .filter(Boolean);
+
+        const matchesValidos = startupsEnriquecidas.filter(Boolean);
+
+        if (matchesValidos.length === 0) {
+          throw new Error('Nenhum match válido foi encontrado.');
+        }
+
+        console.log('💾 Atualizando transação com', matchesValidos.length, 'sugestões');
+        
+        currentTransacao = await base44.entities.Transacao.update(currentTransacao.id, {
+          startups_sugeridas: matchesValidos,
+          insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.',
+          perfil_cliente: perfilCliente
+        });
+
+        console.log('✅ Transação atualizada com sucesso');
+      }
       
       // Inicializar estados baseados nos dados
       if (currentTransacao.startups_selecionadas?.length > 0) {
@@ -95,6 +171,7 @@ export default function Resultados() {
     },
     enabled: !!sessionId,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   // React Query: Mutation para gerar sugestões
@@ -199,40 +276,21 @@ export default function Resultados() {
     }
   });
 
-  // 🔥 useEffect para gerar sugestões automaticamente
-  React.useEffect(() => {
-    if (transacao && !transacao.startups_sugeridas?.length && !autoGeracaoTentada && !gerarSugestoesMutation.isLoading) {
-      console.log('🚀 Iniciando geração automática de sugestões...');
-      setAutoGeracaoTentada(true);
-      gerarSugestoesMutation.mutate({
-        problemCompleto: transacao.dor_relatada,
-        perfilCliente: transacao.perfil_cliente || 'pessoa_fisica',
-        insights: [],
-        filtros: {}
-      });
-    }
-  }, [transacao, autoGeracaoTentada]);
-
   const handleAnaliseCompleta = async (dadosAnalise) => {
-    console.log('🔄 Iniciando análise completa...', dadosAnalise);
+    console.log('🔄 Iniciando análise refinada...');
+    setMostrarBuscaInterativa(false);
+    setGerandoSugestoes(true);
+    
     try {
-      setMostrarBuscaInterativa(false);
-      setAnaliseEnriquecida(dadosAnalise);
-      
-      console.log('🔍 Gerando sugestões...');
-      await gerarSugestoesMutation.mutateAsync(dadosAnalise);
-      console.log('✅ Mutation concluída');
-      
-      // Forçar recarregamento completo dos dados
-      console.log('🔄 Invalidando e refetchando...');
       await queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
       await queryClient.refetchQueries({ queryKey: ['transacao', sessionId], type: 'active' });
-      
-      console.log('✅ Fluxo completo de análise finalizado');
+      console.log('✅ Análise concluída');
     } catch (error) {
       console.error('❌ Erro ao completar análise:', error);
       alert(`Erro ao processar análise: ${error.message}`);
       setMostrarBuscaInterativa(true);
+    } finally {
+      setGerandoSugestoes(false);
     }
   };
 
@@ -295,13 +353,6 @@ export default function Resultados() {
   const startupsSugeridas = transacao?.startups_sugeridas || [];
   const insight = useMemo(() => transacao?.insight_gerado || '', [transacao?.insight_gerado]);
   
-  console.log('🎯 Estado atual:', {
-    totalSugestoes: startupsSugeridas.length,
-    isLoading,
-    isMutating: gerarSugestoesMutation.isLoading,
-    mostrarChat: mostrarBuscaInterativa
-  });
-  
   // Apply filters to startups
   const enrichedStartups = useMemo(() => {
     let resultado = [...startupsSugeridas];
@@ -326,7 +377,7 @@ export default function Resultados() {
     return resultado;
   }, [startupsSugeridas, filtros]);
 
-  if (isLoading || gerarSugestoesMutation.isLoading) {
+  if (isLoading || gerandoSugestoes) {
     return <BuscaLoadingAnimation />;
   }
 
@@ -351,8 +402,8 @@ export default function Resultados() {
     );
   }
 
-  if (error || gerarSugestoesMutation.isError) {
-    const errorMessage = error?.message || gerarSugestoesMutation.error?.message || 'Erro desconhecido';
+  if (error) {
+    const errorMessage = error?.message || 'Erro desconhecido';
     return (
       <div className="min-h-screen p-8 flex items-center justify-center">
         <Card className="max-w-md w-full border-red-200 bg-red-50">
@@ -562,7 +613,7 @@ export default function Resultados() {
           </div>
         )}
 
-        {enrichedStartups.length === 0 && !isLoading && !gerarSugestoesMutation.isLoading && !mostrarBuscaInterativa && !error && !gerarSugestoesMutation.isError && (
+        {enrichedStartups.length === 0 && !isLoading && !gerandoSugestoes && !mostrarBuscaInterativa && !error && (
           <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg mt-8">
             <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-800 mb-2">Nenhuma solução encontrada</h3>
