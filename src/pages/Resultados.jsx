@@ -470,9 +470,9 @@ export default function Resultados() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <Card className={`transition-all duration-300 border-2 ${isSelected ? 'border-emerald-500 shadow-xl' : 'border-transparent hover:shadow-lg'}`}>
+                <Card className={`transition-all duration-300 border-2 ${isSelected ? 'border-emerald-500 shadow-xl' : 'border-transparent hover:shadow-lg'} overflow-hidden`}>
                   <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4 w-full">
                       <Checkbox
                         id={`startup-${startup.startup_id}`}
                         checked={isSelected}
@@ -480,9 +480,9 @@ export default function Resultados() {
                         className="h-6 w-6 rounded-md self-start mt-1"
                         aria-label={`Selecionar ${startup.nome}`}
                       />
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row justify-between items-start mb-3">
-                          <div>
+                      <div className="flex-1 min-w-0 w-full">
+                        <div className="flex flex-col sm:flex-row justify-between items-start mb-3 gap-3">
+                          <div className="flex-1 min-w-0">
                             <h3 className="text-xl font-bold text-slate-900 mb-1">
                               Solução #{index + 1}
                             </h3>
@@ -498,15 +498,15 @@ export default function Resultados() {
                               </Badge>
                             </div>
                           </div>
-                          <div className="text-right mt-2 sm:mt-0">
-                            <p className="text-2xl font-bold text-emerald-600">
+                          <div className="text-right mt-2 sm:mt-0 flex-shrink-0">
+                            <p className="text-2xl font-bold text-emerald-600 whitespace-nowrap">
                               R$ {(transacao?.valor_por_startup || 5.00)?.toFixed(2).replace('.', ',')}
                             </p>
-                            <p className="text-xs text-slate-500">para desbloquear</p>
+                            <p className="text-xs text-slate-500 whitespace-nowrap">para desbloquear</p>
                           </div>
                         </div>
 
-                        <p className="text-slate-700 mb-4">
+                        <p className="text-slate-700 mb-4 leading-relaxed">
                           {recomendacao?.resumo_personalizado}
                         </p>
 
