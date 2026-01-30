@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
         name: user.full_name
       },
       back_urls: {
-        success: `${req.headers.get('origin')}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&startup_id=${startup_id}`,
+        success: `${req.headers.get('origin')}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&startup_id=${startup_original_id}`,
         failure: `${req.headers.get('origin')}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&status=failure`,
         pending: `${req.headers.get('origin')}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&status=pending`
       },

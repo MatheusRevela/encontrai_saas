@@ -108,10 +108,16 @@ ${i + 1}. ${s.nome} (ID: ${s.id})
 `).join('\n')}
 
 TAREFA:
-Identifique as 3-5 startups MAIS SIMILARES à startup de referência com base em:
-1. Mesma categoria ou vertical (peso 40%)
-2. Problema/solução semelhante (peso 40%)
-3. Modelo de negócio compatível (peso 20%)
+Identifique as 3-5 startups MAIS SIMILARES à startup de referência.
+
+CRITÉRIOS OBRIGATÓRIOS (todos devem ser atendidos):
+1. MESMA CATEGORIA ou vertical da startup de referência
+2. Resolve o MESMO TIPO DE PROBLEMA (não pode ser genérico ou muito diferente)
+3. Público-alvo semelhante
+
+CRITÉRIOS COMPLEMENTARES:
+4. Modelo de negócio compatível
+5. Tags similares
 
 Para cada similar, forneça:
 - startup_id
@@ -121,7 +127,10 @@ Para cada similar, forneça:
 
 REGRAS CRÍTICAS:
 1. NO resumo_match, NÃO mencione o nome da startup - use termos genéricos como "Esta solução", "A plataforma", "O sistema"
-2. Retorne APENAS startups com score >= 60. Se nenhuma atingir, retorne lista vazia.
+2. Retorne APENAS startups com score >= 70 E que atendam aos critérios obrigatórios
+3. Se nenhuma startup atender aos critérios, retorne lista vazia
+4. EVITE startups muito genéricas ou que resolvam problemas muito diferentes
+5. Priorize soluções que o usuário realmente consideraria como alternativas
 
 EXEMPLO de resumo_match correto:
 ❌ ERRADO: "A Inovyo oferece soluções para gestão..."
@@ -139,7 +148,7 @@ EXEMPLO de resumo_match correto:
               type: 'object',
               properties: {
                 startup_id: { type: 'string' },
-                similaridade_score: { type: 'number', minimum: 60, maximum: 100 },
+                similaridade_score: { type: 'number', minimum: 70, maximum: 100 },
                 resumo_match: { type: 'string' },
                 razoes_similaridade: {
                   type: 'array',
