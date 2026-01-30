@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CheckCircle, Star, Loader2, Globe, Mail, Phone } from 'lucide-react';
 import StartupsSimilares from '../components/startups/StartupsSimilares';
+import StartupsNaoSelecionadas from '../components/startups/StartupsNaoSelecionadas';
 
 const ProximosPassosCard = () => (
   <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 border-0 shadow-lg">
@@ -169,6 +170,9 @@ export default function DetalhesBusca() {
                 );
               })}
             </div>
+
+            {/* Startups não selecionadas */}
+            <StartupsNaoSelecionadas transacao={busca} />
             
             <ProximosPassosCard />
 

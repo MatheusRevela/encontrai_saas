@@ -208,14 +208,31 @@ Deno.serve(async (req) => {
                             }));
 
                             const similaresDesbloqueadas = transaction.similares_desbloqueadas || [];
-                            similaresDesbloqueadas.push({
-                                startup_original_id: startupOriginalId,
-                                startups_similares: similaresData,
-                                pago_em: new Date().toISOString()
-                            });
+                            
+                            // Verificar se já existe entrada para esta startup original
+                            const indexExistente = similaresDesbloqueadas.findIndex(
+                                s => s.startup_original_id === startupOriginalId
+                            );
+                            
+                            if (indexExistente >= 0) {
+                                // Atualizar entrada existente
+                                similaresDesbloqueadas[indexExistente] = {
+                                    startup_original_id: startupOriginalId,
+                                    startups_similares: similaresData,
+                                    pago_em: new Date().toISOString()
+                                };
+                            } else {
+                                // Adicionar nova entrada
+                                similaresDesbloqueadas.push({
+                                    startup_original_id: startupOriginalId,
+                                    startups_similares: similaresData,
+                                    pago_em: new Date().toISOString()
+                                });
+                            }
 
                             await base44.entities.Transacao.update(transaction.id, {
-                                similares_desbloqueadas: similaresDesbloqueadas
+                                similares_desbloqueadas: similaresDesbloqueadas,
+                                status_pagamento: 'pago'
                             });
 
                             console.log(`✅ ${similaresData.length} similares desbloqueadas com sucesso`);
