@@ -86,7 +86,7 @@ export default function StartupsNaoSelecionadas({ transacao }) {
           Outras Soluções Recomendadas para Você
         </CardTitle>
         <p className="text-sm text-slate-600 mt-2">
-          Você ainda tem {startupsNaoDesbloqueadas.length} solução{startupsNaoDesbloqueadas.length > 1 ? 'ões' : ''} recomendada{startupsNaoDesbloqueadas.length > 1 ? 's' : ''} que não desbloqueou
+          Você ainda tem {startupsNaoDesbloqueadas.length} {startupsNaoDesbloqueadas.length > 1 ? 'soluções recomendadas' : 'solução recomendada'} que não desbloqueou
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
