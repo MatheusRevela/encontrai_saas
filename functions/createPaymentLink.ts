@@ -82,9 +82,13 @@ Deno.serve(async (req) => {
     const isNovoUsuario = comprasAnteriores.length === 0;
     
     // Primeira solução GRÁTIS apenas para novos usuários
-    const valorTotal = isNovoUsuario 
+    let valorTotal = isNovoUsuario 
       ? Math.max(0, (quantidadeSelecionada - 1) * PRECO_UNITARIO)
       : quantidadeSelecionada * PRECO_UNITARIO;
+    
+    // Desconto de R$ 3,00 ao selecionar todas as 5 soluções
+    const descontoCincoSolucoes = quantidadeSelecionada === 5 ? 3.00 : 0;
+    valorTotal = Math.max(0, valorTotal - descontoCincoSolucoes);
 
     // Validar CPF do cliente (Mercado Pago exige CPF válido no Brasil)
     const cpfCliente = transacao.cliente_cpf?.replace(/\D/g, '');
