@@ -21,6 +21,7 @@ import {
 
 export default function Checkout() {
   const [email, setEmail] = useState('');
+  const [cpf, setCpf] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
   
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ export default function Checkout() {
       await base44.entities.Transacao.update(transacao.id, {
         cliente_email: email.trim(),
         cliente_nome: user?.full_name || email.split('@')[0],
-        cliente_cpf: '00000000000',
+        cliente_cpf: cpf.replace(/\D/g, ''),
         status_pagamento: 'processando'
       });
 
@@ -129,7 +130,29 @@ export default function Checkout() {
       return;
     }
 
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    if (!cpfLimpo || cpfLimpo.length !== 11) {
+      setErrorMessage('CPF deve conter 11 dígitos');
+      return;
+    }
+
     await paymentMutation.mutateAsync();
+  };
+
+  const formatCPF = (value) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    return cpf;
+  };
+
+  const handleCPFChange = (e) => {
+    const formatted = formatCPF(e.target.value);
+    setCpf(formatted);
   };
 
   const getAnonymizedTitle = (startup, index) => {
@@ -232,6 +255,25 @@ export default function Checkout() {
                 </p>
               </div>
 
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  CPF *
+                </label>
+                <Input
+                  type="text"
+                  value={cpf}
+                  onChange={handleCPFChange}
+                  placeholder="000.000.000-00"
+                  required
+                  disabled={paymentMutation.isLoading}
+                  maxLength={14}
+                  className="bg-white border-slate-200 text-lg"
+                />
+                <p className="text-xs text-slate-500 mt-2">
+                  Exigido pelo Mercado Pago para processar o pagamento
+                </p>
+              </div>
+
               {/* SELOS DE CONFIANÇA */}
               <div className="bg-slate-50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-3">
@@ -275,7 +317,7 @@ export default function Checkout() {
               <Button
                 type="submit"
                 onClick={handleSubmit}
-                disabled={!email.trim() || paymentMutation.isLoading || selectedStartups.length === 0}
+                disabled={!email.trim() || !cpf.trim() || paymentMutation.isLoading || selectedStartups.length === 0}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-semibold"
               >
                 {paymentMutation.isLoading ? (
