@@ -53,7 +53,7 @@ export default function HomePublica() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 mb-6 px-4 py-2 text-sm">
-            🚀 +500 soluções verificadas na nossa base
+            🚀 +1000 soluções verificadas na nossa base
           </Badge>
           
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
