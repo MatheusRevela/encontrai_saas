@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CheckCircle, Star, Loader2, Globe, Mail, Phone } from 'lucide-react';
-import StartupsSimilares from '../components/startups/StartupsSimilares';
 import StartupsNaoSelecionadas from '../components/startups/StartupsNaoSelecionadas';
 
 const ProximosPassosCard = () => (
