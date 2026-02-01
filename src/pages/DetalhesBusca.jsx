@@ -140,46 +140,46 @@ export default function DetalhesBusca() {
                               <div>
                                 <h3 className="text-3xl font-bold text-slate-900 mb-3">{startup.nome}</h3>
                                 <div className="flex flex-wrap gap-2">
-                                  {startup.categoria && (
-                                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 px-3 py-1">
-                                      {startup.categoria}
-                                    </Badge>
-                                  )}
-                                  {startup.vertical_atuacao && (
-                                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
-                                      {startup.vertical_atuacao}
-                                    </Badge>
-                                  )}
-                                  {startup.modelo_negocio && (
-                                    <Badge className="bg-purple-100 text-purple-800 border-purple-200 px-3 py-1 capitalize">
-                                      {startup.modelo_negocio}
-                                    </Badge>
-                                  )}
+                                 {startup.categoria && (
+                                   <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 px-3 py-1">
+                                     {startup.categoria}
+                                   </Badge>
+                                 )}
+                                 {startup.vertical_atuacao && (
+                                   <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
+                                     {startup.vertical_atuacao}
+                                   </Badge>
+                                 )}
+                                 {startup.modelo_negocio && (
+                                   <Badge className="bg-purple-100 text-purple-800 border-purple-200 px-3 py-1 capitalize">
+                                     {startup.modelo_negocio}
+                                   </Badge>
+                                 )}
                                 </div>
-                              
-                              {/* Mostrar avaliação individual se existir */}
-                              {avaliacaoIndividual && (
-                                <div className="mt-4 bg-amber-50 rounded-lg p-3 border border-amber-200">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-amber-900">Sua avaliação:</span>
-                                    <div className="flex gap-1">
-                                      {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className={`w-4 h-4 ${i < avaliacaoIndividual.avaliacao ? 'text-amber-500 fill-amber-500' : 'text-amber-200'}`} />
-                                      ))}
-                                    </div>
-                                  </div>
+
+                                {/* Mostrar avaliação individual se existir */}
+                                {avaliacaoIndividual && (
+                                 <div className="mt-4 bg-amber-50 rounded-lg p-3 border border-amber-200">
+                                   <div className="flex items-center gap-2">
+                                     <span className="text-sm font-medium text-amber-900">Sua avaliação:</span>
+                                     <div className="flex gap-1">
+                                       {[...Array(5)].map((_, i) => (
+                                         <Star key={i} className={`w-4 h-4 ${i < avaliacaoIndividual.avaliacao ? 'text-amber-500 fill-amber-500' : 'text-amber-200'}`} />
+                                       ))}
+                                     </div>
+                                   </div>
+                                 </div>
+                                )}
                                 </div>
-                              )}
-                              </div>
-                              {startup.preco_base && (
+                                {startup.preco_base && (
                                 <div className="text-right flex-shrink-0 ml-4 bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-                                  <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wide mb-1">Investimento</p>
-                                  <p className="text-2xl font-bold text-emerald-600">{startup.preco_base}</p>
+                                 <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wide mb-1">Investimento</p>
+                                 <p className="text-2xl font-bold text-emerald-600">{startup.preco_base}</p>
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                                )}
+                                </div>
+                                </div>
+                                </div>
                       
                       <div className="p-6">
                         <p className="text-slate-700 text-base leading-relaxed">{startup.descricao}</p>
