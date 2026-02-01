@@ -5,7 +5,7 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, CheckCircle, Star, Loader2, Globe, Mail, Phone, Sparkles, ExternalLink } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Star, Loader2, Globe, Mail, Phone, Sparkles, ExternalLink, Clock } from 'lucide-react';
 import StartupsNaoSelecionadas from '../components/startups/StartupsNaoSelecionadas';
 
 const ProximosPassosCard = () => (
