@@ -157,14 +157,6 @@ export default function DetalhesBusca() {
                           {startup.site && <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-slate-500" /> <a href={startup.site} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Visitar Site</a></div>}
                         </div>
                       </div>
-
-                      {/* Startups Similares */}
-                      <div className="mt-6">
-                        <StartupsSimilares
-                          startupOriginal={startup}
-                          transacaoId={busca.id}
-                        />
-                      </div>
                     </CardContent>
                   </Card>
                 );
