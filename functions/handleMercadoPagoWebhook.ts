@@ -129,15 +129,20 @@ Deno.serve(async (req) => {
             const payment = await paymentResponse.json();
             console.log('💰 Detalhes do pagamento:', JSON.stringify(payment, null, 2));
             
-            const externalReference = payment.external_reference;
-            if (!externalReference) {
-                console.error('❌ External reference não encontrado');
-                return new Response('External reference not found', { status: 400, headers: corsHeaders });
+            // Identificar transação através de external_reference ou metadata
+            let transactions = [];
+            
+            if (payment.external_reference) {
+                transactions = await base44.entities.Transacao.filter({ id: payment.external_reference });
+                console.log('🔍 Transações encontradas por external_reference:', transactions.length);
+            } else if (payment.metadata?.transacao_id) {
+                // Para pagamentos de similares, usar o metadata
+                transactions = await base44.entities.Transacao.filter({ id: payment.metadata.transacao_id });
+                console.log('🔍 Transações encontradas por metadata:', transactions.length);
+            } else {
+                console.error('❌ Não foi possível identificar a transação');
+                return new Response('Transaction not found', { status: 400, headers: corsHeaders });
             }
-
-            // 🔒 SEGURANÇA: Busca e validação robusta da transação
-            const transactions = await base44.entities.Transacao.filter({ id: externalReference });
-            console.log('🔍 Transações encontradas:', transactions.length);
 
             if (transactions.length > 0) {
                 const transaction = transactions[0];
