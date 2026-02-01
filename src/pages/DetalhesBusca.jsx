@@ -170,16 +170,17 @@ export default function DetalhesBusca() {
                                    </div>
                                  </div>
                                 )}
-                                </div>
-                                {startup.preco_base && (
+                              </div>
+                              {startup.preco_base && (
                                 <div className="text-right flex-shrink-0 ml-4 bg-emerald-50 rounded-xl p-4 border border-emerald-200">
                                  <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wide mb-1">Investimento</p>
                                  <p className="text-2xl font-bold text-emerald-600">{startup.preco_base}</p>
                                 </div>
-                                )}
-                                </div>
-                                </div>
-                                </div>
+                              )}
+                            </div>
+                          </div>
+                          </div>
+                          </div>
                       
                       <div className="p-6">
                         <p className="text-slate-700 text-base leading-relaxed">{startup.descricao}</p>
