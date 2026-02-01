@@ -64,6 +64,10 @@ export default function DetalhesBusca() {
       }
     };
     loadBusca();
+
+    // Recarregar a cada 3 segundos para capturar atualizações de pagamento
+    const interval = setInterval(loadBusca, 3000);
+    return () => clearInterval(interval);
   }, [searchParams]);
 
   if (isLoading) {
