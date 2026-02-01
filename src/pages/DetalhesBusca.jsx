@@ -96,7 +96,7 @@ export default function DetalhesBusca() {
           <div className="space-y-8">
             <h2 className="text-2xl font-bold text-slate-800">Soluções Desbloqueadas</h2>
             <div className="space-y-6">
-              {busca.startups_desbloqueadas.map(startup => {
+              {busca.startups_desbloqueadas.map((startup) => {
                 // Encontrar avaliação individual para esta startup
                 const avaliacaoIndividual = busca.avaliacoes_individuais?.find(
                   av => av.startup_id === startup.startup_id
@@ -170,6 +170,56 @@ export default function DetalhesBusca() {
                 );
               })}
             </div>
+
+            {/* Desbloqueios Adicionais */}
+            {busca.similares_desbloqueadas && busca.similares_desbloqueadas.length > 0 && (
+              <>
+                <h2 className="text-2xl font-bold text-slate-800 mt-12">Desbloqueios Adicionais</h2>
+                <div className="space-y-6">
+                  {busca.similares_desbloqueadas.map((similar, idx) => 
+                    similar.startups_similares?.map((startup) => (
+                      <Card key={`${idx}-${startup.startup_id}`} className="bg-white border-0 shadow-lg overflow-hidden">
+                        <CardContent className="p-6">
+                          <div className="flex flex-col sm:flex-row gap-6 mb-6">
+                            {startup.logo_url && (
+                              <img src={startup.logo_url} alt={`Logo ${startup.nome}`} className="w-24 h-24 rounded-2xl object-contain bg-slate-50 p-2 self-start"/>
+                            )}
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h3 className="text-2xl font-bold text-slate-900">{startup.nome}</h3>
+                                  <div className="flex flex-wrap gap-2 mt-2">
+                                    {startup.categoria && <Badge variant="secondary">{startup.categoria}</Badge>}
+                                    {startup.vertical_atuacao && <Badge variant="outline">{startup.vertical_atuacao}</Badge>}
+                                    {startup.modelo_negocio && <Badge variant="outline" className="capitalize">{startup.modelo_negocio}</Badge>}
+                                  </div>
+                                </div>
+                                {startup.preco_base && (
+                                  <div className="text-right flex-shrink-0 ml-4">
+                                    <p className="text-sm text-slate-500 font-medium">Investimento</p>
+                                    <p className="font-bold text-emerald-600">{startup.preco_base}</p>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-slate-600 mt-4">{startup.descricao}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-slate-50 rounded-xl p-4">
+                            <h4 className="font-semibold text-slate-800 mb-4">Contatos:</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {startup.email && <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-slate-500" /> <a href={`mailto:${startup.email}`} className="text-blue-600 hover:underline">{startup.email}</a></div>}
+                              {startup.whatsapp && <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-slate-500" /> <a href={`https://wa.me/${startup.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{startup.whatsapp}</a></div>}
+                              {startup.site && <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-slate-500" /> <a href={startup.site} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Visitar Site</a></div>}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Startups não selecionadas */}
             <StartupsNaoSelecionadas transacao={busca} />

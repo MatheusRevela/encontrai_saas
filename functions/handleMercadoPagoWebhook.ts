@@ -231,8 +231,7 @@ Deno.serve(async (req) => {
                             }
 
                             await base44.entities.Transacao.update(transaction.id, {
-                                similares_desbloqueadas: similaresDesbloqueadas,
-                                status_pagamento: 'pago'
+                                similares_desbloqueadas: similaresDesbloqueadas
                             });
 
                             console.log(`✅ ${similaresData.length} similares desbloqueadas com sucesso`);
