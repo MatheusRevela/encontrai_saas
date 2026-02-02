@@ -105,7 +105,8 @@ export default function DetalhesBusca() {
           </div>
         </div>
 
-        {busca.status_pagamento === 'pago' && busca.startups_desbloqueadas?.length > 0 ? (
+        {/* Sempre mostrar soluções desbloqueadas se existirem */}
+        {busca.startups_desbloqueadas?.length > 0 && (
           <div className="space-y-10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
