@@ -354,7 +354,10 @@ export default function DetalhesBusca() {
               </Card>
             )}
           </div>
-        ) : (
+        )}
+
+        {/* Aviso de pagamento pendente APENAS para a busca principal */}
+        {busca.status_pagamento !== 'pago' && !busca.startups_desbloqueadas?.length && (
           <Card className="text-center p-12 bg-gradient-to-br from-amber-50 to-orange-50 border-0 shadow-xl rounded-3xl">
             <div className="w-20 h-20 bg-amber-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
               <Clock className="w-10 h-10 text-white" />
