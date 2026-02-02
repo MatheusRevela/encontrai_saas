@@ -355,7 +355,7 @@ export default function DetalhesBusca() {
             )}
           </div>
         )}
-
+        
         {/* Aviso de pagamento pendente APENAS para a busca principal */}
         {busca.status_pagamento !== 'pago' && !busca.startups_desbloqueadas?.length && (
           <Card className="text-center p-12 bg-gradient-to-br from-amber-50 to-orange-50 border-0 shadow-xl rounded-3xl">
