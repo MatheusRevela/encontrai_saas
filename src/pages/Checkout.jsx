@@ -171,22 +171,36 @@ export default function Checkout() {
     return `${categoryName} #${index + 1}`;
   };
 
-  const selectedStartups = transacao?.startups_detalhadas || 
-                          transacao?.startups_sugeridas?.filter(s => 
-                            transacao.startups_selecionadas?.includes(s.startup_id)
-                          ) || [];
+  // Se for checkout adicional, mostrar apenas as startups adicionais
+  const isAdicionalCheckout = transacao?.is_adicional_checkout || false;
+  const adicionalCount = transacao?.adicional_startups_count || 0;
+  
+  let selectedStartups;
+  if (isAdicionalCheckout && adicionalCount > 0) {
+    // Pegar apenas as últimas N startups (as adicionais)
+    const allStartups = transacao?.startups_detalhadas || 
+                        transacao?.startups_sugeridas?.filter(s => 
+                          transacao.startups_selecionadas?.includes(s.startup_id)
+                        ) || [];
+    selectedStartups = allStartups.slice(-adicionalCount);
+  } else {
+    selectedStartups = transacao?.startups_detalhadas || 
+                            transacao?.startups_sugeridas?.filter(s => 
+                              transacao.startups_selecionadas?.includes(s.startup_id)
+                            ) || [];
+  }
 
   const valorPorStartup = transacao?.valor_por_startup || 5.00;
   const quantidadeSelecionada = selectedStartups.length;
   
-  // Primeira solução GRÁTIS apenas para novos usuários
-  const primeiraGratis = isNovoUsuario === true && quantidadeSelecionada >= 1;
+  // Primeira solução GRÁTIS apenas para novos usuários E apenas no checkout inicial
+  const primeiraGratis = !isAdicionalCheckout && isNovoUsuario === true && quantidadeSelecionada >= 1;
   let valorFinal = primeiraGratis 
     ? Math.max(0, (quantidadeSelecionada - 1) * valorPorStartup)
     : quantidadeSelecionada * valorPorStartup;
   
-  // Desconto de R$ 3,00 ao selecionar todas as 5 soluções
-  const descontoCincoSolucoes = quantidadeSelecionada === 5 ? 3.00 : 0;
+  // Desconto de R$ 3,00 ao selecionar todas as 5 soluções (apenas checkout inicial)
+  const descontoCincoSolucoes = !isAdicionalCheckout && quantidadeSelecionada === 5 ? 3.00 : 0;
   valorFinal = Math.max(0, valorFinal - descontoCincoSolucoes);
 
   if (isLoading) {
@@ -221,9 +235,14 @@ export default function Checkout() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Finalizar Pagamento</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            {isAdicionalCheckout ? 'Desbloqueio de Soluções Adicionais' : 'Finalizar Pagamento'}
+          </h1>
           <p className="text-slate-600">
-            Confirme seu email para desbloquear {selectedStartups.length} solução{selectedStartups.length !== 1 ? 'ões' : ''}
+            {isAdicionalCheckout 
+              ? `Confirme seu email para desbloquear mais ${selectedStartups.length} solução${selectedStartups.length !== 1 ? 'ões' : ''}`
+              : `Confirme seu email para desbloquear ${selectedStartups.length} solução${selectedStartups.length !== 1 ? 'ões' : ''}`
+            }
           </p>
         </div>
 

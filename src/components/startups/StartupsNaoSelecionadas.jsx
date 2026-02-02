@@ -55,11 +55,14 @@ export default function StartupsNaoSelecionadas({ transacao }) {
       const novasSelecoes = [...(transacao.startups_selecionadas || []), ...selectedStartups];
       const novasDetalhadas = [...(transacao.startups_detalhadas || []), ...startupsDetalhadas];
       
+      // Marcar que é um pagamento de desbloqueio adicional
       await base44.entities.Transacao.update(transacao.id, {
         startups_selecionadas: novasSelecoes,
         startups_detalhadas: novasDetalhadas,
         quantidade_selecionada: novasSelecoes.length,
-        valor_total: novasSelecoes.length * 5.00
+        valor_total: novasSelecoes.length * 5.00,
+        is_adicional_checkout: true, // Flag para indicar que é checkout adicional
+        adicional_startups_count: selectedStartups.length // Quantidade APENAS das adicionais
       });
 
       // Criar link de pagamento
