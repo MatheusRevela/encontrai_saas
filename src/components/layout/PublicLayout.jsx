@@ -19,7 +19,7 @@ const SimplePublicHeader = () => {
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to={createPageUrl("HomePublica")} className="flex items-center gap-2">
+        <Link to={createPageUrl("Home")} className="flex items-center gap-2">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/02b71dae4_Logo_expandido_3-removebg-preview.png"
             alt="EncontrAI Logo"
@@ -49,7 +49,7 @@ const SimpleFooter = () => (
     <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-sm text-slate-600 gap-4">
       <p>&copy; {new Date().getFullYear()} EncontrAI. Todos os direitos reservados.</p>
       <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-        <Link to={createPageUrl("HomePublica")} className="hover:text-emerald-600">Início</Link>
+        <Link to={createPageUrl("Home")} className="hover:text-emerald-600">Início</Link>
         <Link to={createPageUrl("FAQ")} className="hover:text-emerald-600">FAQ</Link>
         <Link to={createPageUrl("Contato")} className="hover:text-emerald-600">Contato</Link>
         <Link to={createPageUrl("TermosDeUso")} className="hover:text-emerald-600">Termos de Uso</Link>

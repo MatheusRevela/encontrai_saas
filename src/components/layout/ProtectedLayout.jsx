@@ -134,7 +134,7 @@ export default function ProtectedLayout({ children, pageName }) {
       } catch (e) {
         // Usuário não autenticado - redireciona imediatamente
         setIsLoading(false);
-        const publicUrl = createPageUrl('HomePublica');
+        const publicUrl = createPageUrl('Home');
         window.location.replace(publicUrl);
       }
     };
@@ -150,7 +150,7 @@ export default function ProtectedLayout({ children, pageName }) {
   }
 
   const handleLogout = async () => {
-    await base44.auth.logout(createPageUrl('HomePublica'));
+    await base44.auth.logout(createPageUrl('Home'));
   };
 
   return (

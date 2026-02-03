@@ -16,7 +16,7 @@ import {
   Gift
 } from 'lucide-react';
 
-export default function HomePublica() {
+export default function Home() {
   const navigate = useNavigate();
   const [testimonials, setTestimonials] = useState([]);
 
