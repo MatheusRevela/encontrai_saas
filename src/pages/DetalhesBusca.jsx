@@ -204,7 +204,7 @@ export default function DetalhesBusca() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {startup.email && (
                               <a 
-                                href={`mailto:${startup.email}`}
+                                href={`mailto:${startup.email}?subject=Conheci vocês através do EncontrAI&body=Olá ${startup.nome},%0D%0A%0D%0AEncontrei a solução de vocês através do EncontrAI e gostaria de saber mais sobre como podem me ajudar.%0D%0A%0D%0A${busca.dor_relatada ? `Minha necessidade:%0D%0A${encodeURIComponent(busca.dor_relatada)}%0D%0A%0D%0A` : ''}Aguardo retorno!%0D%0A%0D%0AObrigado(a)`}
                                 className="flex items-center gap-3 bg-white p-4 rounded-xl hover:shadow-lg transition-all group border border-slate-200"
                               >
                                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
