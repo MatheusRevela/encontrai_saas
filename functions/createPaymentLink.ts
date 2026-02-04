@@ -64,7 +64,12 @@ Deno.serve(async (req) => {
 
     // 🔒 SEGURANÇA: Recalcular valor no backend - nunca confie no frontend
     const PRECO_UNITARIO = 5.00;
-    const quantidadeSelecionada = transacao.startups_selecionadas?.length || 0;
+    
+    // Se for checkout adicional, cobrar apenas pelas startups ADICIONAIS
+    const isAdicionalCheckout = transacao.is_adicional_checkout || false;
+    const quantidadeSelecionada = isAdicionalCheckout 
+      ? (transacao.adicional_startups_count || 0)
+      : (transacao.startups_selecionadas?.length || 0);
     
     if (quantidadeSelecionada === 0) {
       return new Response(JSON.stringify({ error: 'Nenhuma startup selecionada' }), {
@@ -81,13 +86,13 @@ Deno.serve(async (req) => {
     
     const isNovoUsuario = comprasAnteriores.length === 0;
     
-    // Primeira solução GRÁTIS apenas para novos usuários
-    let valorTotal = isNovoUsuario 
+    // Primeira solução GRÁTIS apenas para novos usuários E apenas no checkout INICIAL
+    let valorTotal = (!isAdicionalCheckout && isNovoUsuario) 
       ? Math.max(0, (quantidadeSelecionada - 1) * PRECO_UNITARIO)
       : quantidadeSelecionada * PRECO_UNITARIO;
     
-    // Desconto de R$ 3,00 ao selecionar todas as 5 soluções
-    const descontoCincoSolucoes = quantidadeSelecionada === 5 ? 3.00 : 0;
+    // Desconto de R$ 3,00 ao selecionar todas as 5 soluções (apenas checkout inicial)
+    const descontoCincoSolucoes = (!isAdicionalCheckout && quantidadeSelecionada === 5) ? 3.00 : 0;
     valorTotal = Math.max(0, valorTotal - descontoCincoSolucoes);
 
     // Validar CPF do cliente (Mercado Pago exige CPF válido no Brasil)
