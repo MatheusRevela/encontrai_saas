@@ -460,7 +460,7 @@ export default function Resultados() {
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className={`space-y-6 ${selectedStartups.length > 0 ? 'pb-48' : 'pb-8'}`}>
           {enrichedStartups.map((startup, index) => {
             const isSelected = selectedStartups.includes(startup.startup_id);
             // In this implementation, the `startup` object itself contains all the recommendation details
