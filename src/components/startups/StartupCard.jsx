@@ -187,16 +187,26 @@ export default function StartupCard({ startup, onEdit, onDelete, onToggleStatus,
               <div className="flex justify-between items-center text-xs text-slate-600">
                   <div className="flex items-center gap-4">
                       {startup.email && (
-                          <div className="flex items-center gap-1.5">
-                              <Mail className="w-3.5 h-3.5 text-slate-400"/>
+                          <a 
+                            href={`mailto:${startup.email}`}
+                            className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            title={`Enviar email para ${startup.email}`}
+                          >
+                              <Mail className="w-3.5 h-3.5"/>
                               <span>Email</span>
-                          </div>
+                          </a>
                       )}
                       {startup.whatsapp && (
-                          <div className="flex items-center gap-1.5">
-                              <MessageSquare className="w-3.5 h-3.5 text-slate-400"/>
+                          <a 
+                            href={`https://wa.me/${startup.whatsapp.replace(/\D/g,'')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-green-600 hover:text-green-800 hover:underline transition-colors"
+                            title={`Conversar no WhatsApp: ${startup.whatsapp}`}
+                          >
+                              <MessageSquare className="w-3.5 h-3.5"/>
                               <span>WhatsApp</span>
-                          </div>
+                          </a>
                       )}
                   </div>
                   {startup.preco_base && (
