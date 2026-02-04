@@ -203,15 +203,15 @@ export default function Sucesso() {
                 transition={{ delay: 0.5 + index * 0.1 }}
               >
                 <Card className="bg-white shadow-lg border-0">
-                  <CardContent className="p-8">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                  <CardContent className="p-4 sm:p-8">
+                    <div className="flex flex-col gap-4 mb-6">
+                      <div className="flex gap-3 sm:gap-4">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
                           {startup.logo_url ? (
                             <img 
                               src={startup.logo_url} 
                               alt={`Logo ${startup.nome}`}
-                              className="w-14 h-14 object-contain rounded-xl"
+                              className="w-12 h-12 sm:w-14 sm:h-14 object-contain rounded-xl"
                               onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.nextSibling.style.display = 'flex';
@@ -219,24 +219,24 @@ export default function Sucesso() {
                             />
                           ) : null}
                           <Building2 
-                            className="w-8 h-8 text-emerald-600" 
+                            className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" 
                             style={{ display: startup.logo_url ? 'none' : 'flex' }}
                           />
                         </div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-slate-900">{startup.nome}</h3>
-                          <div className="flex gap-2 mt-2">
-                            <Badge className="bg-slate-100 text-slate-700">{startup.categoria}</Badge>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-2xl font-bold text-slate-900 break-words">{startup.nome}</h3>
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
+                            <Badge className="bg-slate-100 text-slate-700 text-xs">{startup.categoria}</Badge>
                             {startup.vertical_atuacao && (
-                              <Badge className="bg-blue-100 text-blue-700">{startup.vertical_atuacao}</Badge>
+                              <Badge className="bg-blue-100 text-blue-700 text-xs">{startup.vertical_atuacao}</Badge>
                             )}
                           </div>
                         </div>
                       </div>
                       {startup.preco_base && (
-                        <div className="text-right">
-                          <p className="text-sm text-slate-500">Investimento</p>
-                          <p className="text-lg font-bold text-emerald-600">{startup.preco_base}</p>
+                        <div className="bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-200 self-start">
+                          <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wide">Investimento</p>
+                          <p className="text-base sm:text-lg font-bold text-emerald-600">{startup.preco_base}</p>
                         </div>
                       )}
                     </div>
