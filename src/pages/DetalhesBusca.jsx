@@ -218,7 +218,7 @@ export default function DetalhesBusca() {
                             )}
                             {startup.whatsapp && (
                               <a 
-                                href={`https://wa.me/${startup.whatsapp.replace(/\D/g,'')}`}
+                                href={`https://wa.me/${startup.whatsapp.replace(/\D/g,'')}?text=Olá ${startup.nome}! Encontrei a solução de vocês através do EncontrAI e gostaria de saber mais sobre como podem me ajudar.${busca.dor_relatada ? `%0A%0AMinha necessidade: ${encodeURIComponent(busca.dor_relatada)}` : ''}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-3 bg-white p-4 rounded-xl hover:shadow-lg transition-all group border border-slate-200"
