@@ -58,7 +58,8 @@ export default function Sucesso() {
         }
         
         // Se ainda não está pago, redirecionar para checkout
-        navigate(createPageUrl(`Checkout?sessionId=${sessionId}`));
+        console.log('⚠️ Pagamento ainda pendente, redirecionando para checkout');
+        setTimeout(() => navigate(createPageUrl(`Checkout?sessionId=${sessionId}`)), 100);
         throw new Error('Pagamento pendente');
       }
 

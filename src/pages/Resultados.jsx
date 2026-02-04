@@ -68,7 +68,7 @@ export default function Resultados() {
     queryKey: ['transacao', sessionId],
     queryFn: async () => {
       if (!sessionId) {
-        navigate(createPageUrl('Buscar'));
+        console.error('❌ Session ID não encontrado na URL');
         throw new Error('Session ID não encontrado');
       }
       

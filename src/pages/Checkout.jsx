@@ -59,7 +59,7 @@ export default function Checkout() {
     queryKey: ['checkout', sessionId],
     queryFn: async () => {
       if (!sessionId) {
-        navigate(createPageUrl('Buscar'));
+        console.error('❌ Session ID não encontrado na URL do checkout');
         throw new Error('Session ID não encontrado');
       }
       
