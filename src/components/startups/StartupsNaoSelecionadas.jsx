@@ -91,40 +91,40 @@ export default function StartupsNaoSelecionadas({ transacao }) {
   return (
     <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-blue-600" />
-          Outras Soluções Recomendadas para Você
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+          <span className="leading-tight">Outras Soluções Recomendadas para Você</span>
         </CardTitle>
-        <p className="text-sm text-slate-600 mt-2">
+        <p className="text-xs sm:text-sm text-slate-600 mt-2">
           Você ainda tem {startupsNaoDesbloqueadas.length} {startupsNaoDesbloqueadas.length > 1 ? 'soluções recomendadas' : 'solução recomendada'} que não desbloqueou
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="bg-white rounded-xl p-6 border-2 border-blue-300">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <Lock className="w-6 h-6 text-blue-600" />
+        <div className="bg-white rounded-xl p-4 sm:p-6 border-2 border-blue-300">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-slate-900 text-lg mb-2">
+            <div className="flex-1 w-full">
+              <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">
                 Desbloqueie Mais Soluções
               </h4>
-              <p className="text-slate-600 mb-4">
+              <p className="text-slate-600 text-sm sm:text-base mb-4">
                 Escolha quantas soluções você quer ver os contatos completos (R$ 5,00 cada)
               </p>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   {selectedStartups.length > 0 ? (
                     <>
-                      <p className="text-3xl font-bold text-blue-600">
+                      <p className="text-2xl sm:text-3xl font-bold text-blue-600">
                         R$ {(selectedStartups.length * 5).toFixed(2).replace('.', ',')}
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-xs sm:text-sm text-slate-500">
                         {selectedStartups.length} solução{selectedStartups.length > 1 ? 'ões' : ''} selecionada{selectedStartups.length > 1 ? 's' : ''} × R$ 5,00
                       </p>
                     </>
                   ) : (
-                    <p className="text-sm text-slate-500">
+                    <p className="text-xs sm:text-sm text-slate-500">
                       Selecione as soluções abaixo para ver o valor total
                     </p>
                   )}
@@ -132,7 +132,7 @@ export default function StartupsNaoSelecionadas({ transacao }) {
                 <Button
                   onClick={handleDesbloquearAdicionais}
                   disabled={processandoPagamento || selectedStartups.length === 0}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                   size="lg"
                 >
                   {processandoPagamento ? (

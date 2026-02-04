@@ -97,10 +97,10 @@ export default function DetalhesBusca() {
               <Sparkles className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                 Detalhes da sua Busca
               </h1>
-              <p className="text-slate-600 text-lg">Veja as soluções que você desbloqueou e avalie sua experiência</p>
+              <p className="text-slate-600 text-sm sm:text-lg">Veja as soluções que você desbloqueou e avalie sua experiência</p>
             </div>
           </div>
         </div>
@@ -109,10 +109,10 @@ export default function DetalhesBusca() {
         {busca.startups_desbloqueadas?.length > 0 && (
           <div className="space-y-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <h2 className="text-3xl font-bold text-slate-900">Soluções Desbloqueadas</h2>
+              <h2 className="text-xl sm:text-3xl font-bold text-slate-900">Soluções Desbloqueadas</h2>
             </div>
             <div className="space-y-8">
               {busca.startups_desbloqueadas.map((startup) => {
@@ -125,63 +125,64 @@ export default function DetalhesBusca() {
                   <Card key={startup.startup_id} className="bg-white/90 backdrop-blur-sm border-0 shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300">
                     <CardContent className="p-0">
                       {/* Header com gradiente sutil */}
-                      <div className="bg-gradient-to-r from-emerald-50/50 to-blue-50/50 p-6 border-b border-slate-100">
-                        <div className="flex flex-col sm:flex-row gap-6">
+                      <div className="bg-gradient-to-r from-emerald-50/50 to-blue-50/50 p-4 sm:p-6 border-b border-slate-100">
+                        <div className="flex gap-4">
                           {startup.logo_url && (
-                            <div className="relative">
+                            <div className="relative flex-shrink-0">
                               <img 
                                 src={startup.logo_url} 
                                 alt={`Logo ${startup.nome}`} 
-                                className="w-24 h-24 rounded-2xl object-contain bg-white p-3 shadow-lg ring-2 ring-emerald-100"
+                                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain bg-white p-2 sm:p-3 shadow-lg ring-2 ring-emerald-100"
                               />
                             </div>
                           )}
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="text-3xl font-bold text-slate-900 mb-3">{startup.nome}</h3>
-                                <div className="flex flex-wrap gap-2">
-                                 {startup.categoria && (
-                                   <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 px-3 py-1">
-                                     {startup.categoria}
-                                   </Badge>
-                                 )}
-                                 {startup.vertical_atuacao && (
-                                   <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
-                                     {startup.vertical_atuacao}
-                                   </Badge>
-                                 )}
-                                 {startup.modelo_negocio && (
-                                   <Badge className="bg-purple-100 text-purple-800 border-purple-200 px-3 py-1 capitalize">
-                                     {startup.modelo_negocio}
-                                   </Badge>
-                                 )}
-                                </div>
-
-                                {/* Mostrar avaliação individual se existir */}
-                                {avaliacaoIndividual && (
-                                 <div className="mt-4 bg-amber-50 rounded-lg p-3 border border-amber-200">
-                                   <div className="flex items-center gap-2">
-                                     <span className="text-sm font-medium text-amber-900">Sua avaliação:</span>
-                                     <div className="flex gap-1">
-                                       {[...Array(5)].map((_, i) => (
-                                         <Star key={i} className={`w-4 h-4 ${i < avaliacaoIndividual.avaliacao ? 'text-amber-500 fill-amber-500' : 'text-amber-200'}`} />
-                                       ))}
-                                     </div>
-                                   </div>
-                                 </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <h3 className="text-xl sm:text-3xl font-bold text-slate-900">{startup.nome}</h3>
+                                {startup.preco_base && (
+                                  <div className="text-right flex-shrink-0 bg-emerald-50 rounded-lg px-2 py-1 sm:px-4 sm:py-2 border border-emerald-200">
+                                   <p className="text-[10px] sm:text-xs text-emerald-700 font-semibold uppercase tracking-wide">Investimento</p>
+                                   <p className="text-sm sm:text-xl font-bold text-emerald-600 whitespace-nowrap">{startup.preco_base}</p>
+                                  </div>
                                 )}
                               </div>
-                              {startup.preco_base && (
-                                <div className="text-right flex-shrink-0 ml-4 bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-                                 <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wide mb-1">Investimento</p>
-                                 <p className="text-2xl font-bold text-emerald-600">{startup.preco_base}</p>
-                                </div>
+                              
+                              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                               {startup.categoria && (
+                                 <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] sm:text-xs px-2 py-0.5">
+                                   {startup.categoria}
+                                 </Badge>
+                               )}
+                               {startup.vertical_atuacao && (
+                                 <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] sm:text-xs px-2 py-0.5">
+                                   {startup.vertical_atuacao}
+                                 </Badge>
+                               )}
+                               {startup.modelo_negocio && (
+                                 <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-[10px] sm:text-xs px-2 py-0.5 capitalize">
+                                   {startup.modelo_negocio}
+                                 </Badge>
+                               )}
+                              </div>
+
+                              {/* Mostrar avaliação individual se existir */}
+                              {avaliacaoIndividual && (
+                               <div className="bg-amber-50 rounded-lg p-2 sm:p-3 border border-amber-200">
+                                 <div className="flex items-center gap-2">
+                                   <span className="text-xs sm:text-sm font-medium text-amber-900">Sua avaliação:</span>
+                                   <div className="flex gap-1">
+                                     {[...Array(5)].map((_, i) => (
+                                       <Star key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${i < avaliacaoIndividual.avaliacao ? 'text-amber-500 fill-amber-500' : 'text-amber-200'}`} />
+                                     ))}
+                                   </div>
+                                 </div>
+                               </div>
                               )}
                             </div>
                           </div>
-                          </div>
-                          </div>
+                        </div>
+                      </div>
                       
                       <div className="p-6">
                         <p className="text-slate-700 text-base leading-relaxed">{startup.descricao}</p>
