@@ -178,9 +178,9 @@ export default function StartupsNaoSelecionadas({ transacao }) {
                       )}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
                             <h4 className="font-bold text-slate-900">
                               Solução #{index + 1}
                             </h4>
@@ -188,13 +188,12 @@ export default function StartupsNaoSelecionadas({ transacao }) {
                               {startup.match_percentage}% match
                             </Badge>
                           </div>
+                          <p className="text-sm text-slate-600 leading-relaxed">
+                            {startup.resumo_personalizado}
+                          </p>
                         </div>
-                        <Lock className="w-5 h-5 text-slate-400 ml-2 flex-shrink-0" />
+                        <Lock className="w-5 h-5 text-slate-400 flex-shrink-0" />
                       </div>
-                      
-                      <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-                        {startup.resumo_personalizado}
-                      </p>
 
                       {startup.pontos_fortes?.length > 0 && (
                         <div className="bg-blue-50 rounded-lg p-3">
