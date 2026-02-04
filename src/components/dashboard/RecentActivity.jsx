@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,28 +54,28 @@ export default function RecentActivity({ transactions }) {
       <CardContent>
         <div className="space-y-4">
           {transactions.slice(0, 5).map((transacao) => (
-            <div key={transacao.id} className="flex items-start gap-4 p-4 rounded-xl hover:bg-slate-50/80 transition-colors">
-              <div className="flex-shrink-0">
+            <div key={transacao.id} className="flex items-start gap-3 p-3 sm:p-4 rounded-xl hover:bg-slate-50/80 transition-colors">
+              <div className="flex-shrink-0 mt-0.5">
                 {getStatusIcon(transacao.status_pagamento)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium text-slate-900 truncate">
+                <div className="flex items-start gap-2 mb-2">
+                  <p className="font-medium text-slate-900 text-sm sm:text-base break-words flex-1">
                     {transacao.cliente_nome || 'Cliente não identificado'}
                   </p>
-                  <Badge className={`${getStatusColor(transacao.status_pagamento)} border text-xs`}>
+                  <Badge className={`${getStatusColor(transacao.status_pagamento)} border text-[10px] sm:text-xs flex-shrink-0`}>
                     {transacao.status_pagamento || 'indefinido'}
                   </Badge>
                 </div>
-                <p className="text-sm text-slate-600 mb-2 line-clamp-2">
+                <p className="text-xs sm:text-sm text-slate-600 mb-2 line-clamp-2">
                   {transacao.dor_relatada || 'Nenhuma descrição disponível'}
                 </p>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-500">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] sm:text-xs text-slate-500">
                     {formatDateBrasiliaShort(transacao.created_date)}
                   </p>
                   {transacao.valor_total != null && transacao.valor_total > 0 && (
-                    <div className="flex items-center gap-1 text-sm font-medium text-emerald-600">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm font-medium text-emerald-600 flex-shrink-0">
                       <DollarSign className="w-3 h-3" />
                       R$ {Number(transacao.valor_total).toFixed(2)}
                     </div>
