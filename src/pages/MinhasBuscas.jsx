@@ -86,9 +86,9 @@ const StatusBadge = ({ status }) => {
     };
 
     return (
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold border-2 ${info.color} shadow-md`}>
-            <span className={`w-2 h-2 rounded-full ${info.dotColor} animate-pulse`}></span>
-            <info.icon className={`w-4 h-4 ${status === 'processando' ? 'animate-spin' : ''}`} />
+        <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold border-2 ${info.color} shadow-md text-xs sm:text-sm whitespace-nowrap`}>
+            <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${info.dotColor} animate-pulse`}></span>
+            <info.icon className={`w-3 h-3 sm:w-4 sm:h-4 ${status === 'processando' ? 'animate-spin' : ''}`} />
             {info.text}
         </div>
     );
@@ -152,10 +152,10 @@ export default function MinhasBuscas() {
                 </div>
                 
                 {/* Filtros Modernos */}
-                <div className="flex gap-3 mb-8 bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-sm border border-slate-200/60 w-fit">
+                <div className="flex gap-2 sm:gap-3 mb-8 bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-sm border border-slate-200/60 w-fit overflow-x-auto">
                     <button
                         onClick={() => setFilter('all')}
-                        className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                        className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base whitespace-nowrap ${
                             filter === 'all'
                                 ? 'bg-gradient-to-r from-emerald-600 to-blue-600 text-white shadow-lg shadow-emerald-500/25'
                                 : 'text-slate-600 hover:bg-slate-50'
@@ -165,7 +165,7 @@ export default function MinhasBuscas() {
                     </button>
                     <button
                         onClick={() => setFilter('desbloqueadas')}
-                        className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                        className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base whitespace-nowrap ${
                             filter === 'desbloqueadas'
                                 ? 'bg-gradient-to-r from-emerald-600 to-blue-600 text-white shadow-lg shadow-emerald-500/25'
                                 : 'text-slate-600 hover:bg-slate-50'
@@ -175,7 +175,7 @@ export default function MinhasBuscas() {
                     </button>
                     <button
                         onClick={() => setFilter('pendentes')}
-                        className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                        className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base whitespace-nowrap ${
                             filter === 'pendentes'
                                 ? 'bg-gradient-to-r from-emerald-600 to-blue-600 text-white shadow-lg shadow-emerald-500/25'
                                 : 'text-slate-600 hover:bg-slate-50'
@@ -220,22 +220,22 @@ export default function MinhasBuscas() {
 
                                         <div className="p-6">
                                             {busca.status_pagamento === 'pago' && busca.startups_desbloqueadas?.length > 0 && (
-                                                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl p-5 mb-5 border border-emerald-200/60">
-                                                    <div className="flex items-center gap-3 mb-3">
-                                                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                                                            <Sparkles className="w-5 h-5 text-white" />
-                                                        </div>
-                                                        <h4 className="font-bold text-slate-900 text-lg">Soluções Desbloqueadas</h4>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {busca.startups_desbloqueadas.map((s) => (
-                                                            <span key={s.startup_id} className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-lg text-sm font-medium text-slate-700 shadow-sm border border-emerald-100">
-                                                                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                                                                {s.nome}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
+                                               <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl p-4 sm:p-5 mb-5 border border-emerald-200/60">
+                                                   <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                                                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                                           <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                                                       </div>
+                                                       <h4 className="font-bold text-slate-900 text-sm sm:text-lg whitespace-nowrap">Soluções Desbloqueadas</h4>
+                                                   </div>
+                                                   <div className="flex flex-wrap gap-2">
+                                                       {busca.startups_desbloqueadas.map((s) => (
+                                                           <span key={s.startup_id} className="inline-flex items-center gap-1.5 sm:gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-700 shadow-sm border border-emerald-100">
+                                                               <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full flex-shrink-0"></div>
+                                                               {s.nome}
+                                                           </span>
+                                                       ))}
+                                                   </div>
+                                               </div>
                                             )}
 
                                             <Link to={createPageUrl(`DetalhesBusca?id=${busca.id}`)}>
