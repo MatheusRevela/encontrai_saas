@@ -14,8 +14,10 @@ export default function Sucesso() {
   const navigate = useNavigate();
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
-  const { data: transacao, isLoading, error } = useQuery({
-    queryKey: ['sucesso', sessionId],
+  const [tentativas, setTentativas] = React.useState(0);
+
+  const { data: transacao, isLoading, error, refetch } = useQuery({
+    queryKey: ['sucesso', sessionId, tentativas],
     queryFn: async () => {
       if (!sessionId) {
         throw new Error('Sessão não encontrada');
@@ -28,7 +30,34 @@ export default function Sucesso() {
 
       const transacaoAtual = transacoes[0];
       
+      // Se não está pago ainda, tentar verificar o status no Mercado Pago
       if (transacaoAtual.status_pagamento !== 'pago') {
+        // Dar tempo para o webhook processar (até 3 tentativas com 3s de intervalo)
+        if (tentativas < 3) {
+          // Aguardar 3 segundos e tentar novamente
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          setTentativas(prev => prev + 1);
+          throw new Error('Verificando pagamento...');
+        }
+        
+        // Após 3 tentativas, tentar verificar manualmente via API
+        try {
+          const { data: statusResult } = await base44.functions.invoke('checkPaymentStatus', {
+            sessionId: sessionId
+          });
+          
+          if (statusResult?.status === 'pago') {
+            // Recarregar dados da transação
+            const transacoesAtualizadas = await base44.entities.Transacao.filter({ session_id: sessionId });
+            if (transacoesAtualizadas.length > 0 && transacoesAtualizadas[0].status_pagamento === 'pago') {
+              return transacoesAtualizadas[0];
+            }
+          }
+        } catch (checkError) {
+          console.error('Erro ao verificar status:', checkError);
+        }
+        
+        // Se ainda não está pago, redirecionar para checkout
         navigate(createPageUrl(`Checkout?sessionId=${sessionId}`));
         throw new Error('Pagamento pendente');
       }
@@ -36,6 +65,7 @@ export default function Sucesso() {
       return transacaoAtual;
     },
     enabled: !!sessionId,
+    retry: false,
     staleTime: 2 * 60 * 1000,
   });
 
@@ -44,7 +74,9 @@ export default function Sucesso() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando suas soluções...</p>
+          <p className="text-slate-600">
+            {tentativas > 0 ? `Verificando pagamento (tentativa ${tentativas}/3)...` : 'Carregando suas soluções...'}
+          </p>
         </div>
       </div>
     );
