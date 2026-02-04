@@ -60,6 +60,7 @@ import FAQ from './pages/FAQ';
 import Feedback from './pages/Feedback';
 import Ferramentas from './pages/Ferramentas';
 import Growth from './pages/Growth';
+import Home from './pages/Home';
 import LaboratorioStartups from './pages/LaboratorioStartups';
 import MinhasBuscas from './pages/MinhasBuscas';
 import Painel from './pages/Painel';
@@ -76,7 +77,6 @@ import index from './pages/index';
 import startups from './pages/startups';
 import transacoes from './pages/transacoes';
 import users from './pages/users';
-import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -94,6 +94,7 @@ export const PAGES = {
     "Feedback": Feedback,
     "Ferramentas": Ferramentas,
     "Growth": Growth,
+    "Home": Home,
     "LaboratorioStartups": LaboratorioStartups,
     "MinhasBuscas": MinhasBuscas,
     "Painel": Painel,
@@ -110,7 +111,6 @@ export const PAGES = {
     "startups": startups,
     "transacoes": transacoes,
     "users": users,
-    "Home": Home,
 }
 
 export const pagesConfig = {

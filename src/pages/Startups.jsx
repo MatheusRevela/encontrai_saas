@@ -56,16 +56,23 @@ export default function Startups() {
   const lastVerificationTime = useMemo(() => {
     if (!allStartups || allStartups.length === 0) return null;
     
-    let mostRecent = null;
+    // Verificar se existe alguma startup nunca verificada
+    const neverVerified = allStartups.some(s => !s.ultima_verificacao);
+    if (neverVerified) {
+      return { type: 'never_verified' };
+    }
+    
+    // Se todas foram verificadas, encontrar a data mais ANTIGA
+    let oldest = null;
     for (const startup of allStartups) {
       if (startup.ultima_verificacao) {
         const checkDate = new Date(startup.ultima_verificacao);
-        if (!mostRecent || checkDate > mostRecent) {
-          mostRecent = checkDate;
+        if (!oldest || checkDate < oldest) {
+          oldest = checkDate;
         }
       }
     }
-    return mostRecent;
+    return oldest ? { type: 'oldest', date: oldest } : null;
   }, [allStartups]);
 
   const applyFilters = useCallback(() => {
