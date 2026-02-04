@@ -244,8 +244,8 @@ export default function Checkout() {
           </h1>
           <p className="text-slate-600">
             {isAdicionalCheckout 
-              ? `Confirme seu email para desbloquear mais ${selectedStartups.length} solução${selectedStartups.length !== 1 ? 'ões' : ''}`
-              : `Confirme seu email para desbloquear ${selectedStartups.length} solução${selectedStartups.length !== 1 ? 'ões' : ''}`
+              ? `Confirme seu email para desbloquear mais ${selectedStartups.length} ${selectedStartups.length !== 1 ? 'soluções' : 'solução'}`
+              : `Confirme seu email para desbloquear ${selectedStartups.length} ${selectedStartups.length !== 1 ? 'soluções' : 'solução'}`
             }
           </p>
         </div>
