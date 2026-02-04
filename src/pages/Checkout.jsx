@@ -111,7 +111,13 @@ export default function Checkout() {
       return paymentData.paymentUrl;
     },
     onSuccess: (paymentUrl) => {
-      window.location.href = paymentUrl;
+      // Abrir em nova aba para melhor compatibilidade mobile
+      const newWindow = window.open(paymentUrl, '_blank');
+      
+      // Fallback caso popup seja bloqueado
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        window.location.href = paymentUrl;
+      }
     },
     onError: (error) => {
       console.error('Erro no checkout:', error);
