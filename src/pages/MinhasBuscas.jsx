@@ -86,10 +86,11 @@ const StatusBadge = ({ status }) => {
     };
 
     return (
-        <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold border-2 ${info.color} shadow-md text-xs sm:text-sm whitespace-nowrap`}>
-            <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${info.dotColor} animate-pulse`}></span>
-            <info.icon className={`w-3 h-3 sm:w-4 sm:h-4 ${status === 'processando' ? 'animate-spin' : ''}`} />
-            {info.text}
+        <div className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-full font-semibold border-2 ${info.color} shadow-md text-[10px] sm:text-sm whitespace-nowrap`}>
+            <span className={`w-1 h-1 sm:w-2 sm:h-2 rounded-full ${info.dotColor} animate-pulse`}></span>
+            <info.icon className={`w-2.5 h-2.5 sm:w-4 sm:h-4 ${status === 'processando' ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{info.text}</span>
+            <span className="sm:hidden">{info.text.replace('Soluções Desbloqueadas', 'Desbloqueadas').replace('Pagamento Pendente', 'Pendente').replace('Processando Pagamento', 'Processando').replace('Busca Cancelada', 'Cancelada')}</span>
         </div>
     );
 };
