@@ -11,6 +11,11 @@ import EvaluationStats from "../components/dashboard/EvaluationStats";
 import OnboardingMetrics from '../components/growth/OnboardingMetrics';
 import AbandonedCartFunnel from '../components/growth/AbandonedCartFunnel';
 import FeedbackStream from '../components/growth/FeedbackStream';
+import SearchTrendsChart from '../components/analytics/SearchTrendsChart';
+import CategoryDemandChart from '../components/analytics/CategoryDemandChart';
+import ROIChart from '../components/analytics/ROIChart';
+import RegionHeatMap from '../components/analytics/RegionHeatMap';
+import ReportExporter from '../components/analytics/ReportExporter';
 import {
   Users,
   DollarSign,
@@ -75,6 +80,24 @@ export default function Dashboard() {
     staleTime: 2 * 60 * 1000, // Cache por 2 minutos
     refetchInterval: 5 * 60 * 1000 // Atualizar a cada 5 minutos
   });
+
+  // React Query: Buscar dados analíticos
+  const { data: analyticsResponse, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['analytics-data'],
+    queryFn: async () => {
+      const { data } = await base44.functions.invoke('getAnalyticsData');
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+  });
+
+  const analyticsData = analyticsResponse?.data || {
+    trends: [],
+    categories: [],
+    roi: [],
+    regions: [],
+    summary: null
+  };
 
   const stats = dashboardData?.stats || {
     totalUsers: 0,
@@ -313,20 +336,30 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-8 mt-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center">
-              <BarChart3 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                Analytics Detalhado
-              </h3>
-              <p className="text-slate-600 mb-4">
-                Visualize métricas avançadas, cohorts e análise de comportamento
-              </p>
-              <Link to={createPageUrl('analytics')}>
-                <Button>
-                  Ver Analytics Completo
-                </Button>
-              </Link>
-            </div>
+            {analyticsLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+              </div>
+            ) : (
+              <>
+                <div className="grid lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <SearchTrendsChart data={analyticsData.trends} />
+                  </div>
+                  <ReportExporter analyticsData={analyticsData} />
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-6">
+                  <CategoryDemandChart data={analyticsData.categories} />
+                  <ROIChart 
+                    data={analyticsData.roi} 
+                    averageROI={analyticsData.averageROI}
+                  />
+                </div>
+
+                <RegionHeatMap data={analyticsData.regions} />
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </div>

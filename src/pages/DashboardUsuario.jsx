@@ -18,12 +18,18 @@ import RecentSearchesWidget from '../components/dashboard/RecentSearchesWidget';
 import UnlockedStartupsWidget from '../components/dashboard/UnlockedStartupsWidget';
 import QuickActionsWidget from '../components/dashboard/QuickActionsWidget';
 import StatsOverviewWidget from '../components/dashboard/StatsOverviewWidget';
+import SearchTrendsChart from '../components/analytics/SearchTrendsChart';
+import CategoryDemandChart from '../components/analytics/CategoryDemandChart';
+import ROIChart from '../components/analytics/ROIChart';
+import ReportExporter from '../components/analytics/ReportExporter';
+import { useQuery } from '@tanstack/react-query';
 
 const DEFAULT_WIDGETS = {
   stats: true,
   recentSearches: true,
   quickActions: true,
-  unlockedStartups: true
+  unlockedStartups: true,
+  analytics: true
 };
 
 export default function DashboardUsuario() {
@@ -32,6 +38,22 @@ export default function DashboardUsuario() {
   const [isLoading, setIsLoading] = useState(true);
   const [visibleWidgets, setVisibleWidgets] = useState(DEFAULT_WIDGETS);
   const [isCustomizing, setIsCustomizing] = useState(false);
+
+  const { data: analyticsResponse, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['analytics-data-user'],
+    queryFn: async () => {
+      const { data } = await base44.functions.invoke('getAnalyticsData');
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const analyticsData = analyticsResponse?.data || {
+    trends: [],
+    categories: [],
+    roi: [],
+    summary: null
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -80,7 +102,8 @@ export default function DashboardUsuario() {
     { key: 'stats', label: 'Resumo de Atividades', description: 'Estatísticas gerais' },
     { key: 'recentSearches', label: 'Buscas Recentes', description: 'Últimas 3 buscas' },
     { key: 'quickActions', label: 'Acesso Rápido', description: 'Atalhos principais' },
-    { key: 'unlockedStartups', label: 'Soluções Desbloqueadas', description: 'Suas startups' }
+    { key: 'unlockedStartups', label: 'Soluções Desbloqueadas', description: 'Suas startups' },
+    { key: 'analytics', label: 'Analytics Avançado', description: 'Gráficos e tendências' }
   ];
 
   if (isLoading) {
@@ -201,6 +224,44 @@ export default function DashboardUsuario() {
                 className="lg:col-span-3"
               >
                 <UnlockedStartupsWidget transacoes={transacoes} />
+              </motion.div>
+            )}
+
+            {/* Analytics Avançado - Full width */}
+            {visibleWidgets.analytics && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="lg:col-span-3"
+              >
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-slate-900">📊 Analytics Pessoal</h2>
+                  
+                  {analyticsLoading ? (
+                    <div className="flex justify-center items-center py-12">
+                      <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                          <SearchTrendsChart data={analyticsData.trends} title="Seu Histórico de Buscas" />
+                        </div>
+                        <ReportExporter analyticsData={analyticsData} userName={user?.full_name} />
+                      </div>
+
+                      <div className="grid lg:grid-cols-2 gap-6">
+                        <CategoryDemandChart data={analyticsData.categories} title="Categorias que Você Buscou" />
+                        <ROIChart 
+                          data={analyticsData.roi} 
+                          averageROI={analyticsData.averageROI}
+                          title="Sua Satisfação por Categoria"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
