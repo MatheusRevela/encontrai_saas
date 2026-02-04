@@ -162,53 +162,55 @@ export default function StartupsNaoSelecionadas({ transacao }) {
             >
               <Card className={`relative border-2 ${selectedStartups.includes(startup.startup_id) ? 'border-blue-500 bg-blue-50' : 'border-blue-200'}`}>
                 <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <div className="flex items-start pt-1">
-                      <Checkbox
-                        checked={selectedStartups.includes(startup.startup_id)}
-                        onCheckedChange={() => toggleStartupSelection(startup.startup_id)}
-                        className="w-5 h-5"
-                      />
-                    </div>
-                    <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      {startup.logo_url ? (
-                        <img src={startup.logo_url} alt="" className="w-14 h-14 object-contain opacity-30" />
-                      ) : (
-                        <Building2 className="w-8 h-8 text-slate-400" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-bold text-slate-900">
-                              Solução #{index + 1}
-                            </h4>
-                            <Badge className="bg-blue-100 text-blue-700 text-xs">
-                              {startup.match_percentage}% match
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-slate-600 leading-relaxed">
-                            {startup.resumo_personalizado}
-                          </p>
+                  <div className="space-y-3">
+                    {/* Primeira linha: Checkbox, Logo, Título/Badge, Lock */}
+                    <div className="flex gap-3 items-start">
+                      <div className="flex items-start pt-1">
+                        <Checkbox
+                          checked={selectedStartups.includes(startup.startup_id)}
+                          onCheckedChange={() => toggleStartupSelection(startup.startup_id)}
+                          className="w-5 h-5"
+                        />
+                      </div>
+                      <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        {startup.logo_url ? (
+                          <img src={startup.logo_url} alt="" className="w-14 h-14 object-contain opacity-30" />
+                        ) : (
+                          <Building2 className="w-8 h-8 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-slate-900">
+                            Solução #{index + 1}
+                          </h4>
+                          <Badge className="bg-blue-100 text-blue-700 text-xs">
+                            {startup.match_percentage}% match
+                          </Badge>
                         </div>
                         <Lock className="w-5 h-5 text-slate-400 flex-shrink-0" />
                       </div>
-
-                      {startup.pontos_fortes?.length > 0 && (
-                        <div className="bg-blue-50 rounded-lg p-3">
-                          <p className="text-xs font-semibold text-blue-900 mb-2">Principais vantagens:</p>
-                          <ul className="text-xs text-blue-800 space-y-1">
-                            {startup.pontos_fortes.slice(0, 2).map((ponto, i) => (
-                              <li key={i} className="flex items-start gap-2">
-                                <span className="text-blue-600">✓</span>
-                                <span>{ponto}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                     </div>
+
+                    {/* Segunda linha: Texto descritivo ocupando toda largura */}
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {startup.resumo_personalizado}
+                    </p>
+
+                    {/* Terceira linha: Pontos fortes (se existir) */}
+                    {startup.pontos_fortes?.length > 0 && (
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <p className="text-xs font-semibold text-blue-900 mb-2">Principais vantagens:</p>
+                        <ul className="text-xs text-blue-800 space-y-1">
+                          {startup.pontos_fortes.slice(0, 2).map((ponto, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-blue-600">✓</span>
+                              <span>{ponto}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
