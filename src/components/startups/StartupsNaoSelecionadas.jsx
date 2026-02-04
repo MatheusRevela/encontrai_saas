@@ -179,30 +179,20 @@ export default function StartupsNaoSelecionadas({ transacao }) {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="font-bold text-slate-900">
-                            Solução #{index + 1}
-                          </h4>
-                          <div className="flex gap-2 mt-1 flex-wrap">
-                            <Badge variant="outline" className="text-xs">
-                              <Tag className="w-3 h-3 mr-1" />
-                              {startup.categoria}
-                            </Badge>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="font-bold text-slate-900">
+                              Solução #{index + 1}
+                            </h4>
                             <Badge className="bg-blue-100 text-blue-700 text-xs">
                               {startup.match_percentage}% match
                             </Badge>
-                            {startup.implementacao_estimada && (
-                              <Badge variant="outline" className="text-xs">
-                                <Clock className="w-3 h-3 mr-1" />
-                                {startup.implementacao_estimada}
-                              </Badge>
-                            )}
                           </div>
                         </div>
-                        <Lock className="w-5 h-5 text-slate-400" />
+                        <Lock className="w-5 h-5 text-slate-400 ml-2 flex-shrink-0" />
                       </div>
                       
-                      <p className="text-sm text-slate-600 mb-3">
+                      <p className="text-sm text-slate-600 mb-3 leading-relaxed">
                         {startup.resumo_personalizado}
                       </p>
 
