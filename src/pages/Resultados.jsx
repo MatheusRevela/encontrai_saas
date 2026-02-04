@@ -67,12 +67,16 @@ export default function Resultados() {
   const { data: transacao, isLoading, error } = useQuery({
     queryKey: ['transacao', sessionId],
     queryFn: async () => {
+      console.log('🔍 Buscando transação com sessionId:', sessionId);
+      
       if (!sessionId) {
         console.error('❌ Session ID não encontrado na URL');
         throw new Error('Session ID não encontrado');
       }
       
       const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
+      console.log('📦 Transações encontradas:', transacoes.length);
+      
       if (transacoes.length === 0) {
         throw new Error('Transação não encontrada.');
       }

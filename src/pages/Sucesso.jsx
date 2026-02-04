@@ -19,11 +19,15 @@ export default function Sucesso() {
   const { data: transacao, isLoading, error, refetch } = useQuery({
     queryKey: ['sucesso', sessionId, tentativas],
     queryFn: async () => {
+      console.log('✅ Página Sucesso - sessionId:', sessionId, 'tentativa:', tentativas);
+      
       if (!sessionId) {
         throw new Error('Sessão não encontrada');
       }
 
       const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
+      console.log('📦 Transações na página de sucesso:', transacoes.length);
+      
       if (transacoes.length === 0) {
         throw new Error('Transação não encontrada');
       }
