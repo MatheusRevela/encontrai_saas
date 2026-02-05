@@ -18,7 +18,8 @@ import {
   Beaker,
   ShoppingCart,
   Users,
-  User as UserOutlineIcon
+  User as UserOutlineIcon,
+  Sparkles
 } from 'lucide-react';
 
 const AdminNav = ({ navItems }) => {
@@ -97,6 +98,7 @@ const UserNav = ({ navItems }) => {
 export default function ProtectedLayout({ children, pageName }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [logoError, setLogoError] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -172,7 +174,21 @@ export default function ProtectedLayout({ children, pageName }) {
                 </SheetContent>
               </Sheet>
               <Link to={createPageUrl(user?.role === 'admin' ? 'dashboard' : 'DashboardUsuario')}>
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/02b71dae4_Logo_expandido_3-removebg-preview.png" alt="EncontrAI" className="h-10 w-auto"/>
+                {logoError ? (
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-emerald-600" />
+                    <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+                      EncontrAI
+                    </span>
+                  </div>
+                ) : (
+                  <img 
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/02b71dae4_Logo_expandido_3-removebg-preview.png" 
+                    alt="EncontrAI" 
+                    className="h-10 w-auto"
+                    onError={() => setLogoError(true)}
+                  />
+                )}
               </Link>
             </div>
             

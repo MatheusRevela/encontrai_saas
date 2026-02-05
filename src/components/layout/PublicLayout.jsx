@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
-import { LogIn } from "lucide-react";
+import { LogIn, Sparkles } from "lucide-react";
 
 const SimplePublicHeader = () => {
+  const [logoError, setLogoError] = useState(false);
+
   const handleLogin = async () => {
     try {
       const redirectUrl = `${window.location.origin}${createPageUrl('Painel')}`;
@@ -20,11 +22,21 @@ const SimplePublicHeader = () => {
     <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
         <Link to={createPageUrl("Home")} className="flex items-center gap-2">
-          <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/02b71dae4_Logo_expandido_3-removebg-preview.png"
-            alt="EncontrAI Logo"
-            className="h-8 w-auto"
-          />
+          {logoError ? (
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-emerald-600" />
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+                EncontrAI
+              </span>
+            </div>
+          ) : (
+            <img
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/02b71dae4_Logo_expandido_3-removebg-preview.png"
+              alt="EncontrAI Logo"
+              className="h-8 w-auto"
+              onError={() => setLogoError(true)}
+            />
+          )}
         </Link>
         <nav className="hidden md:flex items-center gap-6 mr-4">
           <Link to={createPageUrl("FAQ")} className="text-slate-600 hover:text-emerald-600 font-medium transition-colors">FAQ</Link>
