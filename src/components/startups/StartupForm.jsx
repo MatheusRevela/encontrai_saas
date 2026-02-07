@@ -201,8 +201,9 @@ Descrição da Solução: "${descricaoGerada}"
 REGRAS PARA TAGS:
 - Gere entre 10 e 15 tags relevantes.
 - As tags devem ser curtas, em minúsculas e em português.
+- IMPORTANTE: Mantenha acentuação e caracteres especiais do português (ç, ã, é, á, etc.)
 - Foque nos problemas que a solução resolve e nas funcionalidades.
-- Ex: "gestão de estoque", "controle financeiro", "crm de vendas", "automação de marketing".
+- Ex: "gestão de estoque", "controle financeiro", "crm de vendas", "automação de marketing", "recuperação de crédito".
 
 Retorne um JSON com este formato:
 {

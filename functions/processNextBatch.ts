@@ -52,9 +52,9 @@ REGRAS CRÍTICAS:
 6. Para preços: procure especificamente em páginas/seções de "Preços", "Planos", "Pricing". Se encontrar, use o formato: "R$XX,XX - R$XX,XX/mês" ou "R$XX,XX - R$XX,XX/ano". Se NÃO encontrar preços no site, retorne null.
 7. Use TANTO o conteúdo do site quanto a descrição adicional.
 8. Procure por um email de contato, URL do LinkedIn e a URL da imagem do LOGO.
-9. Gere entre 10 a 15 tags **relevantes e específicas** em português. As tags devem ser curtas (1 a 3 palavras), em letras minúsculas, e sem acentos, caracteres especiais, pontuação ou underscores. O resultado deve ser um array de strings.
-   - Exemplo de formato BOM: ["gestao de estoque", "controle financeiro", "erp para pmes"]
-   - Exemplo de formato RUIM: ["Gestão de Estoque.", "controle_financeiro", "[erp]"]
+9. Gere entre 10 a 15 tags **relevantes e específicas** em português. As tags devem ser curtas (1 a 3 palavras), em letras minúsculas, MANTENDO acentuação e caracteres especiais do português (ç, ã, é, á, etc.). Sem pontuação ou underscores. O resultado deve ser um array de strings.
+   - Exemplo de formato BOM: ["gestão de estoque", "controle financeiro", "recuperação de crédito", "automação"]
+   - Exemplo de formato RUIM: ["Gestão de Estoque.", "controle_financeiro", "[erp]", "gestao"]
 10. Para WhatsApp: procure números em links 'wa.me', textos, rodapés. Formato internacional: "+5511987654321".
 
 REGRAS ANTI-ALUCINAÇÃO (MUITO IMPORTANTE):
