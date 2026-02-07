@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
           nome: resultadoIA.nome || itemAtual.nome,
           descricao: resultadoIA.descricao || itemAtual.descricao,
           categoria: resultadoIA.categoria || 'tecnologia',
-          tags: resultadoIA.tags || [],
+          tags: (resultadoIA.tags || []).map(tag => tag.normalize('NFC').trim()),
           site: itemAtual.site,
           logo_url: itemAtual.logo_url || resultadoIA.logo_url,
           email: resultadoIA.email,
