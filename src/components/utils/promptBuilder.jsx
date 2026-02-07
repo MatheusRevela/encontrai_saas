@@ -26,7 +26,7 @@ ${i + 1}. **${s.nome} (ID: ${s.id})**
    - Vertical: ${s.vertical_atuacao || 'N/A'}
    - Modelo de Negócio: ${s.modelo_negocio || 'N/A'}
    - Descrição: ${s.descricao}
-   - Tags: ${s.tags?.join(', ') || 'N/A'}
+   - Tags: ${(s.tags || []).map(tag => tag.normalize('NFC')).join(', ') || 'N/A'}
 `).join('\n')}
 
 ### PROCESSO DE ANÁLISE E SELEÇÃO (SEGUIR RIGOROSAMENTE)
