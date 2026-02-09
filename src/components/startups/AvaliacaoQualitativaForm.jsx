@@ -1,12 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calculator, Info } from "lucide-react";
+import { Calculator, Info, Star } from "lucide-react";
 import { base44 } from '@/api/base44Client';
+
+// Componente de Estrelas Clicáveis
+function StarRating({ value, onChange, label, helper }) {
+  const stars = [1, 2, 3, 4, 5];
+  
+  return (
+    <div>
+      <Label className="text-xs text-slate-600 mb-2 block">{label}</Label>
+      <div className="flex items-center gap-1 mb-1">
+        {stars.map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            className="transition-all hover:scale-110"
+          >
+            <Star
+              className={`w-6 h-6 ${
+                star <= value
+                  ? 'fill-amber-400 text-amber-400'
+                  : 'text-slate-300 hover:text-amber-300'
+              }`}
+            />
+          </button>
+        ))}
+        <span className="ml-2 text-sm font-semibold text-slate-700">{value}/5</span>
+      </div>
+      {helper && <p className="text-xs text-slate-500">{helper}</p>}
+    </div>
+  );
+}
 
 const RATING_TABLE = [
   { min: 0, max: 20, rating: "C" },
@@ -164,45 +193,24 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate }) {
             🧠 Equipe <span className="text-xs text-slate-500">(Peso: 35%)</span>
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-            <div>
-              <Label className="text-xs text-slate-600">Tempo de Mercado (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.equipe.tempo_mercado}
-                onChange={(e) => handleScoreChange('equipe', 'tempo_mercado', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">0-3 anos: 1 | 3-5: 2 | 5-10: 3 | +10: 5</p>
-            </div>
-            <div>
-              <Label className="text-xs text-slate-600">Experiência Captação (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.equipe.experiencia_captacao}
-                onChange={(e) => handleScoreChange('equipe', 'experiencia_captacao', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Nenhuma: 0 | Anjos: 3 | VCs: 5</p>
-            </div>
-            <div>
-              <Label className="text-xs text-slate-600">Histórico Empreendedor (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.equipe.historico_empreendedor}
-                onChange={(e) => handleScoreChange('equipe', 'historico_empreendedor', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Nunca: 0 | Background: 1 | Já empreen: 3 | Exit: 5</p>
-            </div>
+            <StarRating
+              label="Tempo de Mercado"
+              value={scores.equipe.tempo_mercado}
+              onChange={(val) => handleScoreChange('equipe', 'tempo_mercado', val)}
+              helper="1: 0-3 anos | 2: 3-5 | 3: 5-10 | 5: +10 anos"
+            />
+            <StarRating
+              label="Experiência Captação"
+              value={scores.equipe.experiencia_captacao}
+              onChange={(val) => handleScoreChange('equipe', 'experiencia_captacao', val)}
+              helper="0: Nenhuma | 3: Anjos/Aceleradoras | 5: VCs"
+            />
+            <StarRating
+              label="Histórico Empreendedor"
+              value={scores.equipe.historico_empreendedor}
+              onChange={(val) => handleScoreChange('equipe', 'historico_empreendedor', val)}
+              helper="0: Nunca | 1: Background | 3: Já empreen | 5: Exit"
+            />
           </div>
           <div className="mb-2">
             <Label className="text-xs text-slate-600">Justificativa (Equipe)</Label>
@@ -228,32 +236,18 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate }) {
             🚀 Tese e Modelo de Negócios <span className="text-xs text-slate-500">(Peso: 30%)</span>
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-            <div>
-              <Label className="text-xs text-slate-600">Escalabilidade (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.tese_modelo.escalabilidade}
-                onChange={(e) => handleScoreChange('tese_modelo', 'escalabilidade', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Baixa: 0 | Média: 3 | Alta: 5</p>
-            </div>
-            <div>
-              <Label className="text-xs text-slate-600">Barreira de Entrada (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.tese_modelo.barreira_entrada}
-                onChange={(e) => handleScoreChange('tese_modelo', 'barreira_entrada', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Baixa: 0 | Média: 3 | Alta: 5</p>
-            </div>
+            <StarRating
+              label="Escalabilidade"
+              value={scores.tese_modelo.escalabilidade}
+              onChange={(val) => handleScoreChange('tese_modelo', 'escalabilidade', val)}
+              helper="0: Baixa | 3: Média | 5: Alta"
+            />
+            <StarRating
+              label="Barreira de Entrada"
+              value={scores.tese_modelo.barreira_entrada}
+              onChange={(val) => handleScoreChange('tese_modelo', 'barreira_entrada', val)}
+              helper="0: Baixa | 3: Média | 5: Alta"
+            />
           </div>
           <div className="mb-2">
             <Label className="text-xs text-slate-600">Justificativa (Tese e Modelo)</Label>
@@ -279,32 +273,18 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate }) {
             📊 Tração (Proxy Pública) <span className="text-xs text-slate-500">(Peso: 25%)</span>
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-            <div>
-              <Label className="text-xs text-slate-600">Sinais Públicos (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.tracao.sinais_publicos}
-                onChange={(e) => handleScoreChange('tracao', 'sinais_publicos', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Nenhum: 0 | Clientes citados: 2 | Métricas públicas: 5</p>
-            </div>
-            <div>
-              <Label className="text-xs text-slate-600">Prova Social (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.tracao.prova_social}
-                onChange={(e) => handleScoreChange('tracao', 'prova_social', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Nenhuma: 0 | Parcerias: 3 | Logos relevantes: 5</p>
-            </div>
+            <StarRating
+              label="Sinais Públicos"
+              value={scores.tracao.sinais_publicos}
+              onChange={(val) => handleScoreChange('tracao', 'sinais_publicos', val)}
+              helper="0: Nenhum | 2: Clientes citados | 5: Métricas públicas"
+            />
+            <StarRating
+              label="Prova Social"
+              value={scores.tracao.prova_social}
+              onChange={(val) => handleScoreChange('tracao', 'prova_social', val)}
+              helper="0: Nenhuma | 3: Parcerias | 5: Logos relevantes"
+            />
           </div>
           <div className="mb-2">
             <Label className="text-xs text-slate-600">Justificativa (Tração)</Label>
@@ -330,32 +310,18 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate }) {
             💰 Qualidade Comercial <span className="text-xs text-slate-500">(Peso: 10%)</span>
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-            <div>
-              <Label className="text-xs text-slate-600">Fluidez Navegação (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.qualidade_comercial.fluidez_navegacao}
-                onChange={(e) => handleScoreChange('qualidade_comercial', 'fluidez_navegacao', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Baixa: 0 | Média: 3 | Alta: 5</p>
-            </div>
-            <div>
-              <Label className="text-xs text-slate-600">Clareza Informações (0-5)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={scores.qualidade_comercial.clareza_informacoes}
-                onChange={(e) => handleScoreChange('qualidade_comercial', 'clareza_informacoes', e.target.value)}
-                className="text-sm"
-              />
-              <p className="text-xs text-slate-500 mt-1">Baixa: 0 | Média: 3 | Alta: 5</p>
-            </div>
+            <StarRating
+              label="Fluidez Navegação"
+              value={scores.qualidade_comercial.fluidez_navegacao}
+              onChange={(val) => handleScoreChange('qualidade_comercial', 'fluidez_navegacao', val)}
+              helper="0: Baixa | 3: Média | 5: Alta"
+            />
+            <StarRating
+              label="Clareza Informações"
+              value={scores.qualidade_comercial.clareza_informacoes}
+              onChange={(val) => handleScoreChange('qualidade_comercial', 'clareza_informacoes', val)}
+              helper="0: Baixa | 3: Média | 5: Alta"
+            />
           </div>
           <div className="mb-2">
             <Label className="text-xs text-slate-600">Justificativa (Qualidade Comercial)</Label>
