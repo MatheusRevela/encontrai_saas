@@ -111,7 +111,9 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate, startupId
   }, [formData.avaliacao_qualitativa]);
 
   const calcularScoreBloco = (criterios) => {
-    const valores = Object.values(criterios);
+    // Filtrar apenas os critérios de avaliação (excluir score_bloco se existir)
+    const { score_bloco, ...criteriosLimpos } = criterios;
+    const valores = Object.values(criteriosLimpos);
     const media = valores.reduce((acc, val) => acc + val, 0) / valores.length;
     return (media / 5) * 100;
   };
