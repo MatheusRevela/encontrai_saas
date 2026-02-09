@@ -64,7 +64,7 @@ const PESOS = {
   qualidade_comercial: 10
 };
 
-export default function AvaliacaoQualitativaForm({ formData, onUpdate }) {
+export default function AvaliacaoQualitativaForm({ formData, onUpdate, startupId }) {
   const [scores, setScores] = useState({
     equipe: {
       tempo_mercado: 0,
@@ -145,40 +145,59 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate }) {
     }));
   };
 
+  const [salvando, setSalvando] = useState(false);
+
   const handleSalvarAvaliacao = async () => {
     const scoreFinal = calcularScoreFinal();
     const ratingFinal = getRating(scoreFinal);
     
-    const user = await base44.auth.me();
+    setSalvando(true);
+    try {
+      const user = await base44.auth.me();
 
-    const avaliacaoCompleta = {
-      equipe: {
-        ...scores.equipe,
-        score_bloco: calcularScoreBloco(scores.equipe)
-      },
-      tese_modelo: {
-        ...scores.tese_modelo,
-        score_bloco: calcularScoreBloco(scores.tese_modelo)
-      },
-      tracao: {
-        ...scores.tracao,
-        score_bloco: calcularScoreBloco(scores.tracao)
-      },
-      qualidade_comercial: {
-        ...scores.qualidade_comercial,
-        score_bloco: calcularScoreBloco(scores.qualidade_comercial)
-      },
-      score_final: scoreFinal,
-      rating_final: ratingFinal,
-      justificativa_equipe: justificativas.equipe,
-      justificativa_tese: justificativas.tese,
-      justificativa_tracao: justificativas.tracao,
-      justificativa_comercial: justificativas.comercial,
-      data_avaliacao: new Date().toISOString(),
-      avaliado_por: user.email
-    };
+      const avaliacaoCompleta = {
+        equipe: {
+          ...scores.equipe,
+          score_bloco: calcularScoreBloco(scores.equipe)
+        },
+        tese_modelo: {
+          ...scores.tese_modelo,
+          score_bloco: calcularScoreBloco(scores.tese_modelo)
+        },
+        tracao: {
+          ...scores.tracao,
+          score_bloco: calcularScoreBloco(scores.tracao)
+        },
+        qualidade_comercial: {
+          ...scores.qualidade_comercial,
+          score_bloco: calcularScoreBloco(scores.qualidade_comercial)
+        },
+        score_final: scoreFinal,
+        rating_final: ratingFinal,
+        justificativa_equipe: justificativas.equipe,
+        justificativa_tese: justificativas.tese,
+        justificativa_tracao: justificativas.tracao,
+        justificativa_comercial: justificativas.comercial,
+        data_avaliacao: new Date().toISOString(),
+        avaliado_por: user.email
+      };
 
-    onUpdate(avaliacaoCompleta);
+      // Salvar direto no banco se temos o ID da startup
+      if (startupId) {
+        await base44.entities.Startup.update(startupId, {
+          avaliacao_qualitativa: avaliacaoCompleta
+        });
+        alert('✅ Avaliação salva com sucesso!');
+      }
+
+      // Também atualizar o estado local do formulário pai
+      onUpdate(avaliacaoCompleta);
+    } catch (error) {
+      console.error('Erro ao salvar avaliação:', error);
+      alert('Erro ao salvar avaliação. Tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
   };
 
   const scoreFinal = calcularScoreFinal();
@@ -364,10 +383,11 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate }) {
           </div>
           <Button 
             onClick={handleSalvarAvaliacao} 
+            disabled={salvando}
             className="w-full bg-purple-600 hover:bg-purple-700"
           >
             <Calculator className="w-4 h-4 mr-2" />
-            Salvar Avaliação Completa
+            {salvando ? 'Salvando...' : 'Salvar Avaliação Completa'}
           </Button>
           <div className="mt-3 p-3 bg-blue-50 rounded-lg flex items-start gap-2 text-xs text-blue-800">
             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />

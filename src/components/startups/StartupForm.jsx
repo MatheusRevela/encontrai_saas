@@ -739,7 +739,8 @@ Retorne um JSON com este formato:
             )}
 
             <AvaliacaoQualitativaForm 
-              formData={formData} 
+              formData={formData}
+              startupId={startup?.id}
               onUpdate={(avaliacaoData) => {
                 setFormData(prev => ({
                   ...prev,
