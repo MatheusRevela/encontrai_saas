@@ -123,11 +123,11 @@ export default function AvaliacaoQualitativaForm({ formData, onUpdate, startupId
     const scoreComercial = calcularScoreBloco(scores.qualidade_comercial);
 
     return (
-      (scoreEquipe * PESOS.equipe / 100) +
-      (scoreTese * PESOS.tese_modelo / 100) +
-      (scoreTracao * PESOS.tracao / 100) +
-      (scoreComercial * PESOS.qualidade_comercial / 100)
-    );
+      (scoreEquipe * PESOS.equipe) +
+      (scoreTese * PESOS.tese_modelo) +
+      (scoreTracao * PESOS.tracao) +
+      (scoreComercial * PESOS.qualidade_comercial)
+    ) / 100;
   };
 
   const getRating = (scoreFinal) => {
