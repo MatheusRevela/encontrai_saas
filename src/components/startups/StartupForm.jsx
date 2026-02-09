@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Plus, Save, XCircle, Loader2, Sparkles, Globe, AlertCircle, AlertTriangle } from "lucide-react";
 import { base44 } from '@/api/base44Client';
 import { useDebounce } from '../hooks/useDebounce';
+import AvaliacaoQualitativaForm from './AvaliacaoQualitativaForm';
 
 const CATEGORIAS = [
   { value: "gestao", label: "Gestão" },
@@ -703,6 +704,49 @@ Retorne um JSON com este formato:
                 className="border-slate-200 focus:border-emerald-500"
               />
             </div>
+          </div>
+
+          {/* Avaliação Qualitativa (Rating C-AAA) */}
+          <div className="mt-8 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Avaliação Qualitativa (C a AAA)</h3>
+                <p className="text-xs text-slate-600">Informação visível apenas após desbloqueio</p>
+              </div>
+            </div>
+
+            {formData.avaliacao_qualitativa && (
+              <div className="mb-4 p-4 bg-white rounded-lg border border-purple-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-3xl font-bold text-purple-700">
+                    {formData.avaliacao_qualitativa.rating_final}
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    Score: {formData.avaliacao_qualitativa.score_final?.toFixed(1)}/100
+                  </div>
+                </div>
+                <div className="text-xs text-slate-500">
+                  Avaliado por: {formData.avaliacao_qualitativa.avaliado_por || 'N/A'} • {' '}
+                  {formData.avaliacao_qualitativa.data_avaliacao 
+                    ? new Date(formData.avaliacao_qualitativa.data_avaliacao).toLocaleDateString('pt-BR')
+                    : 'N/A'
+                  }
+                </div>
+              </div>
+            )}
+
+            <AvaliacaoQualitativaForm 
+              formData={formData} 
+              onUpdate={(avaliacaoData) => {
+                setFormData(prev => ({
+                  ...prev,
+                  avaliacao_qualitativa: avaliacaoData
+                }));
+              }}
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">
