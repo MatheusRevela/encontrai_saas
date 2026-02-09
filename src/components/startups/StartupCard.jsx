@@ -11,7 +11,6 @@ import { formatDateBrasiliaShort } from '../utils/dateUtils';
 import { base44 } from '@/api/base44Client';
 
 export default function StartupCard({ startup, onEdit, onDelete, onToggleStatus, onManualVerify, isProcessing, onMarkResolved }) {
-  const [isUpdatingRating, setIsUpdatingRating] = useState(false);
   
   const categoryColors = {
     gestao: "bg-blue-100 text-blue-800",
@@ -32,26 +31,6 @@ export default function StartupCard({ startup, onEdit, onDelete, onToggleStatus,
     (!startup.verificacao_manual || !startup.verificacao_manual.status_aprovado);
   const tagsToShow = startup.tags?.slice(0, 5) || [];
   const remainingTags = startup.tags?.length > 5 ? startup.tags.length - 5 : 0;
-
-  const handleStarClick = async (rating) => {
-    if (isUpdatingRating) return;
-    
-    setIsUpdatingRating(true);
-    try {
-      await base44.entities.Startup.update(startup.id, {
-        avaliacao_especialista: rating,
-        data_avaliacao_especialista: new Date().toISOString(),
-        avaliado_por: 'admin'
-      });
-      
-      // Atualiza localmente para feedback imediato
-      startup.avaliacao_especialista = rating;
-    } catch (error) {
-      console.error('Erro ao salvar avaliação:', error);
-    } finally {
-      setIsUpdatingRating(false);
-    }
-  };
 
   return (
     <motion.div
@@ -89,41 +68,31 @@ export default function StartupCard({ startup, onEdit, onDelete, onToggleStatus,
             </div>
           </div>
 
-          {/* Sistema de Avaliação de Especialista */}
-          <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
-            <div className="flex items-center justify-between mb-2">
+          {/* Rating Qualitativo (C a AAA) */}
+          <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-amber-600" />
-                <span className="text-sm font-medium text-amber-800">Avaliação Especialista</span>
+                <Award className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-800">Rating Qualitativo</span>
               </div>
-              {startup.avaliacao_especialista && (
-                <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800">
-                  {startup.avaliacao_especialista}/5
+              {startup.avaliacao_qualitativa?.rating_final ? (
+                <Badge variant="secondary" className="text-base font-bold bg-purple-100 text-purple-800 px-3 py-1">
+                  {startup.avaliacao_qualitativa.rating_final}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs text-slate-500">
+                  Não avaliado
                 </Badge>
               )}
             </div>
             
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => handleStarClick(star)}
-                  disabled={isUpdatingRating}
-                  className="transition-all duration-200 hover:scale-110 disabled:opacity-50"
-                  title={`Avaliar com ${star} estrela${star > 1 ? 's' : ''}`}
-                >
-                  <Star 
-                    className={`w-5 h-5 transition-colors ${
-                      star <= (startup.avaliacao_especialista || 0)
-                        ? 'text-amber-500 fill-amber-500'
-                        : 'text-amber-300 hover:text-amber-400'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
+            {startup.avaliacao_qualitativa?.rating_final && (
+              <div className="mt-2 text-xs text-purple-700">
+                Score: {startup.avaliacao_qualitativa.score_final?.toFixed(1)}/100
+              </div>
+            )}
             
-            <p className="text-xs text-amber-700 mt-1">
+            <p className="text-xs text-purple-700 mt-1">
               Baseado em: equipe, investimentos, fundadores, funcionários e carteira de clientes
             </p>
           </div>
