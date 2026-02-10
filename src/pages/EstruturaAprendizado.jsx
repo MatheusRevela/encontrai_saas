@@ -187,9 +187,9 @@ export default function EstruturaAprendizado() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
-              Framework de Aprendizado
+              Conteúdos Ricos
             </h1>
-            <p className="text-slate-600 text-lg">Conteúdo estruturado para o seu desenvolvimento</p>
+            <p className="text-slate-600 text-lg">Aprenda mais sobre fatores que deve-se atentar ao seu negócio</p>
           </div>
 
           <div className="grid gap-6">
@@ -455,8 +455,8 @@ export default function EstruturaAprendizado() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Framework de Aprendizado</h1>
-            <p className="text-slate-600 mt-1">Estrutura hierárquica para negócios e startups</p>
+            <h1 className="text-3xl font-bold text-slate-900">Conteúdos Ricos</h1>
+            <p className="text-slate-600 mt-1">Gestão de conteúdos de capacitação para negócios e startups</p>
           </div>
           
           <Dialog>
