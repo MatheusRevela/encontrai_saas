@@ -475,8 +475,6 @@ export default function EstruturaAprendizado() {
                       )}
                     </Card>
                   ))}
-                    </div>
-                  ))}
                 </CardContent>
               )}
             </Card>
