@@ -8,6 +8,29 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CheckCircle, Star, Loader2, Globe, Mail, Phone, Sparkles, ExternalLink, Clock } from 'lucide-react';
 import StartupsNaoSelecionadas from '../components/startups/StartupsNaoSelecionadas';
 
+const getRatingColor = (rating) => {
+  const ratingMap = {
+    'C': 'from-red-900 to-red-800',
+    'CC': 'from-red-800 to-red-700',
+    'CCC-': 'from-red-700 to-red-600',
+    'CCC': 'from-red-600 to-red-500',
+    'CCC+': 'from-red-500 to-red-400',
+    'B-': 'from-green-900 to-green-800',
+    'B': 'from-green-800 to-green-700',
+    'B+': 'from-green-700 to-green-600',
+    'BB': 'from-green-600 to-green-500',
+    'BBB-': 'from-green-500 to-green-400',
+    'BBB': 'from-green-400 to-green-300',
+    'BBB+': 'from-green-300 to-green-200',
+    'A': 'from-amber-300 to-amber-400',
+    'AA-': 'from-amber-400 to-amber-500',
+    'AA': 'from-amber-500 to-amber-600',
+    'AA+': 'from-amber-600 to-amber-700',
+    'AAA': 'from-amber-700 to-amber-800'
+  };
+  return ratingMap[rating] || 'from-slate-400 to-slate-500';
+};
+
 const ProximosPassosCard = () => (
   <Card className="bg-gradient-to-r from-emerald-50 to-blue-50 border-0 shadow-lg">
     <CardHeader>
@@ -179,12 +202,7 @@ export default function DetalhesBusca() {
                                   {startup.modelo_negocio}
                                 </Badge>
                               )}
-                              {avaliacaoQualitativa?.rating_final && (
-                                <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] sm:text-xs px-2 py-0.5 font-bold">
-                                  Rating {avaliacaoQualitativa.rating_final}
-                                </Badge>
-                              )}
-                              </div>
+                             </div>
                               </div>
                           </div>
                           
@@ -196,9 +214,9 @@ export default function DetalhesBusca() {
                               </div>
                             )}
                             {avaliacaoQualitativa?.rating_final && (
-                              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-3 py-2 border border-amber-200">
-                                <p className="text-[10px] sm:text-xs text-amber-700 font-semibold uppercase tracking-wide">Rating</p>
-                                <p className="text-sm sm:text-xl font-bold text-amber-600 whitespace-nowrap">{avaliacaoQualitativa.rating_final}</p>
+                              <div className={`bg-gradient-to-r ${getRatingColor(avaliacaoQualitativa.rating_final)} rounded-lg px-3 py-2 border border-white/20`}>
+                                <p className="text-[10px] sm:text-xs text-white font-semibold uppercase tracking-wide">Rating</p>
+                                <p className="text-sm sm:text-xl font-bold text-white whitespace-nowrap">{avaliacaoQualitativa.rating_final}</p>
                               </div>
                             )}
                           </div>

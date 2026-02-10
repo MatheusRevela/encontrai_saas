@@ -10,6 +10,29 @@ import { CheckCircle, ExternalLink, Mail, Phone, Globe, Star, Rocket, Building2,
 import { motion } from 'framer-motion';
 import StartupsSimilares from '../components/startups/StartupsSimilares';
 
+const getRatingColor = (rating) => {
+  const ratingMap = {
+    'C': 'from-red-900 to-red-800',
+    'CC': 'from-red-800 to-red-700',
+    'CCC-': 'from-red-700 to-red-600',
+    'CCC': 'from-red-600 to-red-500',
+    'CCC+': 'from-red-500 to-red-400',
+    'B-': 'from-green-900 to-green-800',
+    'B': 'from-green-800 to-green-700',
+    'B+': 'from-green-700 to-green-600',
+    'BB': 'from-green-600 to-green-500',
+    'BBB-': 'from-green-500 to-green-400',
+    'BBB': 'from-green-400 to-green-300',
+    'BBB+': 'from-green-300 to-green-200',
+    'A': 'from-amber-300 to-amber-400',
+    'AA-': 'from-amber-400 to-amber-500',
+    'AA': 'from-amber-500 to-amber-600',
+    'AA+': 'from-amber-600 to-amber-700',
+    'AAA': 'from-amber-700 to-amber-800'
+  };
+  return ratingMap[rating] || 'from-slate-400 to-slate-500';
+};
+
 export default function Sucesso() {
   const navigate = useNavigate();
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
@@ -256,11 +279,6 @@ export default function Sucesso() {
                             {startup.vertical_atuacao && (
                               <Badge className="bg-blue-100 text-blue-700 text-xs">{startup.vertical_atuacao}</Badge>
                             )}
-                            {avaliacaoQualitativa?.rating_final && (
-                              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold">
-                                Rating {avaliacaoQualitativa.rating_final}
-                              </Badge>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -272,9 +290,9 @@ export default function Sucesso() {
                           </div>
                         )}
                         {avaliacaoQualitativa?.rating_final && (
-                          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-3 py-2 border border-amber-200">
-                            <p className="text-xs text-amber-700 font-semibold uppercase tracking-wide">Rating</p>
-                            <p className="text-base sm:text-lg font-bold text-amber-600">{avaliacaoQualitativa.rating_final}</p>
+                          <div className={`bg-gradient-to-r ${getRatingColor(avaliacaoQualitativa.rating_final)} rounded-lg px-3 py-2 border border-white/20`}>
+                            <p className="text-xs text-white font-semibold uppercase tracking-wide">Rating</p>
+                            <p className="text-base sm:text-lg font-bold text-white">{avaliacaoQualitativa.rating_final}</p>
                           </div>
                         )}
                       </div>
