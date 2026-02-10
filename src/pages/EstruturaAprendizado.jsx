@@ -180,6 +180,276 @@ export default function EstruturaAprendizado() {
 
   const isAdmin = user?.role === 'admin';
 
+  if (!isAdmin) {
+    // Visualização para usuários regulares
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-slate-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+              Framework de Aprendizado
+            </h1>
+            <p className="text-slate-600 text-lg">Conteúdo estruturado para o seu desenvolvimento</p>
+          </div>
+
+          <div className="grid gap-6">
+            {macrocaixas.map((macro) => {
+              const caixasCount = getCaixasByMacro(macro.id).length;
+              const conteudosCount = getConteudosByMacro(macro.id).length;
+              
+              return (
+                <Card key={macro.id} className="border-2 hover:border-purple-300 transition-all hover:shadow-lg">
+                  <CardHeader 
+                    className="cursor-pointer bg-gradient-to-r from-purple-50 to-blue-50"
+                    onClick={() => toggleMacro(macro.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-white p-3 rounded-lg shadow-sm">
+                          <BookOpen className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-2xl text-slate-900">{macro.nome}</CardTitle>
+                          {macro.descricao && (
+                            <p className="text-sm text-slate-600 mt-1">{macro.descricao}</p>
+                          )}
+                          <div className="flex gap-3 mt-2">
+                            <Badge variant="outline" className="text-xs">
+                              {caixasCount} {caixasCount === 1 ? 'tópico' : 'tópicos'}
+                            </Badge>
+                            {conteudosCount > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                {conteudosCount} {conteudosCount === 1 ? 'conteúdo direto' : 'conteúdos diretos'}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {expandedMacros[macro.id] ? (
+                        <ChevronDown className="w-6 h-6 text-slate-400" />
+                      ) : (
+                        <ChevronRight className="w-6 h-6 text-slate-400" />
+                      )}
+                    </div>
+                  </CardHeader>
+
+                  {expandedMacros[macro.id] && (
+                    <CardContent className="pt-4 space-y-4">
+                      {getConteudosByMacro(macro.id).map((cont) => {
+                        const Icon = TIPO_ICONS[cont.tipo];
+                        return (
+                          <Card key={cont.id} className="border-l-4 border-purple-400 hover:shadow-md transition-all">
+                            <CardHeader 
+                              className="py-3 cursor-pointer"
+                              onClick={() => toggleConteudo(cont.id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {expandedConteudos[cont.id] ? (
+                                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                                  )}
+                                  <div className="bg-purple-100 p-2 rounded-lg">
+                                    <Icon className="w-4 h-4 text-purple-600" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-slate-900">{cont.titulo}</p>
+                                    <Badge className={`${TIPO_COLORS[cont.tipo]} text-xs mt-1`}>
+                                      {cont.tipo}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            {expandedConteudos[cont.id] && cont.corpo && (
+                              <CardContent className="pt-0 bg-slate-50">
+                                <div className="prose prose-sm max-w-none text-slate-700 p-4 bg-white rounded-lg">
+                                  <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                </div>
+                              </CardContent>
+                            )}
+                          </Card>
+                        );
+                      })}
+
+                      {getCaixasByMacro(macro.id).map((caixa) => {
+                        const microsCount = getMicrosByCaixa(caixa.id).length;
+                        const caixaConteudosCount = getConteudosByCaixa(caixa.id).length;
+                        
+                        return (
+                          <Card key={caixa.id} className="border-l-4 border-blue-400 hover:shadow-md transition-all">
+                            <CardHeader 
+                              className="py-3 cursor-pointer bg-blue-50/50"
+                              onClick={() => toggleCaixa(caixa.id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {expandedCaixas[caixa.id] ? (
+                                    <ChevronDown className="w-5 h-5 text-slate-500" />
+                                  ) : (
+                                    <ChevronRight className="w-5 h-5 text-slate-500" />
+                                  )}
+                                  <div className="bg-blue-100 p-2 rounded-lg">
+                                    <FileText className="w-5 h-5 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-lg text-slate-900">{caixa.nome}</h4>
+                                    {caixa.objetivo && (
+                                      <p className="text-sm text-slate-600 mt-0.5">{caixa.objetivo}</p>
+                                    )}
+                                    <div className="flex gap-2 mt-1">
+                                      {microsCount > 0 && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {microsCount} {microsCount === 1 ? 'subtópico' : 'subtópicos'}
+                                        </Badge>
+                                      )}
+                                      {caixaConteudosCount > 0 && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {caixaConteudosCount} {caixaConteudosCount === 1 ? 'conteúdo' : 'conteúdos'}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardHeader>
+
+                            {expandedCaixas[caixa.id] && (
+                              <CardContent className="pt-3 space-y-3">
+                                {getConteudosByCaixa(caixa.id).map((cont) => {
+                                  const Icon = TIPO_ICONS[cont.tipo];
+                                  return (
+                                    <Card key={cont.id} className="border hover:shadow-md transition-all">
+                                      <CardHeader 
+                                        className="py-3 cursor-pointer"
+                                        onClick={() => toggleConteudo(cont.id)}
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-3">
+                                            {expandedConteudos[cont.id] ? (
+                                              <ChevronDown className="w-4 h-4 text-slate-500" />
+                                            ) : (
+                                              <ChevronRight className="w-4 h-4 text-slate-500" />
+                                            )}
+                                            <div className="bg-blue-100 p-2 rounded-lg">
+                                              <Icon className="w-4 h-4 text-blue-600" />
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold text-slate-900">{cont.titulo}</p>
+                                              <Badge className={`${TIPO_COLORS[cont.tipo]} text-xs mt-1`}>
+                                                {cont.tipo}
+                                              </Badge>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </CardHeader>
+                                      {expandedConteudos[cont.id] && cont.corpo && (
+                                        <CardContent className="pt-0 bg-slate-50">
+                                          <div className="prose prose-sm max-w-none text-slate-700 p-4 bg-white rounded-lg">
+                                            <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                          </div>
+                                        </CardContent>
+                                      )}
+                                    </Card>
+                                  );
+                                })}
+
+                                {getMicrosByCaixa(caixa.id).map((micro) => {
+                                  const microConteudosCount = getConteudosByMicro(micro.id).length;
+                                  
+                                  return (
+                                    <Card key={micro.id} className="border-l-4 border-green-400 hover:shadow-md transition-all">
+                                      <CardHeader 
+                                        className="py-3 cursor-pointer bg-green-50/50"
+                                        onClick={() => toggleMicro(micro.id)}
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-3">
+                                            {expandedMicros[micro.id] ? (
+                                              <ChevronDown className="w-4 h-4 text-slate-500" />
+                                            ) : (
+                                              <ChevronRight className="w-4 h-4 text-slate-500" />
+                                            )}
+                                            <div className="bg-green-100 p-2 rounded-lg">
+                                              <Lightbulb className="w-4 h-4 text-green-600" />
+                                            </div>
+                                            <div>
+                                              <h5 className="font-semibold text-slate-900">{micro.nome}</h5>
+                                              {micro.descricao && (
+                                                <p className="text-xs text-slate-600 mt-0.5">{micro.descricao}</p>
+                                              )}
+                                              {microConteudosCount > 0 && (
+                                                <Badge variant="outline" className="text-xs mt-1">
+                                                  {microConteudosCount} {microConteudosCount === 1 ? 'conteúdo' : 'conteúdos'}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </CardHeader>
+
+                                      {expandedMicros[micro.id] && (
+                                        <CardContent className="pt-3 space-y-2">
+                                          {getConteudosByMicro(micro.id).map((cont) => {
+                                            const Icon = TIPO_ICONS[cont.tipo];
+                                            return (
+                                              <Card key={cont.id} className="border hover:shadow-md transition-all">
+                                                <CardHeader 
+                                                  className="py-3 cursor-pointer"
+                                                  onClick={() => toggleConteudo(cont.id)}
+                                                >
+                                                  <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                      {expandedConteudos[cont.id] ? (
+                                                        <ChevronDown className="w-4 h-4 text-slate-500" />
+                                                      ) : (
+                                                        <ChevronRight className="w-4 h-4 text-slate-500" />
+                                                      )}
+                                                      <div className="bg-green-100 p-2 rounded-lg">
+                                                        <Icon className="w-4 h-4 text-green-600" />
+                                                      </div>
+                                                      <div>
+                                                        <p className="font-semibold text-slate-900">{cont.titulo}</p>
+                                                        <Badge className={`${TIPO_COLORS[cont.tipo]} text-xs mt-1`}>
+                                                          {cont.tipo}
+                                                        </Badge>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </CardHeader>
+                                                {expandedConteudos[cont.id] && cont.corpo && (
+                                                  <CardContent className="pt-0 bg-slate-50">
+                                                    <div className="prose prose-sm max-w-none text-slate-700 p-4 bg-white rounded-lg">
+                                                      <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                                    </div>
+                                                  </CardContent>
+                                                )}
+                                              </Card>
+                                            );
+                                          })}
+                                        </CardContent>
+                                      )}
+                                    </Card>
+                                  );
+                                })}
+                              </CardContent>
+                            )}
+                          </Card>
+                        );
+                      })}
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Visualização administrativa
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
@@ -189,22 +459,20 @@ export default function EstruturaAprendizado() {
             <p className="text-slate-600 mt-1">Estrutura hierárquica para negócios e startups</p>
           </div>
           
-          {isAdmin && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="bg-purple-600 hover:bg-purple-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Macrocaixa
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Criar Macrocaixa</DialogTitle>
-                </DialogHeader>
-                <MacrocaixaForm onSubmit={createMacroMutation.mutate} />
-              </DialogContent>
-            </Dialog>
-          )}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Macrocaixa
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Macrocaixa</DialogTitle>
+              </DialogHeader>
+              <MacrocaixaForm onSubmit={createMacroMutation.mutate} />
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="space-y-4">

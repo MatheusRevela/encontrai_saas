@@ -56,6 +56,7 @@ import Conversas from './pages/Conversas';
 import Dashboard from './pages/Dashboard';
 import DashboardUsuario from './pages/DashboardUsuario';
 import DetalhesBusca from './pages/DetalhesBusca';
+import EstruturaAprendizado from './pages/EstruturaAprendizado';
 import FAQ from './pages/FAQ';
 import Feedback from './pages/Feedback';
 import Ferramentas from './pages/Ferramentas';
@@ -77,7 +78,6 @@ import index from './pages/index';
 import startups from './pages/startups';
 import transacoes from './pages/transacoes';
 import users from './pages/users';
-import EstruturaAprendizado from './pages/EstruturaAprendizado';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +91,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DashboardUsuario": DashboardUsuario,
     "DetalhesBusca": DetalhesBusca,
+    "EstruturaAprendizado": EstruturaAprendizado,
     "FAQ": FAQ,
     "Feedback": Feedback,
     "Ferramentas": Ferramentas,
@@ -112,7 +113,6 @@ export const PAGES = {
     "startups": startups,
     "transacoes": transacoes,
     "users": users,
-    "EstruturaAprendizado": EstruturaAprendizado,
 }
 
 export const pagesConfig = {
