@@ -230,6 +230,11 @@ export default function Sucesso() {
                             {startup.vertical_atuacao && (
                               <Badge className="bg-blue-100 text-blue-700 text-xs">{startup.vertical_atuacao}</Badge>
                             )}
+                            {startup.avaliacao_qualitativa?.rating_final && (
+                              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold">
+                                Rating {startup.avaliacao_qualitativa.rating_final}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>

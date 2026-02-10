@@ -138,24 +138,29 @@ export default function DetalhesBusca() {
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-lg sm:text-3xl font-bold text-slate-900 break-words">{startup.nome}</h3>
-                              <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
-                               {startup.categoria && (
-                                 <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] sm:text-xs px-2 py-0.5">
-                                   {startup.categoria}
-                                 </Badge>
-                               )}
-                               {startup.vertical_atuacao && (
-                                 <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] sm:text-xs px-2 py-0.5">
-                                   {startup.vertical_atuacao}
-                                 </Badge>
-                               )}
-                               {startup.modelo_negocio && (
-                                 <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-[10px] sm:text-xs px-2 py-0.5 capitalize">
-                                   {startup.modelo_negocio}
-                                 </Badge>
-                               )}
-                              </div>
+                             <h3 className="text-lg sm:text-3xl font-bold text-slate-900 break-words">{startup.nome}</h3>
+                             <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
+                              {startup.categoria && (
+                                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] sm:text-xs px-2 py-0.5">
+                                  {startup.categoria}
+                                </Badge>
+                              )}
+                              {startup.vertical_atuacao && (
+                                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] sm:text-xs px-2 py-0.5">
+                                  {startup.vertical_atuacao}
+                                </Badge>
+                              )}
+                              {startup.modelo_negocio && (
+                                <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-[10px] sm:text-xs px-2 py-0.5 capitalize">
+                                  {startup.modelo_negocio}
+                                </Badge>
+                              )}
+                              {startup.avaliacao_qualitativa?.rating_final && (
+                                <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] sm:text-xs px-2 py-0.5 font-bold">
+                                  Rating {startup.avaliacao_qualitativa.rating_final}
+                                </Badge>
+                              )}
+                             </div>
                             </div>
                           </div>
                           
