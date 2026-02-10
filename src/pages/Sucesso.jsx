@@ -15,6 +15,7 @@ export default function Sucesso() {
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
   const [tentativas, setTentativas] = React.useState(0);
+  const [startupsCompletas, setStartupsCompletas] = React.useState({});
 
   const { data: transacao, isLoading, error, refetch } = useQuery({
     queryKey: ['sucesso', sessionId, tentativas],
@@ -73,6 +74,29 @@ export default function Sucesso() {
     retry: false,
     staleTime: 2 * 60 * 1000,
   });
+
+  // Buscar dados completos das startups para obter o rating
+  React.useEffect(() => {
+    if (transacao?.startups_desbloqueadas) {
+      const buscarRatings = async () => {
+        const ratings = {};
+        for (const startup of transacao.startups_desbloqueadas) {
+          if (!startup.avaliacao_qualitativa) {
+            try {
+              const startupCompleta = await base44.entities.Startup.get(startup.startup_id);
+              if (startupCompleta?.avaliacao_qualitativa) {
+                ratings[startup.startup_id] = startupCompleta.avaliacao_qualitativa;
+              }
+            } catch (err) {
+              console.error('Erro ao buscar startup:', err);
+            }
+          }
+        }
+        setStartupsCompletas(ratings);
+      };
+      buscarRatings();
+    }
+  }, [transacao]);
 
   if (isLoading) {
     return (
@@ -195,7 +219,9 @@ export default function Sucesso() {
         >
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Soluções Desbloqueadas</h2>
           <div className="space-y-6">
-            {transacao.startups_desbloqueadas.map((startup, index) => (
+            {transacao.startups_desbloqueadas.map((startup, index) => {
+              const avaliacaoQualitativa = startup.avaliacao_qualitativa || startupsCompletas[startup.startup_id];
+              return (
               <motion.div
                 key={startup.startup_id}
                 initial={{ opacity: 0, x: -20 }}
@@ -230,9 +256,9 @@ export default function Sucesso() {
                             {startup.vertical_atuacao && (
                               <Badge className="bg-blue-100 text-blue-700 text-xs">{startup.vertical_atuacao}</Badge>
                             )}
-                            {startup.avaliacao_qualitativa?.rating_final && (
+                            {avaliacaoQualitativa?.rating_final && (
                               <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold">
-                                Rating {startup.avaliacao_qualitativa.rating_final}
+                                Rating {avaliacaoQualitativa.rating_final}
                               </Badge>
                             )}
                           </div>
@@ -315,7 +341,8 @@ export default function Sucesso() {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            );
+            })}
           </div>
         </motion.div>
 

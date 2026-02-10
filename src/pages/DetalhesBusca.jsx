@@ -37,6 +37,7 @@ export default function DetalhesBusca() {
   const [busca, setBusca] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [startupsCompletas, setStartupsCompletas] = useState({});
 
   useEffect(() => {
     const transactionId = searchParams.get('id');
@@ -64,6 +65,28 @@ export default function DetalhesBusca() {
     };
     loadBusca();
   }, [searchParams]);
+
+  useEffect(() => {
+    if (busca?.startups_desbloqueadas) {
+      const buscarRatings = async () => {
+        const ratings = {};
+        for (const startup of busca.startups_desbloqueadas) {
+          if (!startup.avaliacao_qualitativa) {
+            try {
+              const startupCompleta = await base44.entities.Startup.get(startup.startup_id);
+              if (startupCompleta?.avaliacao_qualitativa) {
+                ratings[startup.startup_id] = startupCompleta.avaliacao_qualitativa;
+              }
+            } catch (err) {
+              console.error('Erro ao buscar startup:', err);
+            }
+          }
+        }
+        setStartupsCompletas(ratings);
+      };
+      buscarRatings();
+    }
+  }, [busca]);
 
   if (isLoading) {
     return <div className="p-8 text-center"><Loader2 className="w-8 h-8 mx-auto animate-spin text-emerald-600" /></div>;
@@ -120,6 +143,7 @@ export default function DetalhesBusca() {
                 const avaliacaoIndividual = busca.avaliacoes_individuais?.find(
                   av => av.startup_id === startup.startup_id
                 );
+                const avaliacaoQualitativa = startup.avaliacao_qualitativa || startupsCompletas[startup.startup_id];
 
                 return (
                   <Card key={startup.startup_id} className="bg-white/90 backdrop-blur-sm border-0 shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300">
@@ -155,13 +179,13 @@ export default function DetalhesBusca() {
                                   {startup.modelo_negocio}
                                 </Badge>
                               )}
-                              {startup.avaliacao_qualitativa?.rating_final && (
+                              {avaliacaoQualitativa?.rating_final && (
                                 <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] sm:text-xs px-2 py-0.5 font-bold">
-                                  Rating {startup.avaliacao_qualitativa.rating_final}
+                                  Rating {avaliacaoQualitativa.rating_final}
                                 </Badge>
                               )}
-                             </div>
-                            </div>
+                              </div>
+                              </div>
                           </div>
                           
                           {startup.preco_base && (
