@@ -159,6 +159,14 @@ export default function EstruturaAprendizado() {
     return conteudos.filter(c => c.microcaixa_id === microId);
   };
 
+  const getConteudosByCaixa = (caixaId) => {
+    return conteudos.filter(c => c.caixa_id === caixaId && !c.microcaixa_id);
+  };
+
+  const getConteudosByMacro = (macroId) => {
+    return conteudos.filter(c => c.macrocaixa_id === macroId && !c.caixa_id && !c.microcaixa_id);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
@@ -225,6 +233,7 @@ export default function EstruturaAprendizado() {
                           variant="ghost" 
                           size="sm"
                           onClick={(e) => e.stopPropagation()}
+                          title="Adicionar Caixa"
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
@@ -236,6 +245,27 @@ export default function EstruturaAprendizado() {
                         <CaixaForm 
                           macrocaixaId={macro.id}
                           onSubmit={createCaixaMutation.mutate}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Adicionar Conteúdo Diretamente"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Adicionar Conteúdo em {macro.nome}</DialogTitle>
+                        </DialogHeader>
+                        <ConteudoForm 
+                          macrocaixaId={macro.id}
+                          onSubmit={createConteudoMutation.mutate}
                         />
                       </DialogContent>
                     </Dialog>
@@ -260,6 +290,54 @@ export default function EstruturaAprendizado() {
 
               {expandedMacros[macro.id] && (
                 <CardContent className="pl-12 space-y-3">
+                  {getConteudosByMacro(macro.id).map((cont) => {
+                    const Icon = TIPO_ICONS[cont.tipo];
+                    return (
+                      <div 
+                        key={cont.id}
+                        className="flex items-center justify-between p-2 hover:bg-slate-50 rounded text-sm border-l-2 border-purple-300 pl-3"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge className={TIPO_COLORS[cont.tipo]}>
+                            <Icon className="w-3 h-3 mr-1" />
+                            {cont.tipo}
+                          </Badge>
+                          <span className="text-slate-700 font-medium">{cont.titulo}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Editar Conteúdo</DialogTitle>
+                              </DialogHeader>
+                              <ConteudoForm 
+                                initial={cont}
+                                macrocaixaId={cont.macrocaixa_id}
+                                onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(`Deletar "${cont.titulo}"?`)) {
+                                deleteConteudoMutation.mutate(cont.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
                   {getCaixasByMacro(macro.id).map((caixa) => (
                     <Card key={caixa.id} className="border-l-4 border-blue-400 mb-2">
                       <CardHeader className="py-3 px-4">
@@ -308,6 +386,7 @@ export default function EstruturaAprendizado() {
                                   variant="ghost" 
                                   size="sm"
                                   onClick={(e) => e.stopPropagation()}
+                                  title="Adicionar Microcaixa"
                                 >
                                   <Plus className="w-3 h-3" />
                                 </Button>
@@ -319,6 +398,27 @@ export default function EstruturaAprendizado() {
                                 <MicrocaixaForm 
                                   caixaId={caixa.id}
                                   onSubmit={createMicroMutation.mutate}
+                                />
+                              </DialogContent>
+                            </Dialog>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="Adicionar Conteúdo Diretamente"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Adicionar Conteúdo em {caixa.nome}</DialogTitle>
+                                </DialogHeader>
+                                <ConteudoForm 
+                                  caixaId={caixa.id}
+                                  onSubmit={createConteudoMutation.mutate}
                                 />
                               </DialogContent>
                             </Dialog>
@@ -340,6 +440,54 @@ export default function EstruturaAprendizado() {
 
                       {expandedCaixas[caixa.id] && (
                         <CardContent className="pt-2 pb-3 px-4 space-y-2">
+                          {getConteudosByCaixa(caixa.id).map((cont) => {
+                            const Icon = TIPO_ICONS[cont.tipo];
+                            return (
+                              <div 
+                                key={cont.id}
+                                className="flex items-center justify-between p-2 hover:bg-slate-50 rounded text-sm border-l-2 border-blue-300 pl-3"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Badge className={TIPO_COLORS[cont.tipo]}>
+                                    <Icon className="w-3 h-3 mr-1" />
+                                    {cont.tipo}
+                                  </Badge>
+                                  <span className="text-slate-700">{cont.titulo}</span>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button variant="ghost" size="sm">
+                                        <Edit2 className="w-3 h-3" />
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Editar Conteúdo</DialogTitle>
+                                      </DialogHeader>
+                                      <ConteudoForm 
+                                        initial={cont}
+                                        caixaId={cont.caixa_id}
+                                        onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
+                                      />
+                                    </DialogContent>
+                                  </Dialog>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm(`Deletar "${cont.titulo}"?`)) {
+                                        deleteConteudoMutation.mutate(cont.id);
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="w-3 h-3 text-red-500" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+
                           {getMicrosByCaixa(caixa.id).map((micro) => (
                             <Card key={micro.id} className="border-l-4 border-green-400">
                               <CardHeader className="py-2 px-3">
@@ -596,14 +744,24 @@ function MicrocaixaForm({ caixaId, onSubmit, initial }) {
   );
 }
 
-function ConteudoForm({ microcaixaId, onSubmit, initial }) {
+function ConteudoForm({ macrocaixaId, caixaId, microcaixaId, onSubmit, initial }) {
   const [tipo, setTipo] = useState(initial?.tipo || 'conceito');
   const [titulo, setTitulo] = useState(initial?.titulo || '');
   const [corpo, setCorpo] = useState(initial?.corpo || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ microcaixa_id: microcaixaId, tipo, titulo, corpo, ativo: true, ordem: initial?.ordem || 0 });
+    const data = { tipo, titulo, corpo, ativo: true, ordem: initial?.ordem || 0 };
+    
+    if (microcaixaId) {
+      data.microcaixa_id = microcaixaId;
+    } else if (caixaId) {
+      data.caixa_id = caixaId;
+    } else if (macrocaixaId) {
+      data.macrocaixa_id = macrocaixaId;
+    }
+    
+    onSubmit(data);
     if (!initial) {
       setTitulo('');
       setCorpo('');
