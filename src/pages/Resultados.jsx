@@ -436,12 +436,12 @@ export default function Resultados() {
             Soluções Encontradas
           </h1>
           
-          {/* 🎁 PRIMEIRA SOLUÇÃO GRÁTIS para novos usuários */}
+          {/* 🎁 SOLUÇÃO BÔNUS para novos usuários */}
           {isNovoUsuario && (
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-green-100 border-2 border-emerald-300 rounded-full px-6 py-3 mb-4">
               <Sparkles className="w-5 h-5 text-emerald-600" />
               <span className="font-bold text-emerald-800">
-                🎁 Primeira solução GRÁTIS • R$ 5,00 cada adicional
+                🎁 Ganhe 1 grátis ao desbloquear 2 ou mais • R$ 5,00 cada
               </span>
             </div>
           )}
@@ -593,7 +593,7 @@ export default function Resultados() {
                 </div>
                 <div className="text-sm text-slate-600">
                   {isNovoUsuario && selectedStartups.length === 1 ? (
-                    <span className="text-emerald-600 font-bold">🎁 GRÁTIS (primeira solução)</span>
+                    <span className="text-amber-600 font-bold">Valor: R$ 5,00</span>
                   ) : (
                     <>
                       {(() => {
@@ -621,7 +621,7 @@ export default function Resultados() {
                         <span className="block text-emerald-600 font-semibold mt-1">🎉 R$ 3,00 de desconto aplicado!</span>
                       )}
                       {isNovoUsuario && selectedStartups.length > 1 && (
-                        <span className="block text-emerald-600 font-semibold mt-1">🎁 Primeira solução grátis inclusa</span>
+                        <span className="block text-emerald-600 font-semibold mt-1">🎁 1 solução bônus grátis inclusa</span>
                       )}
                     </>
                   )}

@@ -159,7 +159,7 @@ export default function Buscar() {
               Você escolhe quantas quer desbloquear e paga apenas por elas (R$ 5,00 cada).
             </p>
             <p className="text-xs text-emerald-600 font-semibold mt-2">
-              🎁 Primeira solução completamente GRÁTIS!
+              🎁 Ganhe 1 solução grátis ao desbloquear 2 ou mais!
             </p>
           </div>
         </div>
