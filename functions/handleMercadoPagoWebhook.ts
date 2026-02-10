@@ -209,7 +209,8 @@ Deno.serve(async (req) => {
                                 whatsapp: s.whatsapp,
                                 linkedin: s.linkedin,
                                 preco_base: s.preco_base,
-                                logo_url: s.logo_url
+                                logo_url: s.logo_url,
+                                avaliacao_qualitativa: s.avaliacao_qualitativa
                             }));
 
                             const similaresDesbloqueadas = transaction.similares_desbloqueadas || [];
@@ -261,7 +262,8 @@ Deno.serve(async (req) => {
                             whatsapp: s.whatsapp,
                             linkedin: s.linkedin,
                             preco_base: s.preco_base,
-                            logo_url: s.logo_url
+                            logo_url: s.logo_url,
+                            avaliacao_qualitativa: s.avaliacao_qualitativa
                         }));
 
                         await base44.entities.Transacao.update(transaction.id, {
