@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ReactMarkdown from 'react-markdown';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,12 @@ export default function EstruturaAprendizado() {
   const [expandedMacros, setExpandedMacros] = useState({});
   const [expandedCaixas, setExpandedCaixas] = useState({});
   const [expandedMicros, setExpandedMicros] = useState({});
+  const [expandedConteudos, setExpandedConteudos] = useState({});
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   // Queries
   const { data: macrocaixas = [] } = useQuery({
@@ -147,6 +154,10 @@ export default function EstruturaAprendizado() {
     setExpandedMicros(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const toggleConteudo = (id) => {
+    setExpandedConteudos(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const getCaixasByMacro = (macroId) => {
     return caixas.filter(c => c.macrocaixa_id === macroId);
   };
@@ -167,6 +178,8 @@ export default function EstruturaAprendizado() {
     return conteudos.filter(c => c.macrocaixa_id === macroId && !c.caixa_id && !c.microcaixa_id);
   };
 
+  const isAdmin = user?.role === 'admin';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
@@ -176,20 +189,22 @@ export default function EstruturaAprendizado() {
             <p className="text-slate-600 mt-1">Estrutura hierárquica para negócios e startups</p>
           </div>
           
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-purple-600 hover:bg-purple-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Macrocaixa
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Macrocaixa</DialogTitle>
-              </DialogHeader>
-              <MacrocaixaForm onSubmit={createMacroMutation.mutate} />
-            </DialogContent>
-          </Dialog>
+          {isAdmin && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Macrocaixa
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Macrocaixa</DialogTitle>
+                </DialogHeader>
+                <MacrocaixaForm onSubmit={createMacroMutation.mutate} />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -206,82 +221,69 @@ export default function EstruturaAprendizado() {
                     <CardTitle className="text-xl">{macro.nome}</CardTitle>
                     {!macro.ativa && <Badge variant="secondary">Inativa</Badge>}
                   </div>
-                  <div className="flex gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Editar {macro.nome}</DialogTitle>
-                        </DialogHeader>
-                        <MacrocaixaForm 
-                          initial={macro}
-                          onSubmit={(data) => updateMacroMutation.mutate({ id: macro.id, data })}
-                        />
-                      </DialogContent>
-                    </Dialog>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Adicionar Caixa"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Adicionar Caixa em {macro.nome}</DialogTitle>
-                        </DialogHeader>
-                        <CaixaForm 
-                          macrocaixaId={macro.id}
-                          onSubmit={createCaixaMutation.mutate}
-                        />
-                      </DialogContent>
-                    </Dialog>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Adicionar Conteúdo Diretamente"
-                        >
-                          <FileText className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Adicionar Conteúdo em {macro.nome}</DialogTitle>
-                        </DialogHeader>
-                        <ConteudoForm 
-                          macrocaixaId={macro.id}
-                          onSubmit={createConteudoMutation.mutate}
-                        />
-                      </DialogContent>
-                    </Dialog>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm('Deletar esta macrocaixa e todo seu conteúdo?')) {
-                          deleteMacroMutation.mutate(macro.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Editar {macro.nome}</DialogTitle>
+                          </DialogHeader>
+                          <MacrocaixaForm 
+                            initial={macro}
+                            onSubmit={(data) => updateMacroMutation.mutate({ id: macro.id, data })}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm" title="Adicionar Caixa">
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Adicionar Caixa em {macro.nome}</DialogTitle>
+                          </DialogHeader>
+                          <CaixaForm 
+                            macrocaixaId={macro.id}
+                            onSubmit={createCaixaMutation.mutate}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm" title="Adicionar Conteúdo Diretamente">
+                            <FileText className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Adicionar Conteúdo em {macro.nome}</DialogTitle>
+                          </DialogHeader>
+                          <ConteudoForm 
+                            macrocaixaId={macro.id}
+                            onSubmit={createConteudoMutation.mutate}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm('Deletar esta macrocaixa e todo seu conteúdo?')) {
+                            deleteMacroMutation.mutate(macro.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 {macro.descricao && (
                   <p className="text-sm text-slate-600 mt-2 ml-8">{macro.descricao}</p>
@@ -293,48 +295,66 @@ export default function EstruturaAprendizado() {
                   {getConteudosByMacro(macro.id).map((cont) => {
                     const Icon = TIPO_ICONS[cont.tipo];
                     return (
-                      <div 
-                        key={cont.id}
-                        className="flex items-center justify-between p-2 hover:bg-slate-50 rounded text-sm border-l-2 border-purple-300 pl-3"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Badge className={TIPO_COLORS[cont.tipo]}>
-                            <Icon className="w-3 h-3 mr-1" />
-                            {cont.tipo}
-                          </Badge>
-                          <span className="text-slate-700 font-medium">{cont.titulo}</span>
-                        </div>
-                        <div className="flex gap-1">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Edit2 className="w-3 h-3" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Editar Conteúdo</DialogTitle>
-                              </DialogHeader>
-                              <ConteudoForm 
-                                initial={cont}
-                                macrocaixaId={cont.macrocaixa_id}
-                                onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
-                              />
-                            </DialogContent>
-                          </Dialog>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (confirm(`Deletar "${cont.titulo}"?`)) {
-                                deleteConteudoMutation.mutate(cont.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="w-3 h-3 text-red-500" />
-                          </Button>
-                        </div>
-                      </div>
+                      <Card key={cont.id} className="border-l-2 border-purple-300">
+                        <CardHeader 
+                          className="py-2 px-3 cursor-pointer hover:bg-slate-50"
+                          onClick={() => toggleConteudo(cont.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {expandedConteudos[cont.id] ? (
+                                <ChevronDown className="w-3 h-3 text-slate-500" />
+                              ) : (
+                                <ChevronRight className="w-3 h-3 text-slate-500" />
+                              )}
+                              <Badge className={TIPO_COLORS[cont.tipo]}>
+                                <Icon className="w-3 h-3 mr-1" />
+                                {cont.tipo}
+                              </Badge>
+                              <span className="text-slate-700 font-medium">{cont.titulo}</span>
+                            </div>
+                            {isAdmin && (
+                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <Edit2 className="w-3 h-3" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Editar Conteúdo</DialogTitle>
+                                    </DialogHeader>
+                                    <ConteudoForm 
+                                      initial={cont}
+                                      macrocaixaId={cont.macrocaixa_id}
+                                      onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
+                                    />
+                                  </DialogContent>
+                                </Dialog>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (confirm(`Deletar "${cont.titulo}"?`)) {
+                                      deleteConteudoMutation.mutate(cont.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CardHeader>
+                        {expandedConteudos[cont.id] && cont.corpo && (
+                          <CardContent className="pt-0 pb-2 px-3">
+                            <div className="prose prose-sm max-w-none text-slate-700">
+                              <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                            </div>
+                          </CardContent>
+                        )}
+                      </Card>
                     );
                   })}
                   
@@ -358,83 +378,70 @@ export default function EstruturaAprendizado() {
                               )}
                             </div>
                           </div>
-                          <div className="flex gap-1">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Editar {caixa.nome}</DialogTitle>
-                                </DialogHeader>
-                                <CaixaForm 
-                                  initial={caixa}
-                                  macrocaixaId={caixa.macrocaixa_id}
-                                  onSubmit={(data) => updateCaixaMutation.mutate({ id: caixa.id, data })}
-                                />
-                              </DialogContent>
-                            </Dialog>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={(e) => e.stopPropagation()}
-                                  title="Adicionar Microcaixa"
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Adicionar Microcaixa em {caixa.nome}</DialogTitle>
-                                </DialogHeader>
-                                <MicrocaixaForm 
-                                  caixaId={caixa.id}
-                                  onSubmit={createMicroMutation.mutate}
-                                />
-                              </DialogContent>
-                            </Dialog>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={(e) => e.stopPropagation()}
-                                  title="Adicionar Conteúdo Diretamente"
-                                >
-                                  <FileText className="w-3 h-3" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Adicionar Conteúdo em {caixa.nome}</DialogTitle>
-                                </DialogHeader>
-                                <ConteudoForm 
-                                  caixaId={caixa.id}
-                                  onSubmit={createConteudoMutation.mutate}
-                                />
-                              </DialogContent>
-                            </Dialog>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm(`Deletar "${caixa.nome}" e todas as microcaixas?`)) {
-                                  deleteCaixaMutation.mutate(caixa.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="w-3 h-3 text-red-500" />
-                            </Button>
-                          </div>
+                          {isAdmin && (
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Editar {caixa.nome}</DialogTitle>
+                                  </DialogHeader>
+                                  <CaixaForm 
+                                    initial={caixa}
+                                    macrocaixaId={caixa.macrocaixa_id}
+                                    onSubmit={(data) => updateCaixaMutation.mutate({ id: caixa.id, data })}
+                                  />
+                                </DialogContent>
+                              </Dialog>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" title="Adicionar Microcaixa">
+                                    <Plus className="w-3 h-3" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Adicionar Microcaixa em {caixa.nome}</DialogTitle>
+                                  </DialogHeader>
+                                  <MicrocaixaForm 
+                                    caixaId={caixa.id}
+                                    onSubmit={createMicroMutation.mutate}
+                                  />
+                                </DialogContent>
+                              </Dialog>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" title="Adicionar Conteúdo Diretamente">
+                                    <FileText className="w-3 h-3" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Adicionar Conteúdo em {caixa.nome}</DialogTitle>
+                                  </DialogHeader>
+                                  <ConteudoForm 
+                                    caixaId={caixa.id}
+                                    onSubmit={createConteudoMutation.mutate}
+                                  />
+                                </DialogContent>
+                              </Dialog>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(`Deletar "${caixa.nome}" e todas as microcaixas?`)) {
+                                    deleteCaixaMutation.mutate(caixa.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-3 h-3 text-red-500" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </CardHeader>
 
@@ -443,48 +450,66 @@ export default function EstruturaAprendizado() {
                           {getConteudosByCaixa(caixa.id).map((cont) => {
                             const Icon = TIPO_ICONS[cont.tipo];
                             return (
-                              <div 
-                                key={cont.id}
-                                className="flex items-center justify-between p-2 hover:bg-slate-50 rounded text-sm border-l-2 border-blue-300 pl-3"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Badge className={TIPO_COLORS[cont.tipo]}>
-                                    <Icon className="w-3 h-3 mr-1" />
-                                    {cont.tipo}
-                                  </Badge>
-                                  <span className="text-slate-700">{cont.titulo}</span>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button variant="ghost" size="sm">
-                                        <Edit2 className="w-3 h-3" />
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                      <DialogHeader>
-                                        <DialogTitle>Editar Conteúdo</DialogTitle>
-                                      </DialogHeader>
-                                      <ConteudoForm 
-                                        initial={cont}
-                                        caixaId={cont.caixa_id}
-                                        onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
-                                      />
-                                    </DialogContent>
-                                  </Dialog>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      if (confirm(`Deletar "${cont.titulo}"?`)) {
-                                        deleteConteudoMutation.mutate(cont.id);
-                                      }
-                                    }}
-                                  >
-                                    <Trash2 className="w-3 h-3 text-red-500" />
-                                  </Button>
-                                </div>
-                              </div>
+                              <Card key={cont.id} className="border-l-2 border-blue-300">
+                                <CardHeader 
+                                  className="py-2 px-3 cursor-pointer hover:bg-slate-50"
+                                  onClick={() => toggleConteudo(cont.id)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      {expandedConteudos[cont.id] ? (
+                                        <ChevronDown className="w-3 h-3 text-slate-500" />
+                                      ) : (
+                                        <ChevronRight className="w-3 h-3 text-slate-500" />
+                                      )}
+                                      <Badge className={TIPO_COLORS[cont.tipo]}>
+                                        <Icon className="w-3 h-3 mr-1" />
+                                        {cont.tipo}
+                                      </Badge>
+                                      <span className="text-slate-700">{cont.titulo}</span>
+                                    </div>
+                                    {isAdmin && (
+                                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                        <Dialog>
+                                          <DialogTrigger asChild>
+                                            <Button variant="ghost" size="sm">
+                                              <Edit2 className="w-3 h-3" />
+                                            </Button>
+                                          </DialogTrigger>
+                                          <DialogContent>
+                                            <DialogHeader>
+                                              <DialogTitle>Editar Conteúdo</DialogTitle>
+                                            </DialogHeader>
+                                            <ConteudoForm 
+                                              initial={cont}
+                                              caixaId={cont.caixa_id}
+                                              onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
+                                            />
+                                          </DialogContent>
+                                        </Dialog>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            if (confirm(`Deletar "${cont.titulo}"?`)) {
+                                              deleteConteudoMutation.mutate(cont.id);
+                                            }
+                                          }}
+                                        >
+                                          <Trash2 className="w-3 h-3 text-red-500" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardHeader>
+                                {expandedConteudos[cont.id] && cont.corpo && (
+                                  <CardContent className="pt-0 pb-2 px-3">
+                                    <div className="prose prose-sm max-w-none text-slate-700">
+                                      <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                    </div>
+                                  </CardContent>
+                                )}
+                              </Card>
                             );
                           })}
 
@@ -508,61 +533,54 @@ export default function EstruturaAprendizado() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex gap-1">
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <Edit2 className="w-3 h-3" />
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent>
-                                        <DialogHeader>
-                                          <DialogTitle>Editar {micro.nome}</DialogTitle>
-                                        </DialogHeader>
-                                        <MicrocaixaForm 
-                                          initial={micro}
-                                          caixaId={micro.caixa_id}
-                                          onSubmit={(data) => updateMicroMutation.mutate({ id: micro.id, data })}
-                                        />
-                                      </DialogContent>
-                                    </Dialog>
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <Plus className="w-3 h-3" />
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent>
-                                        <DialogHeader>
-                                          <DialogTitle>Adicionar Conteúdo em {micro.nome}</DialogTitle>
-                                        </DialogHeader>
-                                        <ConteudoForm 
-                                          microcaixaId={micro.id}
-                                          onSubmit={createConteudoMutation.mutate}
-                                        />
-                                      </DialogContent>
-                                    </Dialog>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (confirm(`Deletar "${micro.nome}"?`)) {
-                                          deleteMicroMutation.mutate(micro.id);
-                                        }
-                                      }}
-                                    >
-                                      <Trash2 className="w-3 h-3 text-red-500" />
-                                    </Button>
-                                  </div>
+                                  {isAdmin && (
+                                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                      <Dialog>
+                                        <DialogTrigger asChild>
+                                          <Button variant="ghost" size="sm">
+                                            <Edit2 className="w-3 h-3" />
+                                          </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                          <DialogHeader>
+                                            <DialogTitle>Editar {micro.nome}</DialogTitle>
+                                          </DialogHeader>
+                                          <MicrocaixaForm 
+                                            initial={micro}
+                                            caixaId={micro.caixa_id}
+                                            onSubmit={(data) => updateMicroMutation.mutate({ id: micro.id, data })}
+                                          />
+                                        </DialogContent>
+                                      </Dialog>
+                                      <Dialog>
+                                        <DialogTrigger asChild>
+                                          <Button variant="ghost" size="sm">
+                                            <Plus className="w-3 h-3" />
+                                          </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                          <DialogHeader>
+                                            <DialogTitle>Adicionar Conteúdo em {micro.nome}</DialogTitle>
+                                          </DialogHeader>
+                                          <ConteudoForm 
+                                            microcaixaId={micro.id}
+                                            onSubmit={createConteudoMutation.mutate}
+                                          />
+                                        </DialogContent>
+                                      </Dialog>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          if (confirm(`Deletar "${micro.nome}"?`)) {
+                                            deleteMicroMutation.mutate(micro.id);
+                                          }
+                                        }}
+                                      >
+                                        <Trash2 className="w-3 h-3 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
                               </CardHeader>
 
@@ -571,48 +589,66 @@ export default function EstruturaAprendizado() {
                                   {getConteudosByMicro(micro.id).map((cont) => {
                                     const Icon = TIPO_ICONS[cont.tipo];
                                     return (
-                                      <div 
-                                        key={cont.id}
-                                        className="flex items-center justify-between p-2 hover:bg-slate-50 rounded text-sm"
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <Badge className={TIPO_COLORS[cont.tipo]}>
-                                            <Icon className="w-3 h-3 mr-1" />
-                                            {cont.tipo}
-                                          </Badge>
-                                          <span className="text-slate-700">{cont.titulo}</span>
-                                        </div>
-                                        <div className="flex gap-1">
-                                          <Dialog>
-                                            <DialogTrigger asChild>
-                                              <Button variant="ghost" size="sm">
-                                                <Edit2 className="w-3 h-3" />
-                                              </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                              <DialogHeader>
-                                                <DialogTitle>Editar Conteúdo</DialogTitle>
-                                              </DialogHeader>
-                                              <ConteudoForm 
-                                                initial={cont}
-                                                microcaixaId={cont.microcaixa_id}
-                                                onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
-                                              />
-                                            </DialogContent>
-                                          </Dialog>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                              if (confirm(`Deletar "${cont.titulo}"?`)) {
-                                                deleteConteudoMutation.mutate(cont.id);
-                                              }
-                                            }}
-                                          >
-                                            <Trash2 className="w-3 h-3 text-red-500" />
-                                          </Button>
-                                        </div>
-                                      </div>
+                                      <Card key={cont.id} className="border">
+                                        <CardHeader 
+                                          className="py-2 px-3 cursor-pointer hover:bg-slate-50"
+                                          onClick={() => toggleConteudo(cont.id)}
+                                        >
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                              {expandedConteudos[cont.id] ? (
+                                                <ChevronDown className="w-3 h-3 text-slate-500" />
+                                              ) : (
+                                                <ChevronRight className="w-3 h-3 text-slate-500" />
+                                              )}
+                                              <Badge className={TIPO_COLORS[cont.tipo]}>
+                                                <Icon className="w-3 h-3 mr-1" />
+                                                {cont.tipo}
+                                              </Badge>
+                                              <span className="text-slate-700">{cont.titulo}</span>
+                                            </div>
+                                            {isAdmin && (
+                                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                                <Dialog>
+                                                  <DialogTrigger asChild>
+                                                    <Button variant="ghost" size="sm">
+                                                      <Edit2 className="w-3 h-3" />
+                                                    </Button>
+                                                  </DialogTrigger>
+                                                  <DialogContent>
+                                                    <DialogHeader>
+                                                      <DialogTitle>Editar Conteúdo</DialogTitle>
+                                                    </DialogHeader>
+                                                    <ConteudoForm 
+                                                      initial={cont}
+                                                      microcaixaId={cont.microcaixa_id}
+                                                      onSubmit={(data) => updateConteudoMutation.mutate({ id: cont.id, data })}
+                                                    />
+                                                  </DialogContent>
+                                                </Dialog>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() => {
+                                                    if (confirm(`Deletar "${cont.titulo}"?`)) {
+                                                      deleteConteudoMutation.mutate(cont.id);
+                                                    }
+                                                  }}
+                                                >
+                                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                                </Button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </CardHeader>
+                                        {expandedConteudos[cont.id] && cont.corpo && (
+                                          <CardContent className="pt-0 pb-2 px-3">
+                                            <div className="prose prose-sm max-w-none text-slate-700">
+                                              <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                            </div>
+                                          </CardContent>
+                                        )}
+                                      </Card>
                                     );
                                   })}
                                 </CardContent>
