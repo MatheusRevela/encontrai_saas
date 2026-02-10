@@ -110,8 +110,8 @@ export default function Home() {
 
           <div className="flex items-center justify-center gap-8 text-sm text-slate-600">
             <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <span>Primeira solução grátis</span>
+              <Gift className="w-5 h-5 text-emerald-600" />
+              <span>Ganhe 1 grátis comprando 2+</span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-emerald-600" />
@@ -203,8 +203,8 @@ export default function Home() {
                   <div className="flex items-start gap-3">
                     <Gift className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-1" />
                     <div>
-                      <h4 className="font-semibold text-slate-900 mb-1">Primeira solução grátis</h4>
-                      <p className="text-slate-600">Desbloqueie sua primeira solução sem custo algum</p>
+                      <h4 className="font-semibold text-slate-900 mb-1">Solução bônus grátis</h4>
+                      <p className="text-slate-600">Desbloqueie 2 ou mais e ganhe 1 grátis no primeiro pagamento</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -314,7 +314,7 @@ export default function Home() {
             className="bg-emerald-600 hover:bg-emerald-700 text-lg px-12 py-6"
             onClick={() => handleNavigate('Assistente')}
           >
-            Começar Agora - É Grátis
+            Começar Agora
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
