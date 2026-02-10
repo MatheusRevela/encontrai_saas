@@ -19,7 +19,8 @@ import {
   ShoppingCart,
   Users,
   User as UserOutlineIcon,
-  Sparkles
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 
 const AdminNav = ({ navItems }) => {
@@ -27,7 +28,8 @@ const AdminNav = ({ navItems }) => {
     { title: 'Dashboard', items: ['Dashboard', 'Meu Dashboard'] },
     { title: 'Visão do Usuário', items: ['Painel de Usuário', 'Nova Busca (IA)', 'Busca Rápida', 'Minhas Buscas'] },
     { title: 'Gestão', items: ['Startups', 'Laboratório', 'Transações', 'Conversas', 'Usuários', 'Parceiros'] },
-    { title: 'Ferramentas', items: ['Ferramentas'] }
+    { title: 'Ferramentas', items: ['Ferramentas'] },
+    { title: 'Aprendizado', items: ['Framework de Aprendizado'] }
   ];
 
   return (
@@ -62,7 +64,8 @@ const AdminNav = ({ navItems }) => {
 
 const UserNav = ({ navItems }) => {
   const userGroups = [
-    { title: 'Menu', items: ['Meu Dashboard', 'Painel de Usuário', 'Nova Busca (IA)', 'Busca Rápida', 'Minhas Buscas'] }
+    { title: 'Menu', items: ['Meu Dashboard', 'Painel de Usuário', 'Nova Busca (IA)', 'Busca Rápida', 'Minhas Buscas'] },
+    { title: 'Aprendizado', items: ['Framework de Aprendizado'] }
   ];
 
   return (
@@ -75,7 +78,7 @@ const UserNav = ({ navItems }) => {
             </h3>
           )}
           {navItems
-            .filter(item => item.section === 'user' && group.items.includes(item.name))
+            .filter(item => (item.section === 'user' || item.section === 'both') && group.items.includes(item.name))
             .map((item) => {
               const IconComponent = item.icon;
               return (
@@ -115,7 +118,8 @@ export default function ProtectedLayout({ children, pageName }) {
     { name: 'Conversas', path: 'Conversas', icon: MessageCircle, section: 'admin', group: 'Gestão' },
     { name: 'Usuários', path: 'users', icon: Users, section: 'admin', group: 'Gestão' },
     { name: 'Parceiros', path: 'Parceiros', icon: Handshake, section: 'admin', group: 'Gestão' },
-    { name: 'Ferramentas', path: 'Ferramentas', icon: Wrench, section: 'admin', group: 'Ferramentas' }
+    { name: 'Ferramentas', path: 'Ferramentas', icon: Wrench, section: 'admin', group: 'Ferramentas' },
+    { name: 'Framework de Aprendizado', path: 'EstruturaAprendizado', icon: BookOpen, section: 'both', group: 'Aprendizado' }
   ];
 
   useEffect(() => {
