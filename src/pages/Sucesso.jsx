@@ -264,12 +264,20 @@ export default function Sucesso() {
                           </div>
                         </div>
                       </div>
-                      {startup.preco_base && (
-                        <div className="bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-200 self-start">
-                          <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wide">Investimento</p>
-                          <p className="text-base sm:text-lg font-bold text-emerald-600">{startup.preco_base}</p>
-                        </div>
-                      )}
+                      <div className="flex gap-3 flex-wrap">
+                        {startup.preco_base && (
+                          <div className="bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-200">
+                            <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wide">Investimento</p>
+                            <p className="text-base sm:text-lg font-bold text-emerald-600">{startup.preco_base}</p>
+                          </div>
+                        )}
+                        {avaliacaoQualitativa?.rating_final && (
+                          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-3 py-2 border border-amber-200">
+                            <p className="text-xs text-amber-700 font-semibold uppercase tracking-wide">Rating</p>
+                            <p className="text-base sm:text-lg font-bold text-amber-600">{avaliacaoQualitativa.rating_final}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="mb-6">

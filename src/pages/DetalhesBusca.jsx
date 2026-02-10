@@ -188,12 +188,20 @@ export default function DetalhesBusca() {
                               </div>
                           </div>
                           
-                          {startup.preco_base && (
-                            <div className="bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-200 self-start">
-                              <p className="text-[10px] sm:text-xs text-emerald-700 font-semibold uppercase tracking-wide">Investimento</p>
-                              <p className="text-sm sm:text-xl font-bold text-emerald-600 whitespace-nowrap">{startup.preco_base}</p>
-                            </div>
-                          )}
+                          <div className="flex gap-2 sm:gap-3 flex-wrap">
+                            {startup.preco_base && (
+                              <div className="bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-200">
+                                <p className="text-[10px] sm:text-xs text-emerald-700 font-semibold uppercase tracking-wide">Investimento</p>
+                                <p className="text-sm sm:text-xl font-bold text-emerald-600 whitespace-nowrap">{startup.preco_base}</p>
+                              </div>
+                            )}
+                            {avaliacaoQualitativa?.rating_final && (
+                              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-3 py-2 border border-amber-200">
+                                <p className="text-[10px] sm:text-xs text-amber-700 font-semibold uppercase tracking-wide">Rating</p>
+                                <p className="text-sm sm:text-xl font-bold text-amber-600 whitespace-nowrap">{avaliacaoQualitativa.rating_final}</p>
+                              </div>
+                            )}
+                          </div>
 
                           
                           {/* Mostrar avaliação individual se existir */}
