@@ -287,6 +287,7 @@ export default function Startups() {
   const handleEdit = (startup) => {
     setEditingStartup(startup);
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSave = async (startupData) => {
