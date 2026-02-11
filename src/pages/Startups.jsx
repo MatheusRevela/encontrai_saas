@@ -292,7 +292,9 @@ export default function Startups() {
   // Scroll automático quando abre formulário ou muda startup em edição
   useEffect(() => {
     if (showForm && editingStartup) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 300);
     }
   }, [showForm, editingStartup]);
 
