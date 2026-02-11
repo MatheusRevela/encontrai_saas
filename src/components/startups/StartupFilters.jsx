@@ -137,17 +137,12 @@ export default function StartupFilters({ filters, setFilters, totalCount }) {
             <Select value={filters.avaliacaoEspecialista || 'all'} onValueChange={(value) => handleFilterChange('avaliacaoEspecialista', value)}>
               <SelectTrigger className="w-[200px] border-slate-200 focus:border-emerald-500 bg-white h-9">
                 <Star className="w-4 h-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Avaliação Especialista" />
+                <SelectValue placeholder="Rating Qualitativo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as Avaliações</SelectItem>
+                <SelectItem value="all">Todos os Ratings</SelectItem>
                 <SelectItem value="avaliadas">Apenas Avaliadas</SelectItem>
                 <SelectItem value="nao_avaliadas">Apenas Não Avaliadas</SelectItem>
-                <SelectItem value="5_estrelas">⭐⭐⭐⭐⭐ (5 estrelas)</SelectItem>
-                <SelectItem value="4_estrelas">⭐⭐⭐⭐ (4 estrelas)</SelectItem>
-                <SelectItem value="3_estrelas">⭐⭐⭐ (3 estrelas)</SelectItem>
-                <SelectItem value="2_estrelas">⭐⭐ (2 estrelas)</SelectItem>
-                <SelectItem value="1_estrela">⭐ (1 estrela)</SelectItem>
               </SelectContent>
             </Select>
 

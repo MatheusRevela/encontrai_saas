@@ -108,25 +108,10 @@ export default function Startups() {
     if (filters.avaliacaoEspecialista && filters.avaliacaoEspecialista !== 'all') {
       switch (filters.avaliacaoEspecialista) {
         case 'avaliadas':
-          currentFiltered = currentFiltered.filter(s => s.avaliacao_especialista && s.avaliacao_especialista > 0);
+          currentFiltered = currentFiltered.filter(s => s.avaliacao_qualitativa?.rating_final);
           break;
         case 'nao_avaliadas':
-          currentFiltered = currentFiltered.filter(s => !s.avaliacao_especialista || s.avaliacao_especialista === 0);
-          break;
-        case '5_estrelas':
-          currentFiltered = currentFiltered.filter(s => s.avaliacao_especialista === 5);
-          break;
-        case '4_estrelas':
-          currentFiltered = currentFiltered.filter(s => s.avaliacao_especialista === 4);
-          break;
-        case '3_estrelas':
-          currentFiltered = currentFiltered.filter(s => s.avaliacao_especialista === 3);
-          break;
-        case '2_estrelas':
-          currentFiltered = currentFiltered.filter(s => s.avaliacao_especialista === 2);
-          break;
-        case '1_estrela':
-          currentFiltered = currentFiltered.filter(s => s.avaliacao_especialista === 1);
+          currentFiltered = currentFiltered.filter(s => !s.avaliacao_qualitativa?.rating_final);
           break;
       }
     }
@@ -195,11 +180,15 @@ export default function Startups() {
         return new Date(a.created_date) - new Date(b.created_date);
       });
     } else if (filters.sortBy === 'avaliacao_desc') {
-      currentFiltered.sort((a, b) => (b.avaliacao_especialista || 0) - (a.avaliacao_especialista || 0));
+      currentFiltered.sort((a, b) => {
+        const aScore = a.avaliacao_qualitativa?.score_final || 0;
+        const bScore = b.avaliacao_qualitativa?.score_final || 0;
+        return bScore - aScore;
+      });
     } else if (filters.sortBy === 'nao_avaliadas_primeiro') {
       currentFiltered.sort((a, b) => {
-        const aAvaliada = a.avaliacao_especialista && a.avaliacao_especialista > 0;
-        const bAvaliada = b.avaliacao_especialista && b.avaliacao_especialista > 0;
+        const aAvaliada = a.avaliacao_qualitativa?.rating_final;
+        const bAvaliada = b.avaliacao_qualitativa?.rating_final;
 
         if (!aAvaliada && bAvaliada) return -1;
         if (aAvaliada && !bAvaliada) return 1;
