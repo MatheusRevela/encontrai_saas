@@ -289,7 +289,7 @@ export default function Startups() {
     setShowForm(true);
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+    }, 400);
   };
 
   const handleSave = async (startupData) => {
