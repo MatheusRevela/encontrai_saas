@@ -89,6 +89,13 @@ export default function StartupForm({ startup, onSave, onCancel, isProcessing })
 
   const debouncedSite = useDebounce(formData.site, 500);
 
+  // Atualizar formData quando a prop startup mudar
+  useEffect(() => {
+    if (startup) {
+      setFormData(startup);
+    }
+  }, [startup]);
+
   useEffect(() => {
     const checkForDuplicate = async () => {
       if (!debouncedSite || debouncedSite.trim() === "" || !debouncedSite.includes('.')) {
