@@ -89,29 +89,10 @@ export default function StartupForm({ startup, onSave, onCancel, isProcessing })
 
   const debouncedSite = useDebounce(formData.site, 500);
 
-  // Atualizar formData quando a prop startup mudar (edição)
+  // Atualizar formData quando a prop startup mudar (apenas para edição)
   useEffect(() => {
     if (startup && startup.id) {
       setFormData(startup);
-    } else if (!startup) {
-      // Reset para nova startup
-      setFormData({
-        nome: "",
-        descricao: "",
-        categoria: "",
-        vertical_atuacao: "",
-        modelo_negocio: "",
-        tags: [],
-        site: "",
-        email: "",
-        whatsapp: "",
-        linkedin: "",
-        preco_base: "",
-        ativo: true,
-        logo_url: "",
-        ultima_verificacao: null,
-        status_verificacao: { site_online: true }
-      });
     }
   }, [startup?.id]);
 
