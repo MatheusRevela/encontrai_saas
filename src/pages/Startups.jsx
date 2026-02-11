@@ -307,6 +307,7 @@ export default function Startups() {
       await loadStartups();
       setShowForm(false);
       setEditingStartup(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error("Erro ao salvar startup:", error);
       alert('Erro ao salvar startup.');
