@@ -287,10 +287,14 @@ export default function Startups() {
   const handleEdit = (startup) => {
     setEditingStartup(startup);
     setShowForm(true);
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 400);
   };
+
+  // Scroll automático quando o formulário é aberto
+  useEffect(() => {
+    if (showForm) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [showForm]);
 
   const handleSave = async (startupData) => {
     setIsProcessing(true);
