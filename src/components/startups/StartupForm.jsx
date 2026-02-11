@@ -763,11 +763,11 @@ Retorne um JSON com este formato:
             </Button>
             <Button
               type="submit"
-              disabled={isProcessing || isUploadingLogo || isAnalyzing || duplicateCheck.checking || duplicateCheck.error}
+              disabled={isProcessing || isUploadingLogo || isAnalyzing || duplicateCheck.checking}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
               <Save className="w-4 h-4 mr-2" />
-              {isProcessing ? 'Salvando...' : 'Salvar Startup'}
+              {isProcessing ? 'Salvando...' : (startup ? 'Atualizar Startup' : 'Salvar Startup')}
             </Button>
           </div>
         </form>
