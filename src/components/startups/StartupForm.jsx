@@ -257,10 +257,7 @@ Retorne um JSON com este formato:
         });
 
         if (resultadoTags && resultadoTags.tags) {
-          // Normalizar tags para garantir encoding correto
-          const tagsNormalizadas = resultadoTags.tags.map(tag => 
-            tag.normalize('NFC').trim()
-          );
+          const tagsNormalizadas = resultadoTags.tags.map(tag => fixEncoding(tag));
           console.log(`✅ Tags geradas: ${tagsNormalizadas.join(', ')}`);
           setFormData(prev => ({ ...prev, tags: tagsNormalizadas }));
         }
