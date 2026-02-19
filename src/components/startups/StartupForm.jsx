@@ -322,7 +322,7 @@ Retorne um JSON com este formato:
 
     const newTags = inputString
       .split(',')
-      .map(tag => tag.normalize('NFC').trim()) // Normalizar encoding UTF-8
+      .map(tag => fixEncoding(tag))
       .filter(tag => tag && !formData.tags.includes(tag));
 
     if (newTags.length > 0) {
