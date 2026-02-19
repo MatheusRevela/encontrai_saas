@@ -403,9 +403,9 @@ Retorne SOMENTE o JSON abaixo, sem texto adicional:`;
           </div>
 
           {isAnalyzing && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-purple-700">
-              <AlertCircle className="w-4 h-4" />
-              <span>Analisando o site e extraindo informações... Isso pode levar alguns segundos.</span>
+            <div className="mt-3 flex items-center gap-2 text-sm text-purple-700 bg-purple-50 p-3 rounded-lg">
+              <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+              <span>{analysisStep || 'Analisando o site...'}</span>
             </div>
           )}
         </div>
