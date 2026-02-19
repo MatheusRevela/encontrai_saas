@@ -136,6 +136,8 @@ export default function StartupForm({ startup, onSave, onCancel, isProcessing })
     checkForDuplicate();
   }, [debouncedSite, startup?.id]);
 
+  const [analysisStep, setAnalysisStep] = useState('');
+
   const analisarSite = async () => {
     if (!urlAnalise.trim()) {
       alert('Por favor, insira uma URL válida para análise.');
@@ -143,41 +145,55 @@ export default function StartupForm({ startup, onSave, onCancel, isProcessing })
     }
 
     setIsAnalyzing(true);
+    setAnalysisStep('Acessando e lendo o site...');
+
+    const categoriasStr = CATEGORIAS.map(c => `"${c.value}" (${c.label})`).join(', ');
+    const verticaisStr = VERTICAIS.map(v => `"${v.value}" (${v.label})`).join(', ');
+    const modelosStr = MODELOS_NEGOCIO.map(m => `"${m.value}" (${m.label})`).join(', ');
+
+    const prompt = `Você é um especialista em análise de startups B2B brasileiras. Acesse e analise COMPLETAMENTE o site a seguir, incluindo todas as páginas relevantes: home, sobre, produto, pricing/planos, contato, rodapé e redes sociais.
+
+URL PARA ANALISAR: ${urlAnalise}
+${descricaoAdicional ? `\nINFORMAÇÕES ADICIONAIS FORNECIDAS PELO USUÁRIO:\n"${descricaoAdicional}"` : ''}
+
+=== INSTRUÇÕES DETALHADAS ===
+
+1. NOME: Nome oficial da empresa/produto conforme aparece no site.
+
+2. DESCRICAO: Escreva 3-4 frases descrevendo O QUE a solução faz, QUAIS PROBLEMAS resolve e PARA QUEM. PROIBIDO mencionar o nome da empresa. Use "a plataforma", "a solução", "o sistema", "a ferramenta". Foco total em benefícios e funcionalidades concretas.
+
+3. CATEGORIA (escolha EXATAMENTE um dos valores abaixo):
+${categoriasStr}
+
+4. VERTICAL_ATUACAO (escolha EXATAMENTE um dos valores abaixo, ou null se não se encaixar):
+${verticaisStr}
+DICA: Analise o setor atendido pela startup. Ex: startup de RH = "hrtech", financeiro = "fintech", saúde = "healthtech", varejo = "retailtech", educação = "edtech".
+
+5. MODELO_NEGOCIO (escolha EXATAMENTE um dos valores abaixo, ou null):
+${modelosStr}
+DICA: Procure em páginas de Planos/Pricing. "assinatura" = plano mensal/anual recorrente; "pagamento_uso" = cobra por transação/uso; "marketplace" = conecta compradores e vendedores; "consultoria" = serviço personalizado.
+
+6. EMAIL: Procure em rodapé, página de contato, "fale conosco", cabeçalho. Retorne o email de contato principal ou null.
+
+7. WHATSAPP: Procure links wa.me, ícones de WhatsApp, números de telefone em rodapé/contato. Retorne no formato "+5511999999999" ou null.
+
+8. LINKEDIN: URL completa do perfil LinkedIn da empresa (linkedin.com/company/...) ou null.
+
+9. PRECO_BASE: Acesse a página de planos/preços. Se encontrar valores: retorne no formato "R$XX - R$XX/mês" ou "A partir de R$XX/mês". Se for apenas "Consulte" ou não tiver preço, retorne null.
+
+10. TAGS: Gere entre 12 e 18 tags em português que representem:
+- Funcionalidades principais ("gestão de estoque", "emissão de nota fiscal")
+- Problemas resolvidos ("controle de inadimplência", "automação de cobranças")
+- Público-alvo ("pequenas empresas", "e-commerce", "restaurantes")
+- Termos de busca que um cliente usaria para encontrar essa solução
+REGRA CRÍTICA PARA TAGS: Use APENAS caracteres simples sem acentos nas tags. Substitua: ã→a, ç→c, é/ê/è→e, á/â/à→a, í→i, ó/ô/õ→o, ú→u. Ex: "gestao de estoque" (sem acento), "emissao de notas fiscais", "controle financeiro", "automacao de marketing".
+
+Retorne SOMENTE o JSON abaixo, sem texto adicional:`;
+
     try {
-      // ETAPA 1: Análise Geral (SEM TAGS)
-      const promptGeral = `Analise o site da startup e a descrição adicional, e extraia as seguintes informações em formato JSON:
-
-CATEGORIAS DISPONÍVEIS: ${CATEGORIAS.map(c => c.value).join(', ')}
-VERTICAIS DISPONÍVEIS: ${VERTICAIS.map(v => v.value).join(', ')}
-MODELOS DE NEGÓCIO DISPONÍVEIS: ${MODELOS_NEGOCIO.map(m => m.value).join(', ')}
-
-REGRAS CRÍTICAS:
-1. A DESCRIÇÃO FINAL NÃO PODE MENCIONAR O NOME DA EMPRESA.
-2. Use termos genéricos como "a solução", "a plataforma", etc.
-3. Descrição deve ter 2-3 linhas explicando O QUE a solução faz.
-4. Escolha categorias, verticais e modelos EXATAMENTE como listados.
-5. Use TANTO o conteúdo do site quanto a descrição adicional.
-6. Para preços: procure especificamente em páginas/seções de "Preços", "Planos", "Pricing". Se encontrar, use o formato: "R$XX,XX - R$XX,XX/mês" ou "R$XX,XX - R$XX,XX/ano". Se NÃO encontrar preços no site, retorne null.
-7. Tente encontrar um email de contato e URL do LinkedIn.
-
-DADOS PARA ANÁLISE:
-Site: ${urlAnalise}
-${descricaoAdicional ? `Descrição adicional: ${descricaoAdicional}` : ''}
-
-Retorne um JSON com este formato:
-{
-  "nome": "Nome da startup",
-  "descricao": "Descrição SEM o nome da empresa",
-  "categoria": "uma das categorias da lista",
-  "vertical_atuacao": "uma das verticais ou null",
-  "modelo_negocio": "um dos modelos ou null",
-  "email": "email de contato ou null",
-  "linkedin": "URL do LinkedIn ou null",
-  "preco_base": "formato R$XX,XX - R$XX,XX/mês ou null se não encontrar"
-}`;
-
-      const resultadoGeral = await base44.integrations.Core.InvokeLLM({
-        prompt: promptGeral,
+      setAnalysisStep('IA analisando conteúdo do site...');
+      const resultado = await base44.integrations.Core.InvokeLLM({
+        prompt,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
@@ -188,110 +204,66 @@ Retorne um JSON com este formato:
             vertical_atuacao: { type: ["string", "null"] },
             modelo_negocio: { type: ["string", "null"] },
             email: { type: ["string", "null"] },
+            whatsapp: { type: ["string", "null"] },
             linkedin: { type: ["string", "null"] },
-            preco_base: { type: ["string", "null"] }
-          }
+            preco_base: { type: ["string", "null"] },
+            tags: { type: "array", items: { type: "string" } }
+          },
+          required: ["nome", "descricao", "categoria", "tags"]
         }
       });
-      
-      // Aplica os dados gerais ao formulário (exceto tags, que serão geradas separadamente)
+
+      setAnalysisStep('Aplicando dados...');
+
+      // Validar categoria e vertical retornadas
+      const categoriaValida = CATEGORIAS.find(c => c.value === resultado.categoria)?.value || '';
+      const verticalValida = VERTICAIS.find(v => v.value === resultado.vertical_atuacao)?.value || '';
+      const modeloValido = MODELOS_NEGOCIO.find(m => m.value === resultado.modelo_negocio)?.value || '';
+
+      // Tags: normalizar para garantir UTF-8 limpo (sem double-encoding)
+      const tagsLimpas = (resultado.tags || []).map(tag => {
+        // Primeiro tenta corrigir double-encoding, depois normaliza
+        let t = tag;
+        try { t = decodeURIComponent(escape(tag)); } catch {}
+        return t.normalize('NFC').toLowerCase().trim();
+      }).filter(t => t.length >= 2 && t.length <= 50);
+
       setFormData(prev => ({
         ...prev,
-        nome: resultadoGeral.nome || prev.nome,
-        descricao: resultadoGeral.descricao || prev.descricao,
-        categoria: resultadoGeral.categoria || prev.categoria,
-        vertical_atuacao: resultadoGeral.vertical_atuacao || prev.vertical_atuacao,
-        modelo_negocio: resultadoGeral.modelo_negocio || prev.modelo_negocio,
+        nome: resultado.nome || prev.nome,
+        descricao: resultado.descricao || prev.descricao,
+        categoria: categoriaValida || prev.categoria,
+        vertical_atuacao: verticalValida || prev.vertical_atuacao,
+        modelo_negocio: modeloValido || prev.modelo_negocio,
         site: urlAnalise,
-        email: resultadoGeral.email || prev.email,
-        linkedin: resultadoGeral.linkedin || prev.linkedin,
-        preco_base: resultadoGeral.preco_base || prev.preco_base,
-        tags: [], // Limpa as tags antigas para receber as novas
+        email: resultado.email || prev.email,
+        whatsapp: resultado.whatsapp || prev.whatsapp,
+        linkedin: resultado.linkedin || prev.linkedin,
+        preco_base: resultado.preco_base || prev.preco_base,
+        tags: tagsLimpas,
       }));
 
-      const descricaoGerada = resultadoGeral.descricao || "";
+      const camposPreenchidos = [
+        resultado.nome && 'Nome',
+        resultado.descricao && 'Descrição',
+        categoriaValida && 'Categoria',
+        verticalValida && 'Vertical',
+        modeloValido && 'Modelo de Negócio',
+        resultado.email && 'Email',
+        resultado.whatsapp && 'WhatsApp',
+        resultado.linkedin && 'LinkedIn',
+        resultado.preco_base && 'Preço',
+        tagsLimpas.length > 0 && `${tagsLimpas.length} Tags`,
+      ].filter(Boolean);
 
-      // ETAPA 2: Geração Focada de Tags
-      console.log("🚀 Iniciando geração focada de tags...");
-      const promptTags = `Baseado no conteúdo do site ${urlAnalise} e na descrição a seguir, gere uma lista abrangente de palavras-chave (tags) para matching.
-
-Descrição da Solução: "${descricaoGerada}"
-
-REGRAS PARA TAGS:
-- Gere entre 10 e 15 tags relevantes.
-- As tags devem ser curtas, em minúsculas e em português.
-- IMPORTANTE: Mantenha acentuação e caracteres especiais do português (ç, ã, é, á, etc.)
-- Foque nos problemas que a solução resolve e nas funcionalidades.
-- Ex: "gestão de estoque", "controle financeiro", "crm de vendas", "automação de marketing", "recuperação de crédito".
-
-Retorne um JSON com este formato:
-{
-  "tags": ["array", "de", "tags"]
-}`;
-
-      try {
-        const resultadoTags = await base44.integrations.Core.InvokeLLM({
-          prompt: promptTags,
-          add_context_from_internet: true,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              tags: { type: "array", items: { type: "string" } }
-            }
-          }
-        });
-
-        if (resultadoTags && resultadoTags.tags) {
-          const tagsNormalizadas = resultadoTags.tags.map(tag => fixEncoding(tag));
-          console.log(`✅ Tags geradas: ${tagsNormalizadas.join(', ')}`);
-          setFormData(prev => ({ ...prev, tags: tagsNormalizadas }));
-        }
-      } catch (tagsError) {
-        console.error("Erro na geração de tags:", tagsError);
-      }
-      
-      // ETAPA 3: Busca Focada por WhatsApp
-      console.log("🚀 Iniciando busca focada por WhatsApp...");
-      const promptWhatsapp = `Analise o conteúdo do site ${urlAnalise} com um único objetivo: encontrar o número de telefone ou WhatsApp de contato. Procure em links 'wa.me', texto, rodapés e páginas de contato. Se encontrar, retorne-o. Se não encontrar NADA, retorne null. O número deve estar no formato internacional, por exemplo, "+5511987654321".
-
-Retorne um JSON com este formato:
-{
-  "whatsapp": "número encontrado ou null"
-}`;
-
-      try {
-        const resultadoWhatsapp = await InvokeLLM({
-          prompt: promptWhatsapp,
-          add_context_from_internet: true,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              whatsapp: { type: ["string", "null"] }
-            }
-          }
-        });
-
-        if (resultadoWhatsapp && resultadoWhatsapp.whatsapp) {
-          console.log(`✅ WhatsApp encontrado: ${resultadoWhatsapp.whatsapp}`);
-          // Aplica o WhatsApp encontrado ao formulário
-          setFormData(prev => ({
-            ...prev,
-            whatsapp: resultadoWhatsapp.whatsapp
-          }));
-        } else {
-          console.log("🟡 WhatsApp não encontrado na busca focada.");
-        }
-      } catch (whatsappError) {
-        console.error("Erro na busca focada por WhatsApp:", whatsappError);
-      }
-
-      alert('✅ Análise completa! Geramos tags, buscamos o WhatsApp e preenchemos os dados. Revise e ajuste se necessário.');
+      alert(`✅ Análise completa!\n\nCampos preenchidos: ${camposPreenchidos.join(', ')}.\n\nRevise e ajuste os dados antes de salvar.`);
 
     } catch (error) {
-      console.error('Erro na análise geral do site:', error);
+      console.error('Erro na análise do site:', error);
       alert('Erro ao analisar o site. Verifique se a URL está correta e tente novamente.');
     } finally {
       setIsAnalyzing(false);
+      setAnalysisStep('');
     }
   };
 
