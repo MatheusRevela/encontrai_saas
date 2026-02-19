@@ -61,30 +61,15 @@ const MODELOS_NEGOCIO = [
   { value: "consultoria", label: "Consultoria" }
 ];
 
-// Corrige problema de double-encoding (UTF-8 interpretado como Latin-1)
+// Corrige double-encoding: UTF-8 interpretado como Latin-1 (ex: "Ã§" → "ç")
 const fixEncoding = (str) => {
   if (!str || typeof str !== 'string') return str;
-  const fixes = {
-    'Ã©': 'é', 'Ã¨': 'è', 'Ãª': 'ê', 'Ã«': 'ë',
-    'Ã ': 'à', 'Ã¡': 'á', 'Ã¢': 'â', 'Ã£': 'ã', 'Ã¤': 'ä',
-    'Ã§': 'ç', 'Ã‡': 'Ç',
-    'Ã­': 'í', 'Ã¬': 'ì', 'Ã®': 'î', 'Ã¯': 'ï',
-    'Ã³': 'ó', 'Ã²': 'ò', 'Ã´': 'ô', 'Ãµ': 'õ', 'Ã¶': 'ö',
-    'Ãº': 'ú', 'Ã¹': 'ù', 'Ã»': 'û', 'Ã¼': 'ü',
-    'Ã‰': 'É', 'Ãˆ': 'È', 'ÃŠ': 'Ê', 'Ã‹': 'Ë',
-    'Ã€': 'À', 'Ã': 'Á', 'Ãƒ': 'Ã', 'Ã„': 'Ä',
-    'Ã"': 'Ó', 'Ã'': 'Ò', 'Ã"': 'Ô', 'Ã•': 'Õ', 'Ã–': 'Ö',
-    'Ãš': 'Ú', 'Ã™': 'Ù', 'Ã›': 'Û', 'Ãœ': 'Ü',
-    'Ã': 'Í', 'ÃŒ': 'Ì', 'ÃŽ': 'Î', 'Ã': 'Ï',
-    'Ã±': 'ñ', 'Ã': 'Ñ',
-  };
-  let result = str;
-  for (const [bad, good] of Object.entries(fixes)) {
-    result = result.split(bad).join(good);
+  try {
+    // decodeURIComponent(escape()) converte Latin-1 mal-interpretado de volta para UTF-8 correto
+    return decodeURIComponent(escape(str)).normalize('NFC').trim();
+  } catch {
+    return str.normalize('NFC').trim();
   }
-  // Remove caracteres de controle inválidos
-  result = result.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-  return result.normalize('NFC').trim();
 };
 
 export default function StartupForm({ startup, onSave, onCancel, isProcessing }) {
