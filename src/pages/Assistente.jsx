@@ -125,7 +125,7 @@ RESPONDA EM JSON:`,
       console.error("Erro na conversa:", error);
       setMessages(prev => [...prev, { 
         sender: 'bot', 
-        text: "Opa, deu um problema técnico aqui do meu lado. Pode repetir o que você disse?" 
+        text: "Ocorreu um problema técnico. Poderia repetir sua última mensagem?" 
       }]);
     } finally {
       setIsLoading(false);
