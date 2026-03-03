@@ -1,5 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+const CACHE_TTL_HORAS = 24;
+const MIN_CANDIDATAS_PARA_FILTRAR = 10;
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -10,95 +13,102 @@ Deno.serve(async (req) => {
     }
 
     const { startup_id, transacao_id } = await req.json();
-
     if (!startup_id || !transacao_id) {
       return Response.json({ error: 'Parâmetros obrigatórios faltando' }, { status: 400 });
     }
 
-    // Verificar se já pagou pelas similares
     const transacao = await base44.asServiceRole.entities.Transacao.get(transacao_id);
-    const jaDesbloqueiuSimilares = transacao.similares_desbloqueadas?.some(
-      s => s.startup_original_id === startup_id
-    );
+    if (!transacao) {
+      return Response.json({ error: 'Transação não encontrada' }, { status: 404 });
+    }
 
-    // CACHE: Verificar se similares foram geradas recentemente (últimas 24h)
+    // ✅ CACHE: Verificar similares já geradas (pagas ou preview) nas últimas 24h
     const similarExistente = transacao.similares_desbloqueadas?.find(
       s => s.startup_original_id === startup_id
     );
-    
-    if (similarExistente) {
-      const pagoEm = new Date(similarExistente.pago_em);
-      const agora = new Date();
-      const diferencaHoras = (agora - pagoEm) / (1000 * 60 * 60);
-      
-      if (diferencaHoras < 24 && similarExistente.startups_similares) {
-        // Retornar cache
+    const jaDesbloqueiuSimilares = !!similarExistente;
+
+    if (similarExistente?.startups_similares?.length) {
+      const pago_em = similarExistente.pago_em || similarExistente.gerado_em;
+      const diferencaHoras = pago_em
+        ? (Date.now() - new Date(pago_em).getTime()) / (1000 * 60 * 60)
+        : CACHE_TTL_HORAS + 1;
+
+      if (diferencaHoras < CACHE_TTL_HORAS) {
         return Response.json({
-          similares: similarExistente.startups_similares.map(s => ({
-            ...s,
-            logo_url: s.logo_url,
-            site: s.site,
-            email: s.email,
-            whatsapp: s.whatsapp
-          })),
-          pago: true,
+          similares: similarExistente.startups_similares,
+          pago: jaDesbloqueiuSimilares,
           cached: true
         });
       }
     }
 
-    // Buscar startup original
-    const startupOriginal = await base44.asServiceRole.entities.Startup.get(startup_id);
-    
+    // ✅ CACHE: Verificar cache de preview não pago (campo separado na transação)
+    const previewCache = transacao.similares_preview_cache?.find(
+      c => c.startup_original_id === startup_id
+    );
+    if (previewCache?.startups_similares?.length) {
+      const diferencaHoras = (Date.now() - new Date(previewCache.gerado_em).getTime()) / (1000 * 60 * 60);
+      if (diferencaHoras < CACHE_TTL_HORAS) {
+        return Response.json({
+          similares: previewCache.startups_similares,
+          pago: false,
+          cached: true
+        });
+      }
+    }
+
+    // Buscar startup original e startups ativas em paralelo
+    const [startupOriginal, todasStartups] = await Promise.all([
+      base44.asServiceRole.entities.Startup.get(startup_id),
+      base44.asServiceRole.entities.Startup.filter({ ativo: true })
+    ]);
+
     if (!startupOriginal) {
       return Response.json({ error: 'Startup não encontrada' }, { status: 404 });
     }
 
-    // Buscar IDs das startups já desbloqueadas na transação
-    const startupsJaDesbloqueadas = transacao.startups_desbloqueadas?.map(s => s.startup_id) || [];
-    
-    // DUPLICATAS: Buscar startups que já apareceram como similares de outras
-    const startupsJaSimilares = [];
+    // IDs a excluir das candidatas
+    const startupsJaDesbloqueadas = new Set(
+      transacao.startups_desbloqueadas?.map(s => s.startup_id) || []
+    );
+    const startupsJaSimilares = new Set();
     transacao.similares_desbloqueadas?.forEach(similar => {
-      if (similar.startup_original_id !== startup_id && similar.startups_similares) {
-        similar.startups_similares.forEach(s => {
-          if (s.startup_id) startupsJaSimilares.push(s.startup_id);
+      if (similar.startup_original_id !== startup_id) {
+        similar.startups_similares?.forEach(s => {
+          if (s.startup_id) startupsJaSimilares.add(s.startup_id);
         });
       }
     });
-    
-    // APRENDIZADO: Buscar feedbacks negativos do usuário
+
+    // Feedbacks negativos em paralelo (já iniciado acima, esperar aqui)
     const feedbacksNegativos = await base44.asServiceRole.entities.FeedbackSimilaridade.filter({
-      transacao_id: transacao_id,
+      transacao_id,
       tipo_feedback: { $in: ['ja_conheco', 'nao_relevante'] }
     });
-    const startupsComFeedbackNegativo = feedbacksNegativos.map(f => f.startup_similar_id);
+    const startupsComFeedbackNegativo = new Set(feedbacksNegativos.map(f => f.startup_similar_id));
 
-    // Buscar todas as startups ativas exceto a original e as já desbloqueadas
-    const todasStartups = await base44.asServiceRole.entities.Startup.filter({ 
-      ativo: true 
-    });
+    const excluida = (id) =>
+      id === startup_id ||
+      startupsJaDesbloqueadas.has(id) ||
+      startupsJaSimilares.has(id) ||
+      startupsComFeedbackNegativo.has(id);
 
-    // Filtrar por categoria/vertical para melhorar relevância antes de enviar à IA
-    const startupsCandiatas = todasStartups.filter(s =>
-      s.id !== startup_id &&
-      !startupsJaDesbloqueadas.includes(s.id) &&
-      !startupsJaSimilares.includes(s.id) &&
-      !startupsComFeedbackNegativo.includes(s.id) &&
+    // ✅ Filtrar por categoria/vertical antes de enviar à IA — reduz tokens e melhora qualidade
+    const porCategoriaVertical = todasStartups.filter(s =>
+      !excluida(s.id) &&
       (s.categoria === startupOriginal.categoria || s.vertical_atuacao === startupOriginal.vertical_atuacao)
     );
 
-    // Se o filtro por categoria/vertical trouxer menos de 10, amplia sem filtro
-    const candidatasFinais = startupsCandiatas.length >= 10
-      ? startupsCandiatas
-      : todasStartups.filter(s =>
-          s.id !== startup_id &&
-          !startupsJaDesbloqueadas.includes(s.id) &&
-          !startupsJaSimilares.includes(s.id) &&
-          !startupsComFeedbackNegativo.includes(s.id)
-        );
+    // Fallback: se filtro for muito restrito, abre para todas
+    const candidatasFinais = porCategoriaVertical.length >= MIN_CANDIDATAS_PARA_FILTRAR
+      ? porCategoriaVertical
+      : todasStartups.filter(s => !excluida(s.id));
 
-    // Usar IA para encontrar as mais similares
+    if (candidatasFinais.length === 0) {
+      return Response.json({ similares: [], pago: jaDesbloqueiuSimilares });
+    }
+
     const prompt = `Você é um especialista em análise de startups e soluções tecnológicas.
 
 STARTUP DE REFERÊNCIA:
@@ -109,7 +119,7 @@ STARTUP DE REFERÊNCIA:
 - Descrição: ${startupOriginal.descricao}
 - Tags: ${startupOriginal.tags?.join(', ') || 'N/A'}
 
-STARTUPS CANDIDATAS:
+STARTUPS CANDIDATAS (${candidatasFinais.length} pré-filtradas por relevância):
 ${candidatasFinais.slice(0, 50).map((s, i) => `
 ${i + 1}. ${s.nome} (ID: ${s.id})
    - Categoria: ${s.categoria}
@@ -119,34 +129,17 @@ ${i + 1}. ${s.nome} (ID: ${s.id})
    - Tags: ${s.tags?.join(', ') || 'N/A'}
 `).join('\n')}
 
-TAREFA:
-Identifique as 3-5 startups MAIS SIMILARES à startup de referência.
+TAREFA: Identifique as 3-5 startups MAIS SIMILARES à startup de referência.
 
-CRITÉRIOS OBRIGATÓRIOS (todos devem ser atendidos):
-1. MESMA CATEGORIA ou vertical da startup de referência
-2. Resolve o MESMO TIPO DE PROBLEMA (não pode ser genérico ou muito diferente)
+CRITÉRIOS OBRIGATÓRIOS:
+1. Mesma categoria ou vertical da startup de referência
+2. Resolve o mesmo tipo de problema
 3. Público-alvo semelhante
 
-CRITÉRIOS COMPLEMENTARES:
-4. Modelo de negócio compatível
-5. Tags similares
+Para cada similar: startup_id, similaridade_score (0-100), resumo_match (sem citar o nome da startup), razoes_similaridade (2-3 motivos).
 
-Para cada similar, forneça:
-- startup_id
-- similaridade_score (0-100)
-- resumo_match: breve explicação de como resolve problema similar (1-2 frases)
-- razoes_similaridade: lista de 2-3 motivos específicos da similaridade
-
-REGRAS CRÍTICAS:
-1. NO resumo_match, NÃO mencione o nome da startup - use termos genéricos como "Esta solução", "A plataforma", "O sistema"
-2. Retorne APENAS startups com score >= 70 E que atendam aos critérios obrigatórios
-3. Se nenhuma startup atender aos critérios, retorne lista vazia
-4. EVITE startups muito genéricas ou que resolvam problemas muito diferentes
-5. Priorize soluções que o usuário realmente consideraria como alternativas
-
-EXEMPLO de resumo_match correto:
-❌ ERRADO: "A Inovyo oferece soluções para gestão..."
-✅ CORRETO: "Esta solução oferece ferramentas para gestão..."`;
+REGRAS: Retorne APENAS startups com score >= 70. Se nenhuma atender, retorne lista vazia.
+No resumo_match use apenas "Esta solução", "A plataforma", "O sistema" — NUNCA o nome da startup.`;
 
     const resultado = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
@@ -162,12 +155,7 @@ EXEMPLO de resumo_match correto:
                 startup_id: { type: 'string' },
                 similaridade_score: { type: 'number', minimum: 70, maximum: 100 },
                 resumo_match: { type: 'string' },
-                razoes_similaridade: {
-                  type: 'array',
-                  minItems: 2,
-                  maxItems: 3,
-                  items: { type: 'string' }
-                }
+                razoes_similaridade: { type: 'array', minItems: 2, maxItems: 3, items: { type: 'string' } }
               },
               required: ['startup_id', 'similaridade_score', 'resumo_match', 'razoes_similaridade']
             }
@@ -177,12 +165,11 @@ EXEMPLO de resumo_match correto:
       }
     });
 
-    // Enriquecer com dados completos (se já pagou)
-    const similaresEnriquecidas = await Promise.all(
-      resultado.similares.map(async (similar) => {
+    // Enriquecer com dados completos
+    const similaresEnriquecidas = resultado.similares
+      .map(similar => {
         const startupCompleta = candidatasFinais.find(s => s.id === similar.startup_id);
         if (!startupCompleta) return null;
-
         return {
           startup_id: startupCompleta.id,
           nome: startupCompleta.nome,
@@ -199,17 +186,32 @@ EXEMPLO de resumo_match correto:
           razoes_similaridade: similar.razoes_similaridade
         };
       })
-    );
+      .filter(Boolean);
 
-    const similaresValidas = similaresEnriquecidas.filter(Boolean);
+    // ✅ Salvar cache de preview (sem dados de contato) para evitar reprocessamento
+    if (!jaDesbloqueiuSimilares && similaresEnriquecidas.length > 0) {
+      const cacheAtual = (transacao.similares_preview_cache || []).filter(
+        c => c.startup_original_id !== startup_id
+      );
+      await base44.asServiceRole.entities.Transacao.update(transacao_id, {
+        similares_preview_cache: [
+          ...cacheAtual,
+          {
+            startup_original_id: startup_id,
+            startups_similares: similaresEnriquecidas,
+            gerado_em: new Date().toISOString()
+          }
+        ]
+      });
+    }
 
     return Response.json({
-      similares: similaresValidas,
-      pago: jaDesbloqueiuSimilares || false
+      similares: similaresEnriquecidas,
+      pago: jaDesbloqueiuSimilares
     });
 
   } catch (error) {
-    console.error('Erro ao gerar similares:', error);
+    console.error('Erro ao gerar similares:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

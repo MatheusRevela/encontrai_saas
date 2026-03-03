@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
             },
             auto_return: 'approved',
             // 🔒 URL correta do webhook
-            notification_url: `${ALLOWED_ORIGIN}/functions/handleMercadoPagoWebhook`,
+            notification_url: `https://app.base44.com/api/functions/handleMercadoPagoWebhook`,
             metadata: {
                 transacao_id: transacao.id,
                 startup_original_id: startup_original_id,
