@@ -95,9 +95,10 @@ RESPONDA EM JSON:`,
       });
 
       if (response.should_complete || shouldComplete) {
+        const encerramento = response.next_question || "Ótimo, acho que já tenho uma visão bem clara do que você precisa. Deixa eu vasculhar nossa base de soluções — já volto com o que faz mais sentido pro seu caso.";
         setMessages(prev => [...prev, { 
           sender: 'bot', 
-          text: "Perfeito! Tenho todas as informações necessárias. Vou buscar as melhores soluções para o seu caso específico. Aguarde alguns instantes..." 
+          text: encerramento
         }]);
         
         setTimeout(() => {
