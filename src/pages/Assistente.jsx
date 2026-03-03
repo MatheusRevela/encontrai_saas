@@ -26,7 +26,7 @@ export default function Assistente() {
     if (messages.length === 0) {
       setMessages([{ 
         sender: 'bot', 
-        text: 'E aí! Sou o Marco, consultor de inovação. Trabalho conectando pessoas e empresas às soluções certas — das mais simples às mais sofisticadas. Me conta: qual é o desafio que tá te travando agora?' 
+        text: 'Olá! Sou consultor especializado em conectar pessoas e empresas às melhores soluções tecnológicas. Para encontrar o que realmente faz sentido para o seu caso, preciso entender bem o contexto. Me conte: qual é o desafio que você está enfrentando?' 
       }]);
     }
   }, []);
