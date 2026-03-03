@@ -7,11 +7,12 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Preços centralizados — única fonte de verdade
+// ✅ Lógica de precificação centralizada — única fonte de verdade
 const PRECO_UNITARIO = 5.00;
 const DESCONTO_CINCO_SOLUCOES = 3.00;
 
 const calcularValor = (quantidade, isNovoUsuario, isAdicional) => {
+    if (quantidade <= 0) return 0;
     let valor = (!isAdicional && isNovoUsuario)
         ? Math.max(0, (quantidade - 1) * PRECO_UNITARIO)
         : quantidade * PRECO_UNITARIO;

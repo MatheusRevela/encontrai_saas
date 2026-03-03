@@ -17,8 +17,24 @@ export default function Buscar() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const MIN_CHARS = 20;
+  const MAX_CHARS = 500;
+
+  const validarProblema = (texto) => {
+    const t = texto.trim();
+    if (t.length < MIN_CHARS) return `Descreva com pelo menos ${MIN_CHARS} caracteres para uma busca precisa`;
+    if (t.length > MAX_CHARS) return `Máximo de ${MAX_CHARS} caracteres`;
+    // Rejeitar entradas claramente inválidas (só números, só símbolos, etc.)
+    if (!/[a-zA-ZÀ-ÿ]{5,}/.test(t)) return 'Por favor, descreva seu desafio com palavras';
+    return null;
+  };
+
+  const erroValidacao = problema.length > 0 ? validarProblema(problema) : null;
+  const podeSubmeter = !erroValidacao && problema.trim().length >= MIN_CHARS && !isLoading;
+
   const handleBuscar = async () => {
-    if (!problema.trim() || isLoading) return;
+    const erro = validarProblema(problema);
+    if (erro || isLoading) return;
 
     setIsLoading(true);
     try {
@@ -28,7 +44,7 @@ export default function Buscar() {
       await base44.entities.Transacao.create({
         session_id: sessionId,
         dor_relatada: problema.trim(),
-        perfil_cliente: 'pessoa_fisica', // Será deduzido pela IA
+        perfil_cliente: 'pessoa_fisica',
         status_pagamento: 'pendente',
         valor_por_startup: 5.00,
         referral_code: referralCode || undefined
@@ -105,7 +121,7 @@ export default function Buscar() {
 
             <Button
               onClick={handleBuscar}
-              disabled={!problema.trim() || isLoading || problema.length < 10}
+              disabled={!podeSubmeter}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
             >
               {isLoading ? (
@@ -121,9 +137,9 @@ export default function Buscar() {
               )}
             </Button>
 
-            {problema.length > 0 && problema.length < 10 && (
+            {erroValidacao && (
               <p className="text-sm text-amber-600 text-center">
-                Descreva o desafio com pelo menos 10 caracteres
+                {erroValidacao}
               </p>
             )}
           </div>

@@ -43,13 +43,15 @@ Deno.serve(async (req) => {
         }
 
         const quantidadeSelecionada = similares_selecionadas.length;
-        const valorTotal = parseFloat((quantidadeSelecionada * 4.00).toFixed(2));
+        // Similares têm preço próprio (R$ 4,00/un) — diferentes do checkout principal (R$ 5,00)
+        const PRECO_SIMILAR = 4.00;
+        const valorTotal = parseFloat((quantidadeSelecionada * PRECO_SIMILAR).toFixed(2));
 
         const preference = {
             items: [{
                 title: `${quantidadeSelecionada} Startup${quantidadeSelecionada > 1 ? 's' : ''} Similar${quantidadeSelecionada > 1 ? 'es' : ''} - ${transacao.id.substring(0, 8)}`,
                 quantity: quantidadeSelecionada,
-                unit_price: 4.00,
+                unit_price: PRECO_SIMILAR,
                 currency_id: 'BRL'
             }],
             payer: {
