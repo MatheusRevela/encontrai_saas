@@ -174,8 +174,11 @@ Deno.serve(async (req) => {
         if (existingStartups.length > 0) {
           console.log(`⚠️ Startup já existe com o site ${itemAtual.site}. Pulando...`);
           
-          const dadosComDuplicata = lab.dados_csv.map((item) => 
-            item.site === itemAtual.site ? { 
+          const itemIndexDup = lab.dados_csv.findIndex(
+            (item) => item.site === itemAtual.site && item.status === 'pendente'
+          );
+          const dadosComDuplicata = lab.dados_csv.map((item, i) => 
+            i === itemIndexDup ? { 
               ...item, 
               status: 'sucesso', 
               startup_id: existingStartups[0].id, 
@@ -245,8 +248,8 @@ Deno.serve(async (req) => {
 
         const novaStartup = await base44.asServiceRole.entities.Startup.create(startupData);
         
-        const dadosFinais = lab.dados_csv.map((item) => 
-          item.site === itemAtual.site ? { ...item, status: 'sucesso', startup_id: novaStartup.id } : item
+        const dadosFinais = lab.dados_csv.map((item, i) => 
+          i === itemIndex ? { ...item, status: 'sucesso', startup_id: novaStartup.id } : item
         );
 
         const updatePayloadSuccess = {
