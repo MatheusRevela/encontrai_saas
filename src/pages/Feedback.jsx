@@ -5,7 +5,7 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Star, Send, AlertCircle, Gift, Building2 } from 'lucide-react';
+import { Loader2, Star, Send, AlertCircle, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import APP_CONFIG from '@/components/utils/config';
 
