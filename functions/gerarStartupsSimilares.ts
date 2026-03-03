@@ -79,12 +79,24 @@ Deno.serve(async (req) => {
       ativo: true 
     });
 
-    const startupsCandiatas = todasStartups.filter(s => 
-      s.id !== startup_id && 
+    // Filtrar por categoria/vertical para melhorar relevância antes de enviar à IA
+    const startupsCandiatas = todasStartups.filter(s =>
+      s.id !== startup_id &&
       !startupsJaDesbloqueadas.includes(s.id) &&
       !startupsJaSimilares.includes(s.id) &&
-      !startupsComFeedbackNegativo.includes(s.id)
+      !startupsComFeedbackNegativo.includes(s.id) &&
+      (s.categoria === startupOriginal.categoria || s.vertical_atuacao === startupOriginal.vertical_atuacao)
     );
+
+    // Se o filtro por categoria/vertical trouxer menos de 10, amplia sem filtro
+    const candidatasFinais = startupsCandiatas.length >= 10
+      ? startupsCandiatas
+      : todasStartups.filter(s =>
+          s.id !== startup_id &&
+          !startupsJaDesbloqueadas.includes(s.id) &&
+          !startupsJaSimilares.includes(s.id) &&
+          !startupsComFeedbackNegativo.includes(s.id)
+        );
 
     // Usar IA para encontrar as mais similares
     const prompt = `Você é um especialista em análise de startups e soluções tecnológicas.

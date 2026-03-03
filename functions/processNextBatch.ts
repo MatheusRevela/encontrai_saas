@@ -296,8 +296,8 @@ Deno.serve(async (req) => {
         }
         
         // Para outros erros, marca como erro e continua
-        const dadosComErro = lab.dados_csv.map((item) => 
-          item.site === itemAtual.site ? { 
+        const dadosComErro = lab.dados_csv.map((item, i) => 
+          i === itemIndex ? { 
             ...item, 
             status: 'erro', 
             erro_mensagem: error.message.substring(0, 200) 
