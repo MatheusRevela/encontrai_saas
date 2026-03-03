@@ -22,7 +22,7 @@ export default function Buscar() {
 
     setIsLoading(true);
     try {
-      const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const sessionId = `sess_${crypto.randomUUID().replace(/-/g, '')}`;
       const referralCode = localStorage.getItem('referral_code');
 
       await base44.entities.Transacao.create({

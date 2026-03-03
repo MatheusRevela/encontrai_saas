@@ -77,7 +77,6 @@ function StatusBadge({ status }) {
 }
 
 export default function Conversas() {
-  const [sessionId] = useState(`conversas_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [conversas, setConversas] = useState([]);
   const [filteredConversas, setFilteredConversas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
