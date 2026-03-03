@@ -42,6 +42,20 @@ export default function Resultados() {
 
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
+  // ✅ Debounce para evitar chamadas duplicadas à IA
+  const lastGeracaoRef = useRef(0);
+  const MIN_INTERVAL_GERACAO_MS = 10_000; // 10s entre chamadas
+
+  const gerarComDebounce = useCallback(async (fn) => {
+    const agora = Date.now();
+    if (agora - lastGeracaoRef.current < MIN_INTERVAL_GERACAO_MS) {
+      console.warn('⚠️ Geração bloqueada por debounce — aguarde alguns segundos');
+      return;
+    }
+    lastGeracaoRef.current = agora;
+    return fn();
+  }, []);
+
   // Verificar se é novo usuário (primeira compra)
   const { data: isNovoUsuario } = useQuery({
     queryKey: ['isNovoUsuario'],
