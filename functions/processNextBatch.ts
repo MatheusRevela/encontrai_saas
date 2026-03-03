@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const CATEGORIAS = ["gestao", "vendas", "marketing", "financeiro", "operacional", "rh", "tecnologia", "logistica"];
 const VERTICAIS = ["agtech", "biotech", "ciberseguranca", "cleantech", "construtech", "deeptech", "edtech", "energytech", "fashiontech", "fintech", "foodtech", "govtech", "greentech", "healthtech", "hrtech", "indtech", "insurtech", "legaltech", "logtech", "martech", "mobilidade", "pet_tech", "proptech", "regtech", "retailtech", "salestech", "sportech", "supply_chain", "traveltech"];
