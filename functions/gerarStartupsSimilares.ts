@@ -180,7 +180,7 @@ EXEMPLO de resumo_match correto:
     // Enriquecer com dados completos (se já pagou)
     const similaresEnriquecidas = await Promise.all(
       resultado.similares.map(async (similar) => {
-        const startupCompleta = startupsCandiatas.find(s => s.id === similar.startup_id);
+        const startupCompleta = candidatasFinais.find(s => s.id === similar.startup_id);
         if (!startupCompleta) return null;
 
         return {
