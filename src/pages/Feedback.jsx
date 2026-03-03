@@ -230,63 +230,7 @@ export default function Feedback() {
         </form>
       </div>
 
-      {/* Modal de indicação */}
-      {showReferralModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Gift className="w-8 h-8 text-emerald-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">🎉 Obrigado pelo Feedback!</h3>
-              <p className="text-slate-600 mb-6">
-                Que tal indicar o EncontrAI para amigos? <br />
-                <strong className="text-emerald-600">Você ganha R$ 5 de crédito</strong> para cada indicação que fechar negócio!
-              </p>
-              
-              <div className="bg-slate-50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-slate-600 mb-2">Seu link de indicação:</p>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="text" 
-                    value={`${APP_CONFIG.PRODUCTION_DOMAIN}?ref=${userReferralCode}`}
-                    readOnly
-                    className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                  />
-                  <Button 
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${APP_CONFIG.PRODUCTION_DOMAIN}?ref=${userReferralCode}`);
-                      alert('Link copiado!');
-                    }}
-                  >
-                    Copiar
-                  </Button>
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <Button 
-                  className="w-full"
-                  onClick={() => navigate(createPageUrl('MinhasBuscas'))}
-                >
-                  Continuar
-                </Button>
-                <button 
-                  className="text-sm text-slate-500 hover:text-slate-700"
-                  onClick={() => setShowReferralModal(false)}
-                >
-                  Agora não
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
