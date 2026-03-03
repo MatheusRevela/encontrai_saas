@@ -96,7 +96,7 @@ RESPONDA EM JSON:`,
       });
 
       if (response.should_complete || shouldComplete) {
-        const encerramento = response.next_question || "Ótimo, acho que já tenho uma visão bem clara do que você precisa. Deixa eu vasculhar nossa base de soluções — já volto com o que faz mais sentido pro seu caso.";
+        const encerramento = response.next_question || "Muito bem, acredito que já tenho uma visão clara do que você precisa. Vou buscar as soluções mais adequadas para o seu caso — aguarde um momento.";
         setMessages(prev => [...prev, { 
           sender: 'bot', 
           text: encerramento
