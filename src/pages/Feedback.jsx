@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Star, Send, AlertCircle, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import APP_CONFIG from '@/components/utils/config';
 
 export default function Feedback() {
   const [transacao, setTransacao] = useState(null);
