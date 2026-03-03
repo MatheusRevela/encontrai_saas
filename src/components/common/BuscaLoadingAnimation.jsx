@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Database, Search, Zap, CheckCircle, Sparkles, Target } from 'lucide-react';
@@ -258,6 +257,14 @@ const BuscaLoadingAnimation = () => {
           : "Quase pronto! Organizando os resultados finais..."
         }
       </motion.p>
+
+      {/* Aviso: não recarregar */}
+      <div className="mt-5 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 max-w-sm text-center">
+        <span className="text-amber-500 text-base">⚠️</span>
+        <p className="text-xs text-amber-700 font-medium">
+          Não recarregue a página — sua busca está sendo processada e seria perdida.
+        </p>
+      </div>
     </div>
   );
 };
