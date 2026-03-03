@@ -111,7 +111,7 @@ RESPONDA EM JSON:`,
       } else {
         setMessages(prev => [...prev, { 
           sender: 'bot', 
-          text: "Certo, acho que já tenho o suficiente. Vou buscar as melhores opções pra você!" 
+          text: "Entendido. Com as informações que você trouxe, já consigo buscar as melhores opções para o seu caso." 
         }]);
         setTimeout(() => {
           handleFinalSubmit(
