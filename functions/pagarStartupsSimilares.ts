@@ -1,96 +1,112 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+
+const ALLOWED_ORIGIN = 'https://encontrai.com';
 
 Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { transacao_id, startup_original_id, similares_selecionadas } = await req.json();
-
-    if (!transacao_id || !startup_original_id || !similares_selecionadas || similares_selecionadas.length === 0) {
-      return Response.json({ error: 'Parâmetros obrigatórios faltando' }, { status: 400 });
-    }
-
-    const MP_ACCESS_TOKEN = Deno.env.get('MP_ACCESS_TOKEN');
-    if (!MP_ACCESS_TOKEN) {
-      return Response.json({ error: 'Mercado Pago não configurado' }, { status: 500 });
-    }
-
-    // Buscar transação
-    const transacao = await base44.asServiceRole.entities.Transacao.get(transacao_id);
-    
-    const quantidadeSelecionada = similares_selecionadas.length;
-    const valorTotal = quantidadeSelecionada * 4.00;
-
-    // Criar preferência de pagamento no Mercado Pago
-    const preference = {
-      items: [
-        {
-          title: `${quantidadeSelecionada} Startup${quantidadeSelecionada > 1 ? 's' : ''} Similar${quantidadeSelecionada > 1 ? 'es' : ''} - ${transacao.id.substring(0, 8)}`,
-          quantity: quantidadeSelecionada,
-          unit_price: 4.00,
-          currency_id: 'BRL'
-        }
-      ],
-      payer: {
-        email: user.email,
-        name: user.full_name
-      },
-      back_urls: {
-        success: `${req.headers.get('origin')}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&startup_id=${startup_original_id}`,
-        failure: `${req.headers.get('origin')}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&status=failure`,
-        pending: `${req.headers.get('origin')}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&status=pending`
-      },
-      auto_return: 'approved',
-      notification_url: `${req.headers.get('origin')}/api/handleMercadoPagoWebhook`,
-      metadata: {
-        transacao_id: transacao.id,
-        startup_original_id: startup_original_id,
-        similares_selecionadas: JSON.stringify(similares_selecionadas),
-        tipo: 'similares',
-        user_email: user.email
-      }
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     };
 
-    const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(preference)
-    });
-
-    if (!mpResponse.ok) {
-      const errorData = await mpResponse.text();
-      console.error('Erro Mercado Pago:', errorData);
-      return Response.json({ error: 'Erro ao criar pagamento' }, { status: 500 });
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders });
     }
 
-    const mpData = await mpResponse.json();
+    try {
+        const base44 = createClientFromRequest(req);
+        const user = await base44.auth.me();
 
-    // Salvar preferência na transação
-    await base44.asServiceRole.entities.Transacao.update(transacao.id, {
-      mp_preference_similares: {
-        preference_id: mpData.id,
-        startup_original_id: startup_original_id,
-        similares_selecionadas: similares_selecionadas,
-        init_point: mpData.init_point,
-        created_at: new Date().toISOString()
-      }
-    });
+        if (!user) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-    return Response.json({
-      payment_url: mpData.init_point,
-      preference_id: mpData.id
-    });
+        const { transacao_id, startup_original_id, similares_selecionadas } = await req.json();
 
-  } catch (error) {
-    console.error('Erro ao processar pagamento de similares:', error);
-    return Response.json({ error: error.message }, { status: 500 });
-  }
+        if (!transacao_id || !startup_original_id || !similares_selecionadas?.length) {
+            return Response.json({ error: 'Parâmetros obrigatórios faltando' }, { status: 400 });
+        }
+
+        const MP_ACCESS_TOKEN = Deno.env.get('MP_ACCESS_TOKEN');
+        if (!MP_ACCESS_TOKEN) {
+            return Response.json({ error: 'Mercado Pago não configurado' }, { status: 500 });
+        }
+
+        const transacao = await base44.asServiceRole.entities.Transacao.get(transacao_id);
+        if (!transacao) {
+            return Response.json({ error: 'Transação não encontrada' }, { status: 404 });
+        }
+
+        // 🔒 Verificar ownership — usuário deve ser dono da transação
+        if (transacao.created_by && transacao.created_by !== user.email) {
+            return Response.json({ error: 'Acesso negado' }, { status: 403 });
+        }
+
+        const quantidadeSelecionada = similares_selecionadas.length;
+        const valorTotal = parseFloat((quantidadeSelecionada * 4.00).toFixed(2));
+
+        const preference = {
+            items: [{
+                title: `${quantidadeSelecionada} Startup${quantidadeSelecionada > 1 ? 's' : ''} Similar${quantidadeSelecionada > 1 ? 'es' : ''} - ${transacao.id.substring(0, 8)}`,
+                quantity: quantidadeSelecionada,
+                unit_price: 4.00,
+                currency_id: 'BRL'
+            }],
+            payer: {
+                email: user.email,
+                name: user.full_name
+            },
+            back_urls: {
+                success: `${ALLOWED_ORIGIN}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&startup_id=${startup_original_id}`,
+                failure: `${ALLOWED_ORIGIN}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&status=failure`,
+                pending: `${ALLOWED_ORIGIN}/StatusPagamento?sessionId=${transacao.session_id}&tipo=similares&status=pending`
+            },
+            auto_return: 'approved',
+            // 🔒 URL correta do webhook
+            notification_url: `${ALLOWED_ORIGIN}/functions/handleMercadoPagoWebhook`,
+            metadata: {
+                transacao_id: transacao.id,
+                startup_original_id: startup_original_id,
+                similares_selecionadas: JSON.stringify(similares_selecionadas),
+                tipo: 'similares',
+                user_email: user.email
+            }
+        };
+
+        const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(preference)
+        });
+
+        if (!mpResponse.ok) {
+            const errorData = await mpResponse.text();
+            console.error('Erro Mercado Pago:', errorData);
+            return Response.json({ error: 'Erro ao criar pagamento' }, { status: 500 });
+        }
+
+        const mpData = await mpResponse.json();
+
+        await base44.asServiceRole.entities.Transacao.update(transacao.id, {
+            mp_preference_similares: {
+                preference_id: mpData.id,
+                startup_original_id: startup_original_id,
+                similares_selecionadas: similares_selecionadas,
+                init_point: mpData.init_point,
+                created_at: new Date().toISOString()
+            }
+        });
+
+        return Response.json({
+            payment_url: mpData.init_point,
+            preference_id: mpData.id
+        });
+
+    } catch (error) {
+        console.error('Erro ao processar pagamento de similares:', error.message);
+        return Response.json({ error: 'Erro interno' }, { status: 500 });
+    }
 });
