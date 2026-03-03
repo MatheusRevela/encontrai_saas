@@ -15,8 +15,7 @@ export default function Feedback() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [showReferralModal, setShowReferralModal] = useState(false);
-  const [userReferralCode, setUserReferralCode] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
