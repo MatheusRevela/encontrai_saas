@@ -167,7 +167,9 @@ Deno.serve(async (req) => {
       try {
         console.log(`🤖 Analisando: ${itemAtual.nome} - ${itemAtual.site}`);
         
-        const existingStartups = await base44.asServiceRole.entities.Startup.filter({ site: itemAtual.site });
+        const existingStartups = itemAtual.site 
+          ? await base44.asServiceRole.entities.Startup.filter({ site: itemAtual.site })
+          : [];
         
         if (existingStartups.length > 0) {
           console.log(`⚠️ Startup já existe com o site ${itemAtual.site}. Pulando...`);
@@ -199,8 +201,12 @@ Deno.serve(async (req) => {
           });
         }
         
-        const dadosAtualizados = lab.dados_csv.map((item) => 
-          item.site === itemAtual.site ? { ...item, status: 'processando' } : item
+        // Identificar item pelo índice para evitar colisão com sites duplicados no CSV
+        const itemIndex = lab.dados_csv.findIndex(
+          (item) => item.site === itemAtual.site && item.status === 'pendente'
+        );
+        const dadosAtualizados = lab.dados_csv.map((item, i) => 
+          i === itemIndex ? { ...item, status: 'processando' } : item
         );
         await base44.asServiceRole.entities.StartupLab.update(labId, { dados_csv: dadosAtualizados });
 
