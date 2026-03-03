@@ -110,7 +110,7 @@ RESPONDA EM JSON:`,
       } else {
         setMessages(prev => [...prev, { 
           sender: 'bot', 
-          text: "Entendi. Com essas informações já posso encontrar boas soluções para você!" 
+          text: "Certo, acho que já tenho o suficiente. Vou buscar as melhores opções pra você!" 
         }]);
         setTimeout(() => {
           handleFinalSubmit(
