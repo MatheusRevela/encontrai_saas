@@ -110,7 +110,7 @@ STARTUP DE REFERÊNCIA:
 - Tags: ${startupOriginal.tags?.join(', ') || 'N/A'}
 
 STARTUPS CANDIDATAS:
-${startupsCandiatas.slice(0, 50).map((s, i) => `
+${candidatasFinais.slice(0, 50).map((s, i) => `
 ${i + 1}. ${s.nome} (ID: ${s.id})
    - Categoria: ${s.categoria}
    - Vertical: ${s.vertical_atuacao || 'N/A'}
