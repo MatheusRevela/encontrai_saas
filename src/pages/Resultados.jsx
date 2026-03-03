@@ -294,22 +294,20 @@ export default function Resultados() {
     }
   });
 
-  const handleAnaliseCompleta = async (dadosAnalise) => {
-    console.log('🔄 Iniciando análise refinada...');
-    setMostrarBuscaInterativa(false);
-    setGerandoSugestoes(true);
-    
-    try {
-      await queryClient.invalidateQueries({ queryKey: ['transacao', sessionId] });
-      await queryClient.refetchQueries({ queryKey: ['transacao', sessionId], type: 'active' });
-      console.log('✅ Análise concluída');
-    } catch (error) {
-      console.error('❌ Erro ao completar análise:', error);
-      alert(`Erro ao processar análise: ${error.message}`);
-      setMostrarBuscaInterativa(true);
-    } finally {
-      setGerandoSugestoes(false);
-    }
+  const handleAnaliseCompleta = (dadosAnalise) => {
+    gerarComDebounce(async () => {
+      setMostrarBuscaInterativa(false);
+      setGerandoSugestoes(true);
+      try {
+        await gerarSugestoesMutation.mutateAsync(dadosAnalise);
+      } catch (error) {
+        console.error('❌ Erro ao completar análise:', error);
+        alert(`Erro ao processar análise: ${error.message}`);
+        setMostrarBuscaInterativa(true);
+      } finally {
+        setGerandoSugestoes(false);
+      }
+    });
   };
 
   const toggleStartupSelection = (startupId) => {
