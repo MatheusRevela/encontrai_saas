@@ -105,18 +105,7 @@ export default function Feedback() {
         feedback: avaliacoes.map(av => av.feedback).filter(f => f.trim()).join(' | ') // Concatenar feedbacks
       });
 
-      // 🎁 SISTEMA DE INDICAÇÃO: Se média for >= 4
-      if (mediaGeral >= 4) {
-        const user = await base44.auth.me();
-        const referralCode = user.email.split('@')[0] + Math.random().toString(36).substr(2, 5);
-        
-        await base44.auth.updateMe({ referral_code: referralCode });
-
-        setShowReferralModal(true);
-        setUserReferralCode(referralCode);
-      } else {
-        navigate(createPageUrl('MinhasBuscas'));
-      }
+      navigate(createPageUrl('MinhasBuscas'));
     } catch (error) {
       console.error('Erro ao enviar feedback:', error);
       alert('Erro ao enviar feedback. Tente novamente.');
