@@ -1,5 +1,36 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+const formatSearchDescription = (description) => {
+  if (!description) return "Desafio não descrito.";
+  let text = description;
+  if (text.includes(' || ')) {
+    text = text.split(' || ')[0].replace('Desafio principal:', '').trim();
+  } else if (text.includes("Desafio principal:")) {
+    text = text.split("Perfil:")[0].replace("Desafio principal:", "").trim();
+  }
+  text = text
+    .replace(/^O cliente desenvolveu/i, "Você desenvolveu")
+    .replace(/^O cliente deseja/i, "Você deseja")
+    .replace(/^Cliente deseja/i, "Você deseja")
+    .replace(/\bO cliente\b/gi, "Você")
+    .replace(/\bcliente\b/gi, "você")
+    .replace(/\. Ele /gi, ". Você ")
+    .replace(/\bEle possui\b/gi, "Você possui")
+    .replace(/\bEle tem\b/gi, "Você tem")
+    .replace(/\bEle busca\b/gi, "Você busca")
+    .replace(/\bEle enfrenta\b/gi, "Você enfrenta")
+    .replace(/\bEle não sabe\b/gi, "Você não sabe")
+    .replace(/do cliente/gi, "seu")
+    .replace(/da cliente/gi, "sua")
+    .replace(/no cliente/gi, "em você");
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  if (text.length > 200) {
+    const truncated = text.substring(0, 200);
+    return truncated.substring(0, truncated.lastIndexOf(' ')) + '...';
+  }
+  return text;
+};
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, ArrowRight, Search } from 'lucide-react';
