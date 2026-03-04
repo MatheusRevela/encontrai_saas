@@ -85,7 +85,7 @@ export default function RecentSearchesWidget({ transacoes }) {
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1">
                     <p className="text-sm text-slate-700 line-clamp-2">
-                      {transacao.dor_relatada}
+                      {formatSearchDescription(transacao.dor_relatada)}
                     </p>
                   </div>
                   {getStatusBadge(transacao.status_pagamento)}
