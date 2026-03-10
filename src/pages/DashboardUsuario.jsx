@@ -18,10 +18,7 @@ import RecentSearchesWidget from '../components/dashboard/RecentSearchesWidget';
 import UnlockedStartupsWidget from '../components/dashboard/UnlockedStartupsWidget';
 import QuickActionsWidget from '../components/dashboard/QuickActionsWidget';
 import StatsOverviewWidget from '../components/dashboard/StatsOverviewWidget';
-import SearchTrendsChart from '../components/analytics/SearchTrendsChart';
-import CategoryDemandChart from '../components/analytics/CategoryDemandChart';
-import ROIChart from '../components/analytics/ROIChart';
-import ReportExporter from '../components/analytics/ReportExporter';
+
 import { useQuery } from '@tanstack/react-query';
 
 const DEFAULT_WIDGETS = {
@@ -39,21 +36,8 @@ export default function DashboardUsuario() {
   const [visibleWidgets, setVisibleWidgets] = useState(DEFAULT_WIDGETS);
   const [isCustomizing, setIsCustomizing] = useState(false);
 
-  const { data: analyticsResponse, isLoading: analyticsLoading } = useQuery({
-    queryKey: ['analytics-data-user'],
-    queryFn: async () => {
-      const { data } = await base44.functions.invoke('getAnalyticsData');
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const analyticsData = analyticsResponse?.data || {
-    trends: [],
-    categories: [],
-    roi: [],
-    summary: null
-  };
+  // Analytics removido — getAnalyticsData retorna dados globais da plataforma,
+  // não adequados para exibição no dashboard de usuário comum.
 
   useEffect(() => {
     loadDashboardData();

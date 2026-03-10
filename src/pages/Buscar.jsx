@@ -39,7 +39,8 @@ export default function Buscar() {
     setIsLoading(true);
     try {
       const sessionId = `sess_${crypto.randomUUID().replace(/-/g, '')}`;
-      const referralCode = localStorage.getItem('referral_code');
+      const rawReferral = localStorage.getItem('referral_code');
+      const referralCode = rawReferral && /^[A-Za-z0-9_-]{3,20}$/.test(rawReferral) ? rawReferral : undefined;
 
       await base44.entities.Transacao.create({
         session_id: sessionId,
@@ -47,7 +48,7 @@ export default function Buscar() {
         perfil_cliente: 'pessoa_fisica',
         status_pagamento: 'pendente',
         valor_por_startup: 5.00,
-        referral_code: referralCode || undefined
+        referral_code: referralCode
       });
 
       navigate(createPageUrl(`Resultados?sessionId=${sessionId}`));

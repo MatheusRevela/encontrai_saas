@@ -135,7 +135,8 @@ RESPONDA EM JSON:`,
   const handleFinalSubmit = async (finalSummary, profile) => {
     try {
       const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const referralCode = localStorage.getItem('referral_code');
+      const rawReferral = localStorage.getItem('referral_code');
+      const referralCode = rawReferral && /^[A-Za-z0-9_-]{3,20}$/.test(rawReferral) ? rawReferral : undefined;
       
       await base44.entities.Transacao.create({
         session_id: sessionId,
@@ -143,7 +144,7 @@ RESPONDA EM JSON:`,
         perfil_cliente: profile === "indefinido" ? "pessoa_fisica" : profile,
         status_pagamento: 'pendente',
         valor_por_startup: 5.00,
-        referral_code: referralCode || undefined
+        referral_code: referralCode
       });
       
       navigate(createPageUrl(`Resultados?sessionId=${sessionId}`));
