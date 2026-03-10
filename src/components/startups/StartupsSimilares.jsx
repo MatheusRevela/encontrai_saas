@@ -29,6 +29,13 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
   const [feedbacks, setFeedbacks] = useState({});
   const [comentarios, setComentarios] = useState({});
   const [selectedSimilares, setSelectedSimilares] = useState([]);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [email, setEmail] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [pixData, setPixData] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [checkoutConfig, setCheckoutConfig] = useState(null);
 
   useEffect(() => {
     carregarSimilares();
