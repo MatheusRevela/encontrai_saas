@@ -89,29 +89,52 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
     );
   };
 
-  const handlePagarSimilares = async () => {
+  const formatCPF = (value) => {
+    const n = value.replace(/\D/g, '');
+    return n.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  };
+
+  const handlePaymentSubmit = async (formData) => {
+    setErrorMessage(null);
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErrorMessage('Email inválido');
+      throw new Error('Email inválido');
+    }
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    if (!cpfLimpo || cpfLimpo.length !== 11) {
+      setErrorMessage('CPF deve conter 11 dígitos');
+      throw new Error('CPF inválido');
+    }
+
+    const { data } = await base44.functions.invoke('processTransparentPaymentSimilares', {
+      transacaoId,
+      startupOriginalId: startupOriginal.startup_id,
+      similaresSelecionadas: selectedSimilares,
+      email: email.trim(),
+      cpf: cpfLimpo,
+      paymentFormData: formData
+    });
+
+    if (!data.success) {
+      const errMsg = data.error || 'Erro ao processar pagamento';
+      setErrorMessage(errMsg);
+      throw new Error(errMsg);
+    }
+
+    if (data.status === 'approved') {
+      setIsPago(true);
+      await carregarSimilares();
+    } else if (data.status === 'pending') {
+      setPixData({ qrCode: data.pixQrCode, qrCodeBase64: data.pixQrCodeBase64 });
+    }
+  };
+
+  const handleIniciarCheckout = () => {
     if (selectedSimilares.length === 0) {
       alert('Selecione pelo menos uma startup similar para desbloquear.');
       return;
     }
-
-    try {
-      setProcessandoPagamento(true);
-      const { data: result } = await base44.functions.invoke('pagarStartupsSimilares', {
-        transacao_id: transacaoId,
-        startup_original_id: startupOriginal.startup_id,
-        similares_selecionadas: selectedSimilares
-      });
-
-      if (result.payment_url) {
-        window.location.href = result.payment_url;
-      }
-    } catch (error) {
-      console.error('Erro ao processar pagamento:', error);
-      alert('Erro ao processar pagamento. Tente novamente.');
-    } finally {
-      setProcessandoPagamento(false);
-    }
+    setShowCheckout(true);
   };
 
   const handleFeedback = async (similarId, tipoFeedback) => {
