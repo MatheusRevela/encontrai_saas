@@ -364,16 +364,7 @@ export default function Resultados() {
         selectedStartups.includes(s.startup_id)
       );
 
-      // Primeira solução GRÁTIS apenas para novos usuários
-      const primeiraGratis = isNovoUsuario === true;
-      let valorTotal = primeiraGratis 
-        ? Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00))
-        : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
-
-      // Desconto de R$ 3,00 ao selecionar todas as 5 soluções
-      const descontoCincoSolucoes = selectedStartups.length === 5 ? 3.00 : 0;
-      valorTotal = Math.max(0, valorTotal - descontoCincoSolucoes);
-
+      // valor_total é calculado pelo backend via calcularPreco — não recalcular aqui
       // valor_total NÃO é gravado aqui — o backend (calcularPreco) recalcula e grava o valor correto
       await TransacaoRepo.update(transacao.id, {
         startups_selecionadas: selectedStartups,
