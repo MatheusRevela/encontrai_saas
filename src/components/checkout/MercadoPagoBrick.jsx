@@ -59,7 +59,7 @@ export default function MercadoPagoBrick({ publicKey, amount, payerEmail, payerC
           callbacks: {
             onReady: () => setLoading(false),
             onSubmit: async ({ formData }) => {
-              await onSubmit(formData);
+              await onSubmitRef.current(formData);
             },
             onError: (error) => {
               console.error('MP Brick error:', error);
