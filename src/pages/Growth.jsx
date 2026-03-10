@@ -22,32 +22,16 @@ export default function Growth() {
   const loadMetrics = async () => {
     setIsLoading(true);
     try {
-      const allTransactions = await base44.entities.Transacao.list('-created_date');
-      const paid = allTransactions.filter(t => t.status_pagamento === 'pago');
-      const pending = allTransactions.filter(t => t.status_pagamento === 'pendente');
-      
-      const conversionRate = allTransactions.length > 0 
-        ? (paid.length / allTransactions.length) * 100 
-        : 0;
-      
-      const cartAbandonmentRate = allTransactions.length > 0
-        ? (pending.length / allTransactions.length) * 100
-        : 0;
-
-      const avgTimeToConvert = paid.length > 0
-        ? paid.reduce((acc, t) => {
-            const created = new Date(t.created_date);
-            const updated = new Date(t.updated_date);
-            return acc + (updated - created);
-          }, 0) / paid.length / (1000 * 60)
-        : 0;
-
-      setMetrics({
-        conversion_rate: conversionRate,
-        avg_time_to_convert: avgTimeToConvert,
-        cart_abandonment_rate: cartAbandonmentRate,
-        returning_users: 0
-      });
+      const res = await getDashboardStats({});
+      const gm = res.data?.growthMetrics;
+      if (gm) {
+        setMetrics({
+          conversion_rate: gm.conversion_rate ?? 0,
+          avg_time_to_convert: gm.avg_time_to_convert ?? 0,
+          cart_abandonment_rate: gm.cart_abandonment_rate ?? 0,
+          returning_users: gm.returning_users ?? 0
+        });
+      }
     } catch (error) {
       console.error("Erro ao carregar métricas:", error);
     } finally {
