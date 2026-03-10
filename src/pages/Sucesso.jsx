@@ -245,9 +245,14 @@ export default function Sucesso() {
           transition={{ delay: 0.4 }}
           className="mb-8"
         >
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Soluções Desbloqueadas</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">
+            {startupsNovasIds ? 'Novas Soluções Desbloqueadas' : 'Soluções Desbloqueadas'}
+          </h2>
           <div className="space-y-6">
-            {transacao.startups_desbloqueadas.map((startup, index) => {
+            {(startupsNovasIds
+              ? transacao.startups_desbloqueadas.filter(s => startupsNovasIds.includes(s.startup_id))
+              : transacao.startups_desbloqueadas
+            ).map((startup, index) => {
               const avaliacaoQualitativa = startup.avaliacao_qualitativa || startupsCompletas[startup.startup_id];
               return (
               <motion.div
