@@ -25,8 +25,9 @@ export default function Home() {
     // Capturar e persistir código de referência da URL (?ref=CODIGO)
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
-    if (ref) {
-      localStorage.setItem('referral_code', ref);
+    // Persistir referral com timestamp (expiração de 30 dias, lida em Buscar.jsx)
+    if (ref && /^[A-Za-z0-9_-]{3,20}$/.test(ref)) {
+      localStorage.setItem('referral_code', JSON.stringify({ code: ref, ts: Date.now() }));
     }
   }, []);
 
