@@ -48,8 +48,8 @@ export default function StatsOverviewWidget({ transacoes }) {
             return (
               <div key={stat.label} className="text-center">
                 <div className="flex justify-center mb-2">
-                  <div className={`p-3 rounded-full bg-${stat.color}-100`}>
-                    <Icon className={`w-5 h-5 text-${stat.color}-600`} />
+                  <div className={`p-3 rounded-full ${stat.iconBg}`}>
+                    <Icon className={`w-5 h-5 ${stat.iconColor}`} />
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-slate-900">{stat.value}</div>

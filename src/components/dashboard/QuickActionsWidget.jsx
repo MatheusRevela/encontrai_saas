@@ -57,12 +57,12 @@ export default function QuickActionsWidget() {
               <Button
                 key={action.path}
                 variant="outline"
-                className={`h-auto py-4 justify-start hover:border-${action.color}-500 hover:bg-${action.color}-50 transition-all`}
+                className={`h-auto py-4 justify-start ${action.hoverBorder} ${action.hoverBg} transition-all`}
                 onClick={() => navigate(createPageUrl(action.path))}
               >
                 <div className="flex items-center gap-3 w-full">
-                  <div className={`p-2 rounded-lg bg-${action.color}-100`}>
-                    <Icon className={`w-5 h-5 text-${action.color}-600`} />
+                  <div className={`p-2 rounded-lg ${action.iconBg}`}>
+                    <Icon className={`w-5 h-5 ${action.iconColor}`} />
                   </div>
                   <div className="text-left">
                     <div className="font-semibold text-slate-900">{action.label}</div>
