@@ -73,9 +73,7 @@ import StatusPagamento from './pages/StatusPagamento';
 import Sucesso from './pages/Sucesso';
 import TermosDeUso from './pages/TermosDeUso';
 import analytics from './pages/analytics';
-import dashboard from './pages/dashboard';
 import index from './pages/index';
-import startups from './pages/startups';
 import transacoes from './pages/transacoes';
 import users from './pages/users';
 import __Layout from './Layout.jsx';
@@ -108,9 +106,7 @@ export const PAGES = {
     "Sucesso": Sucesso,
     "TermosDeUso": TermosDeUso,
     "analytics": analytics,
-    "dashboard": dashboard,
     "index": index,
-    "startups": startups,
     "transacoes": transacoes,
     "users": users,
 }

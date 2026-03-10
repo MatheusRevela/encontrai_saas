@@ -7,6 +7,9 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ⚠️ DUPLICATA INTENCIONAL — Fonte única de verdade: functions/calcularPreco
+// Manter SEMPRE sincronizado! Não alterar sem atualizar calcularPreco.ts
+// (Edge Functions não suportam imports locais entre si)
 const PRECO_UNITARIO = 5.00;
 const DESCONTO_CINCO_SOLUCOES = 3.00;
 

@@ -106,7 +106,7 @@ export default function ProtectedLayout({ children, pageName }) {
   const navigate = useNavigate();
 
   const navItems = [
-    { name: 'Dashboard', path: 'dashboard', icon: BarChart3, section: 'admin', group: 'Dashboard' },
+    { name: 'Dashboard', path: 'Dashboard', icon: BarChart3, section: 'admin', group: 'Dashboard' },
     { name: 'Meu Dashboard', path: 'DashboardUsuario', icon: UserOutlineIcon, section: 'user', group: 'Visão do Usuário' },
     { name: 'Painel de Usuário', path: 'Painel', icon: UserOutlineIcon, section: 'user', group: 'Visão do Usuário' },
     { name: 'Nova Busca (IA)', path: 'Assistente', icon: Brain, section: 'user', group: 'Visão do Usuário' },
@@ -132,7 +132,7 @@ export default function ProtectedLayout({ children, pageName }) {
         // 🎯 ROLE-BASED HOMEPAGE
         if (location.pathname === '/' || location.pathname === '/index') {
           if (userData.role === 'admin') {
-            navigate(createPageUrl('dashboard'), { replace: true });
+            navigate(createPageUrl('Dashboard'), { replace: true });
           } else {
             navigate(createPageUrl('DashboardUsuario'), { replace: true });
           }
@@ -140,7 +140,7 @@ export default function ProtectedLayout({ children, pageName }) {
 
         // 🔒 PROTEÇÃO: redirecionar usuários não-admin que acessem páginas admin diretamente
         const ADMIN_ONLY_PAGES = [
-          'Conversas', 'transacoes', 'dashboard', 'Startups',
+          'Conversas', 'transacoes', 'Dashboard', 'Startups',
           'LaboratorioStartups', 'users', 'Parceiros', 'Ferramentas',
           'analytics', 'Growth'
         ];
