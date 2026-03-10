@@ -76,8 +76,8 @@ Primeiro, crie uma lista curta de startups candidatas, eliminando as irrelevante
 
 #### ETAPA 2: MATCHING SEMÂNTICO E PONTUAÇÃO
 Para cada startup pré-selecionada, calcule um \`match_percentage\` (0 a 100) com base nestes pesos exatos:
-- **Relevância Funcional (45%):** A solução resolve DIRETAMENTE o problema central descrito pelo cliente?
-- **Adequação ao Perfil do Cliente (35%):** É compatível com o porte (PME/PF), maturidade, contexto e orçamento implícito?
+- **Relevância Funcional (55%):** A solução resolve DIRETAMENTE o problema central descrito pelo cliente? Analise profundamente as tags, vertical de atuação e descrição para avaliar o fit com a dor específica relatada.
+- **Adequação ao Perfil do Cliente (25%):** É compatível com o porte (PME/PF), maturidade, contexto e orçamento implícito?
 - **Custo-Benefício e ROI (15%):** O valor gerado justifica claramente o investimento? Para PMEs, priorize ROI tangível e mensurável.
 - **Facilidade de Implementação (5%):** É simples e rápida de adotar para este perfil?
 - **Credibilidade da Solução (bônus até +5pts):** Startups com rating AAA/AA/A e alto satisfaction_score têm preferência em empates. O rating (CCC- a AAA) reflete avaliação de especialistas sobre equipe, tração, modelo e qualidade comercial. Ratings mais altos indicam soluções mais confiáveis e com maior histórico de sucesso com clientes.
