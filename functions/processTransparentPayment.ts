@@ -135,19 +135,24 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: false, error: errMsg }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        const newStatus = payment.status === 'approved' ? 'pago'
-            : payment.status === 'in_process' ? 'processando'
-            : 'pendente';
-
-        await base44.entities.Transacao.update(transacao.id, {
-            mp_payment_id: payment.id.toString(),
-            mp_payment_status: payment.status,
-            status_pagamento: newStatus,
-            valor_total: valorTotal
-        });
-
         if (payment.status === 'approved') {
+            // Primeiro desbloqueia as startups, depois marca como pago (atômico via unlockAndNotify)
             await unlockAndNotify(base44, transacao, email.trim(), nomeCliente);
+            // unlockAndNotify já salvou startups_desbloqueadas; agora atualiza status
+            await base44.entities.Transacao.update(transacao.id, {
+                mp_payment_id: payment.id.toString(),
+                mp_payment_status: payment.status,
+                status_pagamento: 'pago',
+                valor_total: valorTotal
+            });
+        } else {
+            const newStatus = payment.status === 'in_process' ? 'processando' : 'pendente';
+            await base44.entities.Transacao.update(transacao.id, {
+                mp_payment_id: payment.id.toString(),
+                mp_payment_status: payment.status,
+                status_pagamento: newStatus,
+                valor_total: valorTotal
+            });
         }
 
         const result = { success: true, status: payment.status, paymentId: payment.id };
