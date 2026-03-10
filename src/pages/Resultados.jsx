@@ -117,9 +117,20 @@ export default function Resultados() {
         const problemaCompleto = currentTransacao.dor_relatada;
         const perfilCliente = currentTransacao.perfil_cliente || 'pessoa_fisica';
 
+        // Pré-filtrar startups por relevância antes de enviar ao LLM — reduz custo e melhora qualidade
+        const problemaLower = problemaCompleto.toLowerCase();
+        const palavrasChave = problemaLower.split(/\s+/).filter(p => p.length > 4);
+        const startupsPrefiltradas = todasStartups.filter(s => {
+          const descLower = (s.descricao || '').toLowerCase();
+          const tagsLower = (s.tags || []).join(' ').toLowerCase();
+          return palavrasChave.some(p => descLower.includes(p) || tagsLower.includes(p));
+        });
+        // Fallback: se o pré-filtro for muito restritivo (< 20 candidatas), usa todas
+        const startupsParaLLM = startupsPrefiltradas.length >= 20 ? startupsPrefiltradas : todasStartups;
+
         const prompt = buildMatchingPrompt(
           problemaCompleto,
-          todasStartups,
+          startupsParaLLM,
           perfilCliente,
           [],
           {}
@@ -210,9 +221,20 @@ export default function Resultados() {
       const filtrosIA = dadosAnalise?.filtros || {};
       const perfilCliente = dadosAnalise?.perfilCliente || transacao.perfil_cliente || 'pessoa_fisica';
 
+      // Pré-filtrar startups por relevância antes de enviar ao LLM — reduz custo e melhora qualidade
+      const problemaLower = problemaCompleto.toLowerCase();
+      const palavrasChave = problemaLower.split(/\s+/).filter(p => p.length > 4);
+      const startupsPrefiltradas = todasStartups.filter(s => {
+        const descLower = (s.descricao || '').toLowerCase();
+        const tagsLower = (s.tags || []).join(' ').toLowerCase();
+        return palavrasChave.some(p => descLower.includes(p) || tagsLower.includes(p));
+      });
+      // Fallback: se o pré-filtro for muito restritivo (< 20 candidatas), usa todas
+      const startupsParaLLM = startupsPrefiltradas.length >= 20 ? startupsPrefiltradas : todasStartups;
+
       const prompt = buildMatchingPrompt(
         problemaCompleto,
-        todasStartups,
+        startupsParaLLM,
         perfilCliente,
         insights,
         filtrosIA
