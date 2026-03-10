@@ -25,8 +25,7 @@ const DEFAULT_WIDGETS = {
   stats: true,
   recentSearches: true,
   quickActions: true,
-  unlockedStartups: true,
-  analytics: true
+  unlockedStartups: true
 };
 
 export default function DashboardUsuario() {
@@ -86,8 +85,7 @@ export default function DashboardUsuario() {
     { key: 'stats', label: 'Resumo de Atividades', description: 'Estatísticas gerais' },
     { key: 'recentSearches', label: 'Buscas Recentes', description: 'Últimas 3 buscas' },
     { key: 'quickActions', label: 'Acesso Rápido', description: 'Atalhos principais' },
-    { key: 'unlockedStartups', label: 'Soluções Desbloqueadas', description: 'Suas startups' },
-    { key: 'analytics', label: 'Analytics Avançado', description: 'Gráficos e tendências' }
+    { key: 'unlockedStartups', label: 'Soluções Desbloqueadas', description: 'Suas startups' }
   ];
 
   if (isLoading) {
@@ -211,43 +209,7 @@ export default function DashboardUsuario() {
               </motion.div>
             )}
 
-            {/* Analytics Avançado - Full width */}
-            {visibleWidgets.analytics && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="lg:col-span-3"
-              >
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-slate-900">📊 Analytics Pessoal</h2>
-                  
-                  {analyticsLoading ? (
-                    <div className="flex justify-center items-center py-12">
-                      <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="grid lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2">
-                          <SearchTrendsChart data={analyticsData.trends} title="Seu Histórico de Buscas" />
-                        </div>
-                        <ReportExporter analyticsData={analyticsData} userName={user?.full_name} />
-                      </div>
 
-                      <div className="grid lg:grid-cols-2 gap-6">
-                        <CategoryDemandChart data={analyticsData.categories} title="Categorias que Você Buscou" />
-                        <ROIChart 
-                          data={analyticsData.roi} 
-                          averageROI={analyticsData.averageROI}
-                          title="Sua Satisfação por Categoria"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            )}
           </AnimatePresence>
 
           {/* Empty State */}
