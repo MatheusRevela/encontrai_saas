@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { 
   Lock, 
   Sparkles, 
@@ -11,12 +12,14 @@ import {
   CheckCircle, 
   Building2,
   Loader2,
-  Star,
   Eye,
-  EyeOff
+  Copy,
+  Check,
+  CreditCard
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import MercadoPagoBrick from '../checkout/MercadoPagoBrick';
 
 export default function StartupsSimilares({ startupOriginal, transacaoId }) {
   const [similares, setSimilares] = useState([]);
