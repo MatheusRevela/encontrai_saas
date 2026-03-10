@@ -3,7 +3,7 @@ import { parse } from 'https://deno.land/std@0.207.0/csv/mod.ts';
 
 Deno.serve(async (req) => {
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://encontrai.com',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   };
 
