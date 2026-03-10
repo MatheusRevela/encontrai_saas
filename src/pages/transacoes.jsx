@@ -27,6 +27,8 @@ export default function Transacoes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const [accessDenied, setAccessDenied] = useState(false);
+
   useEffect(() => {
     loadTransacoes();
   }, []);
@@ -56,6 +58,12 @@ export default function Transacoes() {
   const loadTransacoes = async () => {
     setIsLoading(true);
     try {
+      const user = await base44.auth.me();
+      if (!user || user.role !== 'admin') {
+        setAccessDenied(true);
+        setIsLoading(false);
+        return;
+      }
       const data = await base44.entities.Transacao.list('-created_date');
       setTransacoes(data || []);
     } catch (error) {
@@ -65,6 +73,17 @@ export default function Transacoes() {
   };
 
   const formatDate = formatDateBrasiliaShort;
+
+  if (accessDenied) {
+    return (
+      <div className="p-8 flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Acesso Negado</h2>
+          <p className="text-slate-600">Esta página é restrita a administradores.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

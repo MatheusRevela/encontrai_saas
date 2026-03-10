@@ -14,6 +14,7 @@ export default function Analytics() {
   const [transacoes, setTransacoes] = useState([]);
   const [startups, setStartups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -22,6 +23,12 @@ export default function Analytics() {
   const loadData = async () => {
     setIsLoading(true);
     try {
+      const user = await base44.auth.me();
+      if (!user || user.role !== 'admin') {
+        setAccessDenied(true);
+        setIsLoading(false);
+        return;
+      }
       const [transacoesData, startupsData] = await Promise.all([
         base44.entities.Transacao.list('-created_date'),
         base44.entities.Startup.list()
@@ -77,6 +84,17 @@ export default function Analytics() {
       ticketMedio: conversoesPagas > 0 ? (faturamentoTotal / conversoesPagas).toFixed(2) : 0,
     };
   };
+
+  if (accessDenied) {
+    return (
+      <div className="p-8 flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Acesso Negado</h2>
+          <p className="text-slate-600">Esta página é restrita a administradores.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <DashboardSkeleton />;

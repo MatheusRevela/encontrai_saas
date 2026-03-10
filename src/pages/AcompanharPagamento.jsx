@@ -60,41 +60,16 @@ export default function AcompanharPagamento() {
     setIsChecking(false);
   };
 
-  const finalizarTransacao = async () => {
-    try {
-      // Buscar transação
-      const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
-      const transacao = transacoes[0];
-
-      if (transacao) {
-        // Preparar dados das startups desbloqueadas
-        const startupsDesbloqueadas = startups.map(s => ({
-          startup_id: s.id,
-          nome: s.nome,
-          site: s.site,
-          email: s.email,
-          whatsapp: s.whatsapp,
-          linkedin: s.linkedin
-        }));
-
-        // Atualizar transação
-        await base44.entities.Transacao.update(transacao.id, {
-          status_pagamento: 'pago',
-          startups_desbloqueadas: startupsDesbloqueadas
-        });
-
-        // Redirecionar para sucesso
-        navigate(createPageUrl("Sucesso"), {
-          state: { 
-            sessionId,
-            startups,
-            valorPago: valorTotal
-          }
-        });
+  const finalizarTransacao = () => {
+    // A confirmação do pagamento e desbloqueio de startups é feita 100% pelo backend via webhook.
+    // O frontend apenas redireciona para a página de sucesso.
+    navigate(createPageUrl("Sucesso"), {
+      state: { 
+        sessionId,
+        startups,
+        valorPago: valorTotal
       }
-    } catch (error) {
-      console.error('Erro ao finalizar transação:', error);
-    }
+    });
   };
 
   const getStatusInfo = () => {
