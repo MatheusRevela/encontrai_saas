@@ -292,7 +292,7 @@ export default function Resultados() {
 
       console.log('💾 Atualizando transação com', matchesValidos.length, 'sugestões');
       
-      const transacaoAtualizada = await base44.entities.Transacao.update(transacao.id, {
+      const transacaoAtualizada = await TransacaoRepo.update(transacao.id, {
         startups_sugeridas: matchesValidos,
         insight_gerado: matchingResult.insight_geral || 'Análise realizada com base no seu perfil e necessidades específicas.',
         perfil_cliente: perfilCliente
