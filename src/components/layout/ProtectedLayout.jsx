@@ -187,7 +187,7 @@ export default function ProtectedLayout({ children, pageName }) {
                   </nav>
                 </SheetContent>
               </Sheet>
-              <Link to={createPageUrl(user?.role === 'admin' ? 'dashboard' : 'DashboardUsuario')}>
+              <Link to={createPageUrl(user?.role === 'admin' ? 'Dashboard' : 'DashboardUsuario')}>
                 {logoError ? (
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-6 h-6 text-emerald-600" />
