@@ -57,26 +57,25 @@ export default function Resultados() {
     return fn();
   }, []);
 
-  // Verificar se é novo usuário (primeira compra)
-  const { data: isNovoUsuario } = useQuery({
-    queryKey: ['isNovoUsuario'],
+  // Verificar se é novo usuário — via endpoint calcularPreco (fonte única de verdade de pricing)
+  const { data: precoDados } = useQuery({
+    queryKey: ['precoInfo', selectedStartups.length],
     queryFn: async () => {
       try {
-        const user = await base44.auth.me();
-        if (!user) return true; // Considera novo se não autenticado
-        
-        const comprasAnteriores = await base44.entities.Transacao.filter({
-          created_by: user.email,
-          status_pagamento: 'pago'
-        });
-        
-        return comprasAnteriores.length === 0;
+        if (selectedStartups.length === 0) {
+          // Consulta mínima apenas para saber se é novo usuário
+          const res = await calcularPreco({ quantidade: 1, isAdicional: false });
+          return res.data;
+        }
+        const res = await calcularPreco({ quantidade: selectedStartups.length, isAdicional: false });
+        return res.data;
       } catch {
-        return true;
+        return null;
       }
     },
     staleTime: 10 * 60 * 1000,
   });
+  const isNovoUsuario = precoDados?.is_novo_usuario ?? true;
 
   // React Query: Buscar transação E gerar sugestões se necessário
   const { data: transacao, isLoading, error } = useQuery({
