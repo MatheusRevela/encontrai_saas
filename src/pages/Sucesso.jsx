@@ -39,6 +39,7 @@ export default function Sucesso() {
 
   const [tentativas, setTentativas] = React.useState(0);
   const [startupsCompletas, setStartupsCompletas] = React.useState({});
+  const [startupsNovasIds, setStartupsNovasIds] = React.useState(null); // null = mostrar todas
 
   const { data: transacao, isLoading, error, refetch } = useQuery({
     queryKey: ['sucesso', sessionId, tentativas],
