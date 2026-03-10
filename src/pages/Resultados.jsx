@@ -374,8 +374,8 @@ export default function Resultados() {
       const descontoCincoSolucoes = selectedStartups.length === 5 ? 3.00 : 0;
       valorTotal = Math.max(0, valorTotal - descontoCincoSolucoes);
 
-      // valor_total NÃO é gravado aqui — o backend (createPaymentLink) recalcula e grava o valor correto
-      await base44.entities.Transacao.update(transacao.id, {
+      // valor_total NÃO é gravado aqui — o backend (calcularPreco) recalcula e grava o valor correto
+      await TransacaoRepo.update(transacao.id, {
         startups_selecionadas: selectedStartups,
         quantidade_selecionada: selectedStartups.length,
         startups_detalhadas: startupsCompletas
