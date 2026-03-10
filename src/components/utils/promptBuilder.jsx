@@ -1,3 +1,37 @@
+const normalizar = (str) =>
+  (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+// Radicais comuns para expandir palavras-chave (captura variações morfológicas)
+const expandirPalavras = (palavras) => {
+  const extras = [];
+  palavras.forEach(p => {
+    if (p.endsWith('ao')) extras.push(p.slice(0, -2)); // gestão → gest
+    if (p.endsWith('oes')) extras.push(p.slice(0, -3)); // soluções → soluc
+    if (p.endsWith('ar') || p.endsWith('er') || p.endsWith('ir')) extras.push(p.slice(0, -2)); // vender → vend
+    if (p.endsWith('s') && p.length > 5) extras.push(p.slice(0, -1)); // vendas → venda
+  });
+  return [...new Set([...palavras, ...extras])];
+};
+
+export const prefiltrarStartups = (problema, todasStartups, idsExcluir = []) => {
+  const problemaNorm = normalizar(problema);
+  const palavrasRaw = problemaNorm.split(/\s+/).filter(p => p.length > 4);
+  const palavrasChave = expandirPalavras(palavrasRaw);
+
+  const disponíveis = idsExcluir.length > 0
+    ? todasStartups.filter(s => !idsExcluir.includes(s.id))
+    : todasStartups;
+
+  const prefiltradas = disponíveis.filter(s => {
+    const descNorm = normalizar(s.descricao);
+    const tagsNorm = normalizar((s.tags || []).join(' '));
+    return palavrasChave.some(p => descNorm.includes(p) || tagsNorm.includes(p));
+  });
+
+  // Fallback: se o pré-filtro for muito restritivo (< 20 candidatas), usa todas disponíveis
+  return prefiltradas.length >= 20 ? prefiltradas : disponíveis;
+};
+
 export const buildMatchingPrompt = (problema, startups, perfilCliente, insights = [], filtros = {}) => {
   const insightsTexto = insights.length > 0 
     ? `\n### INSIGHTS CONTEXTUAIS EXTRAÍDOS\n${insights.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}\n`
