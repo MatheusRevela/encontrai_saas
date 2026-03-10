@@ -183,56 +183,108 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {!isPago && (
-          <div className="bg-white rounded-xl p-6 border-2 border-purple-300">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Lock className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-slate-900 text-lg mb-2">
-                  Selecione as Alternativas que Deseja Desbloquear
-                </h4>
-                <p className="text-slate-600 mb-4">
-                  Escolha quantas startups similares você quer ver os contatos completos (R$ 4,00 cada)
-                </p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    {selectedSimilares.length > 0 ? (
-                      <>
-                        <p className="text-3xl font-bold text-purple-600">
-                          R$ {(selectedSimilares.length * 4).toFixed(2).replace('.', ',')}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          {selectedSimilares.length} startup{selectedSimilares.length > 1 ? 's' : ''} selecionada{selectedSimilares.length > 1 ? 's' : ''} × R$ 4,00
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-sm text-slate-500">
-                        Selecione as startups abaixo para ver o valor total
-                      </p>
-                    )}
+          <div className="bg-white rounded-xl p-6 border-2 border-purple-300 space-y-4">
+            {!showCheckout ? (
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Lock className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-slate-900 text-lg mb-2">
+                    Selecione as Alternativas que Deseja Desbloquear
+                  </h4>
+                  <p className="text-slate-600 mb-4">
+                    Escolha quantas startups similares você quer ver os contatos completos (R$ 4,00 cada)
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {selectedSimilares.length > 0 ? (
+                        <>
+                          <p className="text-3xl font-bold text-purple-600">
+                            R$ {(selectedSimilares.length * 4).toFixed(2).replace('.', ',')}
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            {selectedSimilares.length} startup{selectedSimilares.length > 1 ? 's' : ''} × R$ 4,00
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-slate-500">Selecione as startups abaixo</p>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleIniciarCheckout}
+                      disabled={selectedSimilares.length === 0}
+                      className="bg-purple-600 hover:bg-purple-700"
+                      size="lg"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Desbloquear Selecionadas
+                    </Button>
                   </div>
-                  <Button
-                    onClick={handlePagarSimilares}
-                    disabled={processandoPagamento || selectedSimilares.length === 0}
-                    className="bg-purple-600 hover:bg-purple-700"
-                    size="lg"
-                  >
-                    {processandoPagamento ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="w-4 h-4 mr-2" />
-                        Desbloquear Selecionadas
-                      </>
-                    )}
-                  </Button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-purple-600" />
+                    Pagar R$ {(selectedSimilares.length * 4).toFixed(2).replace('.', ',')}
+                  </h4>
+                  <Button variant="ghost" size="sm" onClick={() => { setShowCheckout(false); setPixData(null); setErrorMessage(null); }}>
+                    ← Voltar
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 mb-1 block">Email *</label>
+                    <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" className="text-sm" disabled={!!pixData} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 mb-1 block">CPF *</label>
+                    <Input type="text" value={cpf} onChange={e => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} className="text-sm" disabled={!!pixData} />
+                  </div>
+                </div>
+
+                {errorMessage && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">{errorMessage}</div>
+                )}
+
+                {pixData && (
+                  <div className="border border-purple-200 bg-purple-50 rounded-xl p-4 text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
+                      <span className="text-sm font-semibold text-purple-700">Aguardando pagamento Pix...</span>
+                    </div>
+                    {pixData.qrCodeBase64 && (
+                      <img src={`data:image/png;base64,${pixData.qrCodeBase64}`} alt="QR Code Pix" className="mx-auto w-40 h-40 rounded-lg" />
+                    )}
+                    <div className="flex gap-2">
+                      <Input readOnly value={pixData.qrCode} className="text-xs bg-white" />
+                      <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(pixData.qrCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="shrink-0">
+                        {copied ? <Check className="w-4 h-4 text-purple-600" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {!pixData && checkoutConfig?.publicKey && (
+                  <MercadoPagoBrick
+                    publicKey={checkoutConfig.publicKey}
+                    amount={parseFloat((selectedSimilares.length * 4).toFixed(2))}
+                    payerEmail={email}
+                    payerCpf={cpf}
+                    onSubmit={handlePaymentSubmit}
+                  />
+                )}
+                {!pixData && !checkoutConfig?.publicKey && (
+                  <div className="flex items-center justify-center py-6 gap-2">
+                    <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+                    <span className="text-sm text-slate-600">Carregando opções de pagamento...</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
