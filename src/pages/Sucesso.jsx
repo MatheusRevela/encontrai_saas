@@ -181,7 +181,7 @@ export default function Sucesso() {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-10 h-10 text-emerald-600" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">🎉 Parabéns! Suas Soluções Estão Desbloqueadas</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">🎉 Parabéns! {startupsNovasIds ? 'Novas Soluções Desbloqueadas' : 'Suas Soluções Estão Desbloqueadas'}</h1>
           <p className="text-slate-600 text-lg">Os contatos estão disponíveis abaixo e também foram enviados para <strong>{transacao.cliente_email}</strong></p>
         </motion.div>
 
