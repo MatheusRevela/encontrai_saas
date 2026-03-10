@@ -184,11 +184,15 @@ Deno.serve(async (req) => {
                     });
                 }
             } else if (transaction.startups_selecionadas?.length > 0) {
-                const startups = await base44.asServiceRole.entities.Startup.filter({
-                    id: { $in: transaction.startups_selecionadas }
-                });
+                // Identificar apenas as startups ainda não desbloqueadas (APPEND, não substitui)
+                const jaDesbloqueadasIds = new Set((transaction.startups_desbloqueadas || []).map(s => s.startup_id));
+                const novosIds = transaction.startups_selecionadas.filter(id => !jaDesbloqueadasIds.has(id));
 
-                const unlockedStartups = startups.map(s => ({
+                const startups = novosIds.length > 0
+                    ? await base44.asServiceRole.entities.Startup.filter({ id: { $in: novosIds } })
+                    : [];
+
+                const novasDesbloqueadas = startups.map(s => ({
                     startup_id: s.id, nome: s.nome, descricao: s.descricao,
                     categoria: s.categoria, vertical_atuacao: s.vertical_atuacao,
                     modelo_negocio: s.modelo_negocio, site: s.site, email: s.email,
@@ -196,16 +200,19 @@ Deno.serve(async (req) => {
                     logo_url: s.logo_url, avaliacao_qualitativa: s.avaliacao_qualitativa
                 }));
 
-                // Atualiza status e startups_desbloqueadas em uma única chamada atômica
-                // Isso evita race condition: polling detecta 'pago' só depois que startups já estão desbloqueadas
+                const todasDesbloqueadas = [...(transaction.startups_desbloqueadas || []), ...novasDesbloqueadas];
+
+                // Atualiza tudo em uma única chamada atômica
                 await base44.asServiceRole.entities.Transacao.update(transaction.id, {
                     mp_payment_id: payment.id.toString(),
                     mp_payment_status: payment.status,
                     status_pagamento: 'pago',
-                    startups_desbloqueadas: unlockedStartups
+                    startups_desbloqueadas: todasDesbloqueadas
                 });
 
-                await sendSuccessEmail(base44, transaction, unlockedStartups);
+                if (novasDesbloqueadas.length > 0) {
+                    await sendSuccessEmail(base44, { ...transaction, startups_desbloqueadas: todasDesbloqueadas }, novasDesbloqueadas);
+                }
             }
         } else {
             // Para status não-aprovado, apenas atualiza o status
