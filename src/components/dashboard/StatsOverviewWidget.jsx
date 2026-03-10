@@ -14,19 +14,22 @@ export default function StatsOverviewWidget({ transacoes }) {
       icon: Search,
       label: 'Total de Buscas',
       value: totalBuscas,
-      color: 'blue'
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600'
     },
     {
       icon: CheckCircle,
       label: 'Buscas Concluídas',
       value: buscasPagas,
-      color: 'green'
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-600'
     },
     {
       icon: Building2,
       label: 'Soluções Desbloqueadas',
       value: startupsDesbloqueadas,
-      color: 'purple'
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600'
     }
   ];
 

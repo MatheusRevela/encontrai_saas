@@ -13,21 +13,30 @@ export default function QuickActionsWidget() {
       icon: Search,
       label: 'Busca Rápida',
       description: 'Encontre soluções com IA',
-      color: 'emerald',
+      hoverBorder: 'hover:border-emerald-500',
+      hoverBg: 'hover:bg-emerald-50',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
       path: 'Buscar'
     },
     {
       icon: Sparkles,
       label: 'Assistente IA',
       description: 'Análise personalizada',
-      color: 'purple',
+      hoverBorder: 'hover:border-purple-500',
+      hoverBg: 'hover:bg-purple-50',
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600',
       path: 'Assistente'
     },
     {
       icon: History,
       label: 'Histórico',
       description: 'Suas buscas anteriores',
-      color: 'blue',
+      hoverBorder: 'hover:border-blue-500',
+      hoverBg: 'hover:bg-blue-50',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
       path: 'MinhasBuscas'
     }
   ];
