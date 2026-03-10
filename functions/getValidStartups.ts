@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { 
       headers: { 
-        'Access-Control-Allow-Origin': '*', 
+        'Access-Control-Allow-Origin': 'https://encontrai.com', 
         'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' 
       } 
     });
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     if (!Array.isArray(ids) || ids.length === 0) {
       return new Response(JSON.stringify([]), {
         status: 200,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': 'https://encontrai.com' }
       });
     }
 
@@ -38,14 +38,14 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify(validStartups || []), {
       status: 200,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': 'https://encontrai.com' }
     });
 
   } catch (error) {
     console.error('Error in getValidStartups function:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': 'https://encontrai.com' }
     });
   }
 });

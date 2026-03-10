@@ -116,8 +116,7 @@ Deno.serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       error: 'Erro interno no servidor',
-      details: error.message,
-      stack: error.stack?.substring(0, 1000) // Limita o stack trace
+      details: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -45,6 +45,11 @@ Deno.serve(async (req) => {
       throw new Error('Nenhuma startup válida encontrada no CSV. Verifique se tem pelo menos as colunas obrigatórias: Nome | Site');
     }
 
+    const MAX_RECORDS = 200;
+    if (records.length > MAX_RECORDS) {
+      throw new Error(`CSV muito grande. Máximo de ${MAX_RECORDS} startups por upload. Seu arquivo tem ${records.length} linhas válidas.`);
+    }
+
     const lab = await base44.asServiceRole.entities.StartupLab.create({
       nome_arquivo: file.name,
       total_registros: records.length,

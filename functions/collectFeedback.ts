@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
 
     // 1. Feedback após 15 dias
     const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
-    const paid15d = await base44.entities.Transacao.filter({
+    const paid15d = await base44.asServiceRole.entities.Transacao.filter({
       status_pagamento: 'pago',
       created_date: { $lte: fifteenDaysAgo.toISOString() },
       feedback_15d_sent: { $ne: true }

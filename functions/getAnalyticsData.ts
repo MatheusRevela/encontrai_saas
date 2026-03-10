@@ -92,15 +92,8 @@ Deno.serve(async (req) => {
       ? (roi.reduce((sum, r) => sum + r.satisfacao, 0) / roi.length) * 20 // Convertendo para %
       : 0;
 
-    // 4. DISTRIBUIÇÃO REGIONAL (simulada com base em sessões/IPs - dados mockados por enquanto)
-    const regions = [
-      { regiao: 'São Paulo', buscas: Math.floor(transacoes.length * 0.35), conversoes: Math.floor(transacoes.filter(t => t.status_pagamento === 'pago').length * 0.35) },
-      { regiao: 'Rio de Janeiro', buscas: Math.floor(transacoes.length * 0.20), conversoes: Math.floor(transacoes.filter(t => t.status_pagamento === 'pago').length * 0.20) },
-      { regiao: 'Minas Gerais', buscas: Math.floor(transacoes.length * 0.15), conversoes: Math.floor(transacoes.filter(t => t.status_pagamento === 'pago').length * 0.15) },
-      { regiao: 'Paraná', buscas: Math.floor(transacoes.length * 0.10), conversoes: Math.floor(transacoes.filter(t => t.status_pagamento === 'pago').length * 0.10) },
-      { regiao: 'Bahia', buscas: Math.floor(transacoes.length * 0.08), conversoes: Math.floor(transacoes.filter(t => t.status_pagamento === 'pago').length * 0.08) },
-      { regiao: 'Outros', buscas: Math.floor(transacoes.length * 0.12), conversoes: Math.floor(transacoes.filter(t => t.status_pagamento === 'pago').length * 0.12) }
-    ].filter(r => r.buscas > 0);
+    // 4. DISTRIBUIÇÃO REGIONAL — não implementada ainda (dados reais requerem coleta de geolocalização)
+    const regions = [];
 
     // 5. RESUMO EXECUTIVO
     const totalBuscas = transacoes.length;
