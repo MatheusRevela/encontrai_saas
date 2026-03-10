@@ -19,7 +19,7 @@ import UnlockedStartupsWidget from '../components/dashboard/UnlockedStartupsWidg
 import QuickActionsWidget from '../components/dashboard/QuickActionsWidget';
 import StatsOverviewWidget from '../components/dashboard/StatsOverviewWidget';
 
-import { useQuery } from '@tanstack/react-query';
+
 
 const DEFAULT_WIDGETS = {
   stats: true,
