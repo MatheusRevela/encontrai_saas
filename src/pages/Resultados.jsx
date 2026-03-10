@@ -623,38 +623,24 @@ export default function Resultados() {
                   {selectedStartups.length} {selectedStartups.length === 1 ? 'solução selecionada' : 'soluções selecionadas'}
                 </div>
                 <div className="text-sm text-slate-600">
-                  {isNovoUsuario && selectedStartups.length === 1 ? (
-                    <span className="text-amber-600 font-bold">Valor: R$ 5,00</span>
-                  ) : (
+                  {precoDados ? (
                     <>
-                      {(() => {
-                        let valorBase = isNovoUsuario 
-                          ? Math.max(0, (selectedStartups.length - 1) * (transacao?.valor_por_startup || 5.00))
-                          : selectedStartups.length * (transacao?.valor_por_startup || 5.00);
-                        
-                        const descontoCinco = selectedStartups.length === 5 ? 3.00 : 0;
-                        const valorFinal = Math.max(0, valorBase - descontoCinco);
-                        
-                        return (
-                          <>
-                            {descontoCinco > 0 && (
-                              <span className="line-through text-slate-400 mr-2">
-                                R$ {valorBase.toFixed(2).replace('.', ',')}
-                              </span>
-                            )}
-                            <span className={descontoCinco > 0 ? 'text-emerald-600 font-bold text-lg' : ''}>
-                              Total: R$ {valorFinal.toFixed(2).replace('.', ',')}
-                            </span>
-                          </>
-                        );
-                      })()}
+                      {precoDados.valor_total === 0 ? (
+                        <span className="text-emerald-600 font-bold text-lg">Grátis!</span>
+                      ) : (
+                        <span className="text-emerald-600 font-bold text-lg">
+                          Total: R$ {precoDados.valor_total.toFixed(2).replace('.', ',')}
+                        </span>
+                      )}
                       {selectedStartups.length === 5 && (
                         <span className="block text-emerald-600 font-semibold mt-1">🎉 R$ 3,00 de desconto aplicado!</span>
                       )}
-                      {isNovoUsuario && selectedStartups.length > 1 && (
+                      {precoDados.is_novo_usuario && selectedStartups.length > 1 && (
                         <span className="block text-emerald-600 font-semibold mt-1">🎁 1 solução bônus grátis inclusa</span>
                       )}
                     </>
+                  ) : (
+                    <span className="text-slate-400">Calculando...</span>
                   )}
                 </div>
               </div>
