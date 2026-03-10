@@ -5,15 +5,21 @@ const normalizar = (str) =>
 const expandirPalavras = (palavras) => {
   const extras = [];
   palavras.forEach(p => {
-    if (p.endsWith('ao')) extras.push(p.slice(0, -2)); // gestão → gest
-    if (p.endsWith('oes')) extras.push(p.slice(0, -3)); // soluções → soluc
-    if (p.endsWith('ar') || p.endsWith('er') || p.endsWith('ir')) extras.push(p.slice(0, -2)); // vender → vend
-    if (p.endsWith('s') && p.length > 5) extras.push(p.slice(0, -1)); // vendas → venda
+    if (p.endsWith('ao')) extras.push(p.slice(0, -2));
+    if (p.endsWith('oes')) extras.push(p.slice(0, -3));
+    if (p.endsWith('ar') || p.endsWith('er') || p.endsWith('ir')) extras.push(p.slice(0, -2));
+    if (p.endsWith('s') && p.length > 5) extras.push(p.slice(0, -1));
   });
   return [...new Set([...palavras, ...extras])];
 };
 
-export const prefiltrarStartups = (problema, todasStartups, idsExcluir = []) => {
+/**
+ * Pré-filtra startups por relevância semântica via scoring de palavras-chave.
+ * Sempre retorna no máximo `limite` candidatas (padrão: 80) — NUNCA todas.
+ * Scoring: nome (3pts) > tags (2pts) > descrição (1pt) por palavra-chave presente.
+ * Garante que o LLM nunca receba mais de 80 startups, mesmo com 10k+ no banco.
+ */
+export const prefiltrarStartups = (problema, todasStartups, idsExcluir = [], limite = 80) => {
   const problemaNorm = normalizar(problema);
   const palavrasRaw = problemaNorm.split(/\s+/).filter(p => p.length > 4);
   const palavrasChave = expandirPalavras(palavrasRaw);
@@ -22,14 +28,24 @@ export const prefiltrarStartups = (problema, todasStartups, idsExcluir = []) => 
     ? todasStartups.filter(s => !idsExcluir.includes(s.id))
     : todasStartups;
 
-  const prefiltradas = disponíveis.filter(s => {
+  // Pontuar cada startup por relevância — score 0 é válido (funciona como fallback ordenado)
+  const pontuadas = disponíveis.map(s => {
+    const nomeNorm = normalizar(s.nome);
     const descNorm = normalizar(s.descricao);
     const tagsNorm = normalizar((s.tags || []).join(' '));
-    return palavrasChave.some(p => descNorm.includes(p) || tagsNorm.includes(p));
+    const score = palavrasChave.reduce((acc, p) => {
+      if (nomeNorm.includes(p)) return acc + 3;
+      if (tagsNorm.includes(p)) return acc + 2;
+      if (descNorm.includes(p)) return acc + 1;
+      return acc;
+    }, 0);
+    return { startup: s, score };
   });
 
-  // Fallback: se o pré-filtro for muito restritivo (< 20 candidatas), usa todas disponíveis
-  return prefiltradas.length >= 20 ? prefiltradas : disponíveis;
+  return pontuadas
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limite)
+    .map(({ startup }) => startup);
 };
 
 export const buildMatchingPrompt = (problema, startups, perfilCliente, insights = [], filtros = {}) => {

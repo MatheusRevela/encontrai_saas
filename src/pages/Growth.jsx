@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from '@/api/base44Client';
+import { getDashboardStats } from '@/functions/getDashboardStats';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import OnboardingMetrics from '../components/growth/OnboardingMetrics';
