@@ -44,16 +44,38 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Não autenticado' }, { status: 401, headers: corsHeaders });
         }
 
-        const { quantidade, isAdicional } = await req.json();
+        const { quantidade, isAdicional, transacao_id } = await req.json();
         if (!quantidade || quantidade < 1 || quantidade > 5) {
             return Response.json({ error: 'Quantidade inválida (1-5)' }, { status: 400, headers: corsHeaders });
         }
 
-        const comprasAnteriores = await base44.asServiceRole.entities.Transacao.filter({
-            created_by: user.email,
-            status_pagamento: 'pago'
-        });
-        const isNovoUsuario = comprasAnteriores.length === 0;
+        // ✅ ANTI RACE-CONDITION: is_first_purchase é persistido na transação uma única vez.
+        // Se já foi gravado, usamos o valor persistido — nunca recalculamos após a primeira gravação.
+        let isNovoUsuario;
+        if (transacao_id) {
+            const transacao = await base44.asServiceRole.entities.Transacao.get(transacao_id);
+            if (transacao && transacao.is_first_purchase !== undefined && transacao.is_first_purchase !== null) {
+                // Já persistido — usar valor imutável
+                isNovoUsuario = transacao.is_first_purchase;
+            } else {
+                // Calcular e persistir atomicamente (primeira vez)
+                const comprasAnteriores = await base44.asServiceRole.entities.Transacao.filter({
+                    created_by: user.email, status_pagamento: 'pago'
+                });
+                isNovoUsuario = comprasAnteriores.length === 0;
+                if (transacao) {
+                    await base44.asServiceRole.entities.Transacao.update(transacao_id, {
+                        is_first_purchase: isNovoUsuario
+                    });
+                }
+            }
+        } else {
+            const comprasAnteriores = await base44.asServiceRole.entities.Transacao.filter({
+                created_by: user.email, status_pagamento: 'pago'
+            });
+            isNovoUsuario = comprasAnteriores.length === 0;
+        }
+
         const valorTotal = calcularValor(quantidade, isNovoUsuario, isAdicional || false);
 
         return Response.json({

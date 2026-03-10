@@ -90,10 +90,20 @@ Deno.serve(async (req) => {
             ? (transacao.adicional_startups_count || 0)
             : (transacao.startups_selecionadas?.length || 0);
 
-        const comprasAnteriores = await base44.asServiceRole.entities.Transacao.filter({
-            created_by: user.email, status_pagamento: 'pago'
-        });
-        const isNovoUsuario = comprasAnteriores.length === 0;
+        // ✅ ANTI RACE-CONDITION: Ler is_first_purchase persistido por calcularPreco.
+        // Nunca recalcular aqui — evita que duas compras simultâneas ganhem o desconto.
+        let isNovoUsuario;
+        if (transacao.is_first_purchase !== undefined && transacao.is_first_purchase !== null) {
+            isNovoUsuario = transacao.is_first_purchase;
+        } else {
+            // Fallback: acesso direto ao checkout sem passar por calcularPreco
+            const comprasAnteriores = await base44.asServiceRole.entities.Transacao.filter({
+                created_by: user.email, status_pagamento: 'pago'
+            });
+            isNovoUsuario = comprasAnteriores.length === 0;
+            // Persistir para idempotência
+            await base44.entities.Transacao.update(transacao.id, { is_first_purchase: isNovoUsuario });
+        }
         const valorTotal = calcularValor(quantidade, isNovoUsuario, isAdicionalCheckout);
 
         const cpfLimpo = cpf.replace(/\D/g, '');
