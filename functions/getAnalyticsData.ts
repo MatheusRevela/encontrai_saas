@@ -9,6 +9,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Acesso negado' }, { status: 403 });
+    }
+
     // Buscar transações (todas para admin, apenas do usuário para user)
     const transacoes = user.role === 'admin'
       ? await base44.asServiceRole.entities.Transacao.list('-created_date', 1000)

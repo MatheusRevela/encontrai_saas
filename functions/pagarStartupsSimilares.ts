@@ -70,8 +70,7 @@ Deno.serve(async (req) => {
                 transacao_id: transacao.id,
                 startup_original_id: startup_original_id,
                 similares_selecionadas: JSON.stringify(similares_selecionadas),
-                tipo: 'similares',
-                user_email: user.email
+                tipo: 'similares'
             }
         };
 
