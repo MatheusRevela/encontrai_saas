@@ -89,15 +89,29 @@ export default function Checkout() {
     if (user?.email && !email) setEmail(user.email);
   }, [user]);
 
-  // Subscribe para detectar pagamento Pix confirmado automaticamente
+  // Polling para detectar pagamento Pix confirmado (webhook pode demorar)
   useEffect(() => {
     if (!pixData || !transacao?.id) return;
+
+    // Também subscribes em tempo real
     const unsubscribe = base44.entities.Transacao.subscribe((event) => {
       if (event.id === transacao.id && event.data?.status_pagamento === 'pago') {
         navigate(createPageUrl(`Sucesso?sessionId=${sessionId}`));
       }
     });
-    return unsubscribe;
+
+    // Polling a cada 5s por até 10 minutos
+    const interval = setInterval(async () => {
+      try {
+        const lista = await base44.entities.Transacao.filter({ session_id: sessionId });
+        if (lista[0]?.status_pagamento === 'pago') {
+          clearInterval(interval);
+          navigate(createPageUrl(`Sucesso?sessionId=${sessionId}`));
+        }
+      } catch (_) {}
+    }, 5000);
+
+    return () => { unsubscribe(); clearInterval(interval); };
   }, [pixData, transacao?.id]);
 
   const validarCampos = () => {
