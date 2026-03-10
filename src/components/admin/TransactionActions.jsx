@@ -17,6 +17,12 @@ export default function TransactionActions({ transaction, onUpdate }) {
   const handleMarkAsPaid = async () => {
     setIsProcessing(true);
     try {
+      const currentUser = await base44.auth.me();
+      if (!currentUser || currentUser.role !== 'admin') {
+        console.error('Unauthorized: Admin role required');
+        setIsProcessing(false);
+        return;
+      }
       const startups = await base44.entities.Startup.list();
       const startupsCompletas = startups.filter(s => transaction.startups_selecionadas?.includes(s.id));
       
@@ -85,6 +91,12 @@ P.S. Todas as nossas startups são verificadas mensalmente para garantir que est
   const handleMarkAsRejected = async () => {
     setIsProcessing(true);
     try {
+      const currentUser = await base44.auth.me();
+      if (!currentUser || currentUser.role !== 'admin') {
+        console.error('Unauthorized: Admin role required');
+        setIsProcessing(false);
+        return;
+      }
       await base44.entities.Transacao.update(transaction.id, {
         status_pagamento: 'cancelado'
       });

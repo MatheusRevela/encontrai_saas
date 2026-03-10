@@ -137,6 +137,16 @@ export default function ProtectedLayout({ children, pageName }) {
             navigate(createPageUrl('DashboardUsuario'), { replace: true });
           }
         }
+
+        // 🔒 PROTEÇÃO: redirecionar usuários não-admin que acessem páginas admin diretamente
+        const ADMIN_ONLY_PAGES = [
+          'Conversas', 'transacoes', 'dashboard', 'Startups',
+          'LaboratorioStartups', 'users', 'Parceiros', 'Ferramentas',
+          'analytics', 'Growth'
+        ];
+        if (userData.role !== 'admin' && ADMIN_ONLY_PAGES.includes(pageName)) {
+          navigate(createPageUrl('DashboardUsuario'), { replace: true });
+        }
       } catch (e) {
         // Usuário não autenticado - redireciona imediatamente
         setIsLoading(false);

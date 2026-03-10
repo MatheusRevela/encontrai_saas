@@ -1,8 +1,8 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://encontrai.com',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   };
@@ -90,13 +90,13 @@ Deno.serve(async (req) => {
     ).length;
 
     // Transações recentes (top 5)
+    // cliente_email omitido intencionalmente — não expor PII no response
     const recentTransactions = transacoesData.slice(0, 5).map(t => ({
       id: t.id,
       created_date: t.created_date,
       status_pagamento: t.status_pagamento,
       valor_total: t.valor_total,
-      quantidade_selecionada: t.quantidade_selecionada,
-      cliente_email: t.cliente_email
+      quantidade_selecionada: t.quantidade_selecionada
     }));
 
     return Response.json({
