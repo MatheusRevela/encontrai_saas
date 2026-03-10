@@ -6,6 +6,9 @@ export default function MercadoPagoBrick({ publicKey, amount, payerEmail, payerC
   const [sdkError, setSdkError] = useState(null);
   const brickControllerRef = useRef(null);
   const initializedRef = useRef(false);
+  const onSubmitRef = useRef(onSubmit);
+
+  useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
 
   useEffect(() => {
     if (!publicKey || !amount || amount <= 0 || initializedRef.current) return;
