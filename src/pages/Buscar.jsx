@@ -39,8 +39,22 @@ export default function Buscar() {
     setIsLoading(true);
     try {
       const sessionId = `sess_${crypto.randomUUID().replace(/-/g, '')}`;
-      const rawReferral = localStorage.getItem('referral_code');
-      const referralCode = rawReferral && /^[A-Za-z0-9_-]{3,20}$/.test(rawReferral) ? rawReferral : undefined;
+      // Ler referral com expiração de 30 dias
+      let referralCode;
+      try {
+        const raw = localStorage.getItem('referral_code');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const expired = !parsed.ts || (Date.now() - parsed.ts > 30 * 24 * 60 * 60 * 1000);
+          if (!expired && /^[A-Za-z0-9_-]{3,20}$/.test(parsed.code)) {
+            referralCode = parsed.code;
+          } else {
+            localStorage.removeItem('referral_code');
+          }
+        }
+      } catch {
+        localStorage.removeItem('referral_code');
+      }
 
       await base44.entities.Transacao.create({
         session_id: sessionId,
