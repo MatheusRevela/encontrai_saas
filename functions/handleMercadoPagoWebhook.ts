@@ -142,8 +142,10 @@ Deno.serve(async (req) => {
 
         const transaction = transactions[0];
 
-        // Idempotência
-        if (transaction.status_pagamento === 'pago') {
+        // Idempotência — APENAS para pagamentos do fluxo principal (não similares)
+        // Similares têm tipo='similares' no metadata; devem ser processadas mesmo se a transação principal já está 'pago'
+        const tipoWebhook = payment.metadata?.tipo;
+        if (transaction.status_pagamento === 'pago' && tipoWebhook !== 'similares') {
             console.log('Pagamento já processado - webhook duplicado ignorado');
             return new Response('Already processed', { status: 200, headers: corsHeaders });
         }
