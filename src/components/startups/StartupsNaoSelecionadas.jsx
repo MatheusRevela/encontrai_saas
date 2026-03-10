@@ -50,42 +50,31 @@ export default function StartupsNaoSelecionadas({ transacao }) {
     try {
       setProcessandoPagamento(true);
       
-      // Atualizar transação com as startups adicionais selecionadas
       const startupsDetalhadas = startupsNaoDesbloqueadas.filter(s =>
         selectedStartups.includes(s.startup_id)
       );
 
-      const novasSelecoes = [...(transacao.startups_selecionadas || []), ...selectedStartups];
+      // startups_selecionadas = antigas desbloqueadas + novas adicionais
+      const novasSelecoes = [
+        ...(transacao.startups_desbloqueadas || []).map(s => s.startup_id),
+        ...selectedStartups
+      ];
       const novasDetalhadas = [...(transacao.startups_detalhadas || []), ...startupsDetalhadas];
       
-      // Garantir que CPF seja válido - se não for, usar CPF fictício válido
-      let cpfValido = transacao.cliente_cpf;
-      if (!cpfValido || cpfValido === '00000000000' || cpfValido.length !== 11) {
-        cpfValido = '11111111111'; // CPF fictício válido para testes
-      }
-      
-      // Marcar que é um pagamento de desbloqueio adicional
+      // Marcar que é um checkout adicional — sem desconto das 5
       await base44.entities.Transacao.update(transacao.id, {
         startups_selecionadas: novasSelecoes,
         startups_detalhadas: novasDetalhadas,
         quantidade_selecionada: novasSelecoes.length,
-        valor_total: selectedStartups.length * 5.00, // Valor apenas das adicionais
         is_adicional_checkout: true,
         adicional_startups_count: selectedStartups.length,
-        cliente_cpf: cpfValido // Garantir CPF válido
       });
 
-      // Criar link de pagamento
-      const { data: result } = await base44.functions.invoke('createPaymentLink', {
-        sessionId: transacao.session_id
-      });
-
-      if (result.paymentUrl) {
-        window.location.href = result.paymentUrl;
-      }
+      // Usar Transparent Checkout (mesmo fluxo do checkout normal)
+      navigate(createPageUrl(`Checkout?sessionId=${transacao.session_id}`));
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
-      alert('Erro ao processar pagamento. Tente novamente.');
+      alert('Erro ao processar. Tente novamente.');
     } finally {
       setProcessandoPagamento(false);
     }
