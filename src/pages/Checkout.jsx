@@ -39,23 +39,9 @@ export default function Checkout() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: isNovoUsuario } = useQuery({
-    queryKey: ['isNovoUsuario'],
-    queryFn: async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        if (!currentUser) return true;
-        const comprasAnteriores = await base44.entities.Transacao.filter({
-          created_by: currentUser.email,
-          status_pagamento: 'pago'
-        });
-        return comprasAnteriores.length === 0;
-      } catch {
-        return true;
-      }
-    },
-    staleTime: 10 * 60 * 1000,
-  });
+  // is_first_purchase é persistido pelo calcularPreco ao passar pela página de Resultados
+  // Lemos diretamente da transação — sem query extra, sem race condition
+  const isNovoUsuario = transacao?.is_first_purchase ?? true;
 
   const { data: transacao, isLoading, error } = useQuery({
     queryKey: ['checkout', sessionId],

@@ -59,23 +59,17 @@ export default function Resultados() {
 
   // Verificar se é novo usuário — via endpoint calcularPreco (fonte única de verdade de pricing)
   const { data: precoDados } = useQuery({
-    queryKey: ['precoInfo', selectedStartups.length],
+    queryKey: ['precoInfo', selectedStartups.length, sessionId],
     queryFn: async () => {
-      try {
-        if (selectedStartups.length === 0) {
-          // Consulta mínima apenas para saber se é novo usuário
-          const res = await calcularPreco({ quantidade: 1, isAdicional: false });
-          return res.data;
-        }
-        const res = await calcularPreco({ quantidade: selectedStartups.length, isAdicional: false });
-        return res.data;
-      } catch {
-        return null;
-      }
+      if (!transacao?.id) return null;
+      const quantidade = selectedStartups.length > 0 ? selectedStartups.length : 1;
+      const res = await calcularPreco({ quantidade, isAdicional: false, transacao_id: transacao.id });
+      return res.data;
     },
+    enabled: !!transacao?.id,
     staleTime: 10 * 60 * 1000,
   });
-  const isNovoUsuario = precoDados?.is_novo_usuario ?? true;
+  const isNovoUsuario = precoDados?.is_novo_usuario ?? transacao?.is_first_purchase ?? true;
 
   // React Query: Buscar transação E gerar sugestões se necessário
   const { data: transacao, isLoading, error } = useQuery({
