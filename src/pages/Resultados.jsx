@@ -88,7 +88,7 @@ export default function Resultados() {
         throw new Error('Session ID não encontrado');
       }
       
-      const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
+      const transacoes = await TransacaoRepo.getBySessionId(sessionId);
       console.log('📦 Transações encontradas:', transacoes.length);
       
       if (transacoes.length === 0) {
