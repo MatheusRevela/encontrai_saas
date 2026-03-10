@@ -22,6 +22,7 @@ export default function UsersPage() {
   const [transacoes, setTransacoes] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -40,6 +41,12 @@ export default function UsersPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
+      const currentUser = await base44.auth.me();
+      if (!currentUser || currentUser.role !== 'admin') {
+        setAccessDenied(true);
+        setIsLoading(false);
+        return;
+      }
       const [usersData, transacoesData] = await Promise.all([
         base44.entities.User.list('-created_date'),
         base44.entities.Transacao.list('-created_date')
@@ -261,6 +268,17 @@ export default function UsersPage() {
 
     return { total, activeUsers, payingUsers, newUsers };
   };
+
+  if (accessDenied) {
+    return (
+      <div className="p-8 flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Acesso Negado</h2>
+          <p className="text-slate-600">Esta página é restrita a administradores.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
