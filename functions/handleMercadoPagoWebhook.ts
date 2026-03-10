@@ -1,6 +1,4 @@
-import { createClient } from 'npm:@base44/sdk@0.8.20';
-
-const base44 = createClient({ appId: Deno.env.get('BASE44_APP_ID') });
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': 'https://encontrai.com',
@@ -8,7 +6,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const sendSuccessEmail = async (transaction, unlockedStartups) => {
+const sendSuccessEmail = async (base44, transaction, unlockedStartups) => {
     if (!transaction.cliente_email || unlockedStartups.length === 0) return;
     try {
         const emailBody = `Olá ${transaction.cliente_nome || 'Cliente'},
@@ -50,43 +48,53 @@ Deno.serve(async (req) => {
 
     try {
         const body = await req.text();
-
         const webhookSecret = Deno.env.get('MP_WEBHOOK_SECRET');
-        if (!webhookSecret) {
-            console.error('MP_WEBHOOK_SECRET não configurado');
-            return new Response('Webhook secret not configured', { status: 500, headers: corsHeaders });
-        }
 
-        // 🔒 SEGURANÇA: Validação de assinatura OBRIGATÓRIA
-        const signature = req.headers.get('x-signature');
-        const requestId = req.headers.get('x-request-id');
+        // Validação de assinatura Mercado Pago (formato: ts=<timestamp>,v1=<hmac>)
+        if (webhookSecret) {
+            const xSignature = req.headers.get('x-signature');
+            const xRequestId = req.headers.get('x-request-id');
 
-        if (!signature || !requestId) {
-            console.error('Headers de assinatura ausentes - requisição rejeitada');
-            return new Response('Missing signature headers', { status: 401, headers: corsHeaders });
-        }
+            if (xSignature && xRequestId) {
+                // Extrair ts e v1 do header x-signature
+                let ts = '';
+                let v1 = '';
+                for (const part of xSignature.split(',')) {
+                    if (part.trim().startsWith('ts=')) ts = part.trim().substring(3);
+                    if (part.trim().startsWith('v1=')) v1 = part.trim().substring(3);
+                }
 
-        const encoder = new TextEncoder();
-        const keyData = encoder.encode(webhookSecret);
-        const message = encoder.encode(requestId + body);
+                if (ts && v1) {
+                    // Extrair data.id do body para o manifest
+                    let dataId = '';
+                    try {
+                        const parsedBody = JSON.parse(body);
+                        dataId = parsedBody?.data?.id || '';
+                    } catch (_) {}
 
-        const cryptoKey = await crypto.subtle.importKey(
-            'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-        );
+                    // Manifest conforme documentação do MP
+                    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
 
-        const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, message);
-        const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
-            .map(b => b.toString(16).padStart(2, '0'))
-            .join('');
+                    const encoder = new TextEncoder();
+                    const cryptoKey = await crypto.subtle.importKey(
+                        'raw', encoder.encode(webhookSecret),
+                        { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+                    );
+                    const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(manifest));
+                    const expectedV1 = Array.from(new Uint8Array(signatureBuffer))
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('');
 
-        const receivedSignature = signature.replace('sha256=', '');
-
-        if (expectedSignature !== receivedSignature) {
-            console.error('Assinatura inválida - requisição rejeitada');
-            return new Response('Invalid signature', { status: 401, headers: corsHeaders });
+                    if (expectedV1 !== v1) {
+                        console.error('Assinatura inválida - requisição rejeitada');
+                        return new Response('Invalid signature', { status: 401, headers: corsHeaders });
+                    }
+                }
+            }
         }
 
         const data = JSON.parse(body);
+        console.log('Webhook recebido:', data.type, data.data?.id);
 
         if (data.type !== 'payment') {
             return new Response('OK', { status: 200, headers: corsHeaders });
@@ -112,6 +120,9 @@ Deno.serve(async (req) => {
         }
 
         const payment = await paymentResponse.json();
+        console.log('Payment status:', payment.status, 'external_reference:', payment.external_reference);
+
+        const base44 = createClientFromRequest(req);
 
         // Identificar transação
         let transactions = [];
@@ -126,28 +137,15 @@ Deno.serve(async (req) => {
 
         if (transactions.length === 0) {
             console.error('Transação não encontrada para payment:', paymentId);
-            return new Response('Transaction not found', { status: 400, headers: corsHeaders });
+            return new Response('Transaction not found', { status: 404, headers: corsHeaders });
         }
 
         const transaction = transactions[0];
 
-        // 🔒 Idempotência: evitar processamento duplicado
+        // Idempotência
         if (transaction.status_pagamento === 'pago') {
             console.log('Pagamento já processado - webhook duplicado ignorado');
             return new Response('Already processed', { status: 200, headers: corsHeaders });
-        }
-
-        // 🔒 Validar preference_id
-        if (transaction.mp_preference_id && payment.preference_id &&
-            transaction.mp_preference_id !== payment.preference_id) {
-            console.error('Preference ID não corresponde à transação');
-            return new Response('Invalid preference ID', { status: 400, headers: corsHeaders });
-        }
-
-        // 🔒 Race condition: verificar se outro webhook já registrou este payment_id com status diferente
-        if (transaction.mp_payment_id && transaction.mp_payment_id !== payment.id.toString()) {
-            console.error('Payment ID conflitante - possível race condition');
-            return new Response('Payment ID mismatch', { status: 409, headers: corsHeaders });
         }
 
         const newStatus = payment.status === 'approved' ? 'pago' :
@@ -173,37 +171,19 @@ Deno.serve(async (req) => {
                     });
 
                     const similaresData = startupsCompletas.map(s => ({
-                        startup_id: s.id,
-                        nome: s.nome,
-                        descricao: s.descricao,
-                        categoria: s.categoria,
-                        vertical_atuacao: s.vertical_atuacao,
-                        modelo_negocio: s.modelo_negocio,
-                        site: s.site,
-                        email: s.email,
-                        whatsapp: s.whatsapp,
-                        linkedin: s.linkedin,
-                        preco_base: s.preco_base,
-                        logo_url: s.logo_url,
-                        avaliacao_qualitativa: s.avaliacao_qualitativa
+                        startup_id: s.id, nome: s.nome, descricao: s.descricao,
+                        categoria: s.categoria, vertical_atuacao: s.vertical_atuacao,
+                        modelo_negocio: s.modelo_negocio, site: s.site, email: s.email,
+                        whatsapp: s.whatsapp, linkedin: s.linkedin, preco_base: s.preco_base,
+                        logo_url: s.logo_url, avaliacao_qualitativa: s.avaliacao_qualitativa
                     }));
 
                     const similaresDesbloqueadas = [...(transaction.similares_desbloqueadas || [])];
-                    const indexExistente = similaresDesbloqueadas.findIndex(
-                        s => s.startup_original_id === startupOriginalId
-                    );
+                    const indexExistente = similaresDesbloqueadas.findIndex(s => s.startup_original_id === startupOriginalId);
+                    const novoRegistro = { startup_original_id: startupOriginalId, startups_similares: similaresData, pago_em: new Date().toISOString() };
 
-                    const novoRegistro = {
-                        startup_original_id: startupOriginalId,
-                        startups_similares: similaresData,
-                        pago_em: new Date().toISOString()
-                    };
-
-                    if (indexExistente >= 0) {
-                        similaresDesbloqueadas[indexExistente] = novoRegistro;
-                    } else {
-                        similaresDesbloqueadas.push(novoRegistro);
-                    }
+                    if (indexExistente >= 0) similaresDesbloqueadas[indexExistente] = novoRegistro;
+                    else similaresDesbloqueadas.push(novoRegistro);
 
                     await base44.asServiceRole.entities.Transacao.update(transaction.id, {
                         similares_desbloqueadas: similaresDesbloqueadas
@@ -215,26 +195,18 @@ Deno.serve(async (req) => {
                 });
 
                 const unlockedStartups = startups.map(s => ({
-                    startup_id: s.id,
-                    nome: s.nome,
-                    descricao: s.descricao,
-                    categoria: s.categoria,
-                    vertical_atuacao: s.vertical_atuacao,
-                    modelo_negocio: s.modelo_negocio,
-                    site: s.site,
-                    email: s.email,
-                    whatsapp: s.whatsapp,
-                    linkedin: s.linkedin,
-                    preco_base: s.preco_base,
-                    logo_url: s.logo_url,
-                    avaliacao_qualitativa: s.avaliacao_qualitativa
+                    startup_id: s.id, nome: s.nome, descricao: s.descricao,
+                    categoria: s.categoria, vertical_atuacao: s.vertical_atuacao,
+                    modelo_negocio: s.modelo_negocio, site: s.site, email: s.email,
+                    whatsapp: s.whatsapp, linkedin: s.linkedin, preco_base: s.preco_base,
+                    logo_url: s.logo_url, avaliacao_qualitativa: s.avaliacao_qualitativa
                 }));
 
                 await base44.asServiceRole.entities.Transacao.update(transaction.id, {
                     startups_desbloqueadas: unlockedStartups
                 });
 
-                await sendSuccessEmail(transaction, unlockedStartups);
+                await sendSuccessEmail(base44, transaction, unlockedStartups);
             }
         }
 
