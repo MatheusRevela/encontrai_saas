@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CreditCard, 
+import {
+  CreditCard,
   CheckCircle,
   Loader2,
   AlertCircle,
@@ -16,37 +16,39 @@ import {
   ShoppingCart,
   Newspaper,
   Shield,
-  Zap
+  Zap,
+  Copy,
+  Check
 } from 'lucide-react';
+import MercadoPagoBrick from '../components/checkout/MercadoPagoBrick';
 
 export default function Checkout() {
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
-  
+  const [pixData, setPixData] = useState(null);
+  const [isFreeProcessing, setIsFreeProcessing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const navigate = useNavigate();
   const sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
-  // React Query: Buscar usuário e transação
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    staleTime: 10 * 60 * 1000, // Cache por 10 minutos
+    staleTime: 10 * 60 * 1000,
   });
 
-  // Verificar se é novo usuário
   const { data: isNovoUsuario } = useQuery({
     queryKey: ['isNovoUsuario'],
     queryFn: async () => {
       try {
         const currentUser = await base44.auth.me();
         if (!currentUser) return true;
-        
         const comprasAnteriores = await base44.entities.Transacao.filter({
           created_by: currentUser.email,
           status_pagamento: 'pago'
         });
-        
         return comprasAnteriores.length === 0;
       } catch {
         return true;
@@ -58,95 +60,92 @@ export default function Checkout() {
   const { data: transacao, isLoading, error } = useQuery({
     queryKey: ['checkout', sessionId],
     queryFn: async () => {
-      console.log('🛒 Checkout - sessionId:', sessionId);
-      
-      if (!sessionId) {
-        console.error('❌ Session ID não encontrado na URL do checkout');
-        throw new Error('Session ID não encontrado');
-      }
-      
+      if (!sessionId) throw new Error('Session ID não encontrado');
       const transacoes = await base44.entities.Transacao.filter({ session_id: sessionId });
-      console.log('📦 Transações no checkout:', transacoes.length);
-      
-      if (transacoes.length === 0) {
-        throw new Error('Transação não encontrada');
-      }
-
+      if (transacoes.length === 0) throw new Error('Transação não encontrada');
       const currentTransacao = transacoes[0];
-
-      if (!currentTransacao.startups_selecionadas?.length) {
-        throw new Error('Nenhuma startup selecionada. Retorne à página de resultados.');
-      }
-
-      // 📊 TRACKING: Usuário chegou no checkout
+      if (!currentTransacao.startups_selecionadas?.length) throw new Error('Nenhuma startup selecionada. Retorne à página de resultados.');
       await base44.entities.Transacao.update(currentTransacao.id, {
         checkout_viewed_at: new Date().toISOString()
       });
-
       return currentTransacao;
     },
-    onSuccess: () => {
-      if (user?.email) setEmail(user.email);
-    },
     enabled: !!sessionId,
-    staleTime: 1 * 60 * 1000, // Cache por 1 minuto
+    staleTime: 1 * 60 * 1000,
   });
 
-  // React Query: Mutation para processar pagamento
-  const paymentMutation = useMutation({
-    mutationFn: async () => {
-      await base44.entities.Transacao.update(transacao.id, {
-        cliente_email: email.trim(),
-        cliente_nome: user?.full_name || email.split('@')[0],
-        cliente_cpf: cpf.replace(/\D/g, ''),
-        status_pagamento: 'processando'
-      });
-
-      const { data: paymentData } = await base44.functions.invoke('createPaymentLink', { sessionId });
-      
-      if (!paymentData.success || !paymentData.paymentUrl) {
-        throw new Error('Erro ao criar link de pagamento');
-      }
-
-      return paymentData.paymentUrl;
+  const { data: checkoutConfig } = useQuery({
+    queryKey: ['checkoutConfig'],
+    queryFn: async () => {
+      const { data } = await base44.functions.invoke('getCheckoutConfig', {});
+      return data;
     },
-    onSuccess: (paymentUrl) => {
-      // Abrir em nova aba para melhor compatibilidade mobile
-      const newWindow = window.open(paymentUrl, '_blank');
-      
-      // Fallback caso popup seja bloqueado
-      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-        window.location.href = paymentUrl;
-      }
-    },
-    onError: (error) => {
-      console.error('Erro no checkout:', error);
-      setErrorMessage('Erro ao processar pagamento. Tente novamente.');
-    }
+    enabled: !!transacao,
+    staleTime: 30 * 60 * 1000,
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage(null);
+  // Pré-preencher email do usuário
+  useEffect(() => {
+    if (user?.email && !email) setEmail(user.email);
+  }, [user]);
 
-    if (!email.trim()) {
-      setErrorMessage('Email é obrigatório');
-      return;
-    }
+  // Subscribe para detectar pagamento Pix confirmado automaticamente
+  useEffect(() => {
+    if (!pixData || !transacao?.id) return;
+    const unsubscribe = base44.entities.Transacao.subscribe((event) => {
+      if (event.id === transacao.id && event.data?.status_pagamento === 'pago') {
+        navigate(createPageUrl(`Sucesso?sessionId=${sessionId}`));
+      }
+    });
+    return unsubscribe;
+  }, [pixData, transacao?.id]);
 
+  const validarCampos = () => {
+    if (!email.trim()) { setErrorMessage('Email é obrigatório'); return false; }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setErrorMessage('Email inválido');
-      return;
-    }
-
+    if (!emailRegex.test(email)) { setErrorMessage('Email inválido'); return false; }
     const cpfLimpo = cpf.replace(/\D/g, '');
-    if (!cpfLimpo || cpfLimpo.length !== 11) {
-      setErrorMessage('CPF deve conter 11 dígitos');
-      return;
+    if (!cpfLimpo || cpfLimpo.length !== 11) { setErrorMessage('CPF deve conter 11 dígitos'); return false; }
+    return true;
+  };
+
+  const handlePaymentSubmit = async (formData) => {
+    setErrorMessage(null);
+    if (!validarCampos()) throw new Error('Campos inválidos');
+
+    const { data } = await base44.functions.invoke('processTransparentPayment', {
+      sessionId,
+      email: email.trim(),
+      cpf: cpf.replace(/\D/g, ''),
+      paymentFormData: formData
+    });
+
+    if (!data.success) {
+      const errMsg = data.error || 'Erro ao processar pagamento';
+      setErrorMessage(errMsg);
+      throw new Error(errMsg);
     }
 
-    await paymentMutation.mutateAsync();
+    if (data.status === 'approved') {
+      navigate(createPageUrl(`Sucesso?sessionId=${sessionId}`));
+    } else if (data.status === 'pending') {
+      setPixData({ qrCode: data.pixQrCode, qrCodeBase64: data.pixQrCodeBase64 });
+    }
+  };
+
+  const handleFreeCheckout = async () => {
+    setErrorMessage(null);
+    if (!validarCampos()) return;
+    setIsFreeProcessing(true);
+    const { data } = await base44.functions.invoke('processTransparentPayment', {
+      sessionId,
+      email: email.trim(),
+      cpf: cpf.replace(/\D/g, ''),
+      paymentFormData: { payment_method_id: 'free', transaction_amount: 0 }
+    });
+    setIsFreeProcessing(false);
+    if (data.success) navigate(createPageUrl(`Sucesso?sessionId=${sessionId}`));
+    else setErrorMessage(data.error || 'Erro ao processar');
   };
 
   const formatCPF = (value) => {
@@ -160,56 +159,42 @@ export default function Checkout() {
     return cpf;
   };
 
-  const handleCPFChange = (e) => {
-    const formatted = formatCPF(e.target.value);
-    setCpf(formatted);
+  const handleCPFChange = (e) => setCpf(formatCPF(e.target.value));
+
+  const copyPixCode = () => {
+    navigator.clipboard.writeText(pixData.qrCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const getAnonymizedTitle = (startup, index) => {
     const categoryMap = {
-      'gestao': 'Gestão',
-      'vendas': 'Vendas', 
-      'marketing': 'Marketing',
-      'financeiro': 'Financeiro',
-      'operacional': 'Operacional',
-      'rh': 'Recursos Humanos',
-      'tecnologia': 'Tecnologia',
-      'logistica': 'Logística'
+      'gestao': 'Gestão', 'vendas': 'Vendas', 'marketing': 'Marketing',
+      'financeiro': 'Financeiro', 'operacional': 'Operacional',
+      'rh': 'Recursos Humanos', 'tecnologia': 'Tecnologia', 'logistica': 'Logística'
     };
-    
-    const categoryName = startup.categoria ? (categoryMap[startup.categoria] || startup.categoria) : 'Solução';
-    return `${categoryName} #${index + 1}`;
+    return `${categoryMap[startup.categoria] || 'Solução'} #${index + 1}`;
   };
 
-  // Se for checkout adicional, mostrar apenas as startups adicionais
   const isAdicionalCheckout = transacao?.is_adicional_checkout || false;
   const adicionalCount = transacao?.adicional_startups_count || 0;
-  
+
   let selectedStartups;
   if (isAdicionalCheckout && adicionalCount > 0) {
-    // Pegar apenas as últimas N startups (as adicionais)
-    const allStartups = transacao?.startups_detalhadas || 
-                        transacao?.startups_sugeridas?.filter(s => 
-                          transacao.startups_selecionadas?.includes(s.startup_id)
-                        ) || [];
+    const allStartups = transacao?.startups_detalhadas ||
+      transacao?.startups_sugeridas?.filter(s => transacao.startups_selecionadas?.includes(s.startup_id)) || [];
     selectedStartups = allStartups.slice(-adicionalCount);
   } else {
-    selectedStartups = transacao?.startups_detalhadas || 
-                            transacao?.startups_sugeridas?.filter(s => 
-                              transacao.startups_selecionadas?.includes(s.startup_id)
-                            ) || [];
+    selectedStartups = transacao?.startups_detalhadas ||
+      transacao?.startups_sugeridas?.filter(s => transacao.startups_selecionadas?.includes(s.startup_id)) || [];
   }
 
   const valorPorStartup = transacao?.valor_por_startup || 5.00;
-  const quantidadeSelecionada = selectedStartups.length;
-  
-  // Primeira solução GRÁTIS apenas para novos usuários E apenas no checkout inicial
+  const quantidadeSelecionada = selectedStartups?.length || 0;
   const primeiraGratis = !isAdicionalCheckout && isNovoUsuario === true && quantidadeSelecionada >= 1;
-  let valorFinal = primeiraGratis 
+  let valorFinal = primeiraGratis
     ? Math.max(0, (quantidadeSelecionada - 1) * valorPorStartup)
     : quantidadeSelecionada * valorPorStartup;
-  
-  // Desconto de R$ 3,00 ao selecionar todas as 5 soluções (apenas checkout inicial)
   const descontoCincoSolucoes = !isAdicionalCheckout && quantidadeSelecionada === 5 ? 3.00 : 0;
   valorFinal = Math.max(0, valorFinal - descontoCincoSolucoes);
 
@@ -249,7 +234,7 @@ export default function Checkout() {
             {isAdicionalCheckout ? 'Desbloqueio de Soluções Adicionais' : 'Finalizar Pagamento'}
           </h1>
           <p className="text-slate-600">
-            {isAdicionalCheckout 
+            {isAdicionalCheckout
               ? `Confirme seu email para desbloquear mais ${selectedStartups.length} ${selectedStartups.length !== 1 ? 'soluções' : 'solução'}`
               : `Confirme seu email para desbloquear ${selectedStartups.length} ${selectedStartups.length !== 1 ? 'soluções' : 'solução'}`
             }
@@ -257,15 +242,15 @@ export default function Checkout() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* COLUNA ESQUERDA - Dados Simplificados */}
+          {/* COLUNA ESQUERDA */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="w-5 h-5" />
-                Confirme seu Email
+                Confirme seus Dados
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-2 block">
                   Email para receber os contatos *
@@ -275,13 +260,10 @@ export default function Checkout() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
-                  required
-                  disabled={paymentMutation.isLoading}
                   className="bg-white border-slate-200 text-lg"
+                  disabled={!!pixData}
                 />
-                <p className="text-xs text-slate-500 mt-2">
-                  Os contatos das startups serão enviados para este email
-                </p>
+                <p className="text-xs text-slate-500 mt-1">Os contatos das startups serão enviados para este email</p>
               </div>
 
               <div>
@@ -293,30 +275,26 @@ export default function Checkout() {
                   value={cpf}
                   onChange={handleCPFChange}
                   placeholder="000.000.000-00"
-                  required
-                  disabled={paymentMutation.isLoading}
                   maxLength={14}
                   className="bg-white border-slate-200 text-lg"
+                  disabled={!!pixData}
                 />
-                <p className="text-xs text-slate-500 mt-2">
-                  Exigido pelo Mercado Pago para processar o pagamento
-                </p>
+                <p className="text-xs text-slate-500 mt-1">Exigido para processar o pagamento</p>
               </div>
 
-              {/* SELOS DE CONFIANÇA */}
               <div className="bg-slate-50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-emerald-600" />
+                  <div className="w-9 h-9 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-slate-900 text-sm">Pagamento 100% Seguro</p>
-                    <p className="text-xs text-slate-600">Processado via Mercado Pago</p>
+                    <p className="text-xs text-slate-600">Processado via Mercado Pago — sem sair do app</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-blue-600" />
+                  <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-slate-900 text-sm">Acesso Instantâneo</p>
@@ -324,8 +302,8 @@ export default function Checkout() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-purple-600" />
+                  <div className="w-9 h-9 bg-purple-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-purple-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-slate-900 text-sm">Startups Verificadas</p>
@@ -335,35 +313,85 @@ export default function Checkout() {
               </div>
 
               {errorMessage && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-red-800">
-                    <AlertCircle className="w-4 h-4" />
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm font-medium">{String(errorMessage)}</span>
                   </div>
                 </div>
               )}
 
-              <Button
-                type="submit"
-                onClick={handleSubmit}
-                disabled={!email.trim() || !cpf.trim() || paymentMutation.isLoading || selectedStartups.length === 0}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-semibold"
-              >
-                {paymentMutation.isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Pagar R$ {valorFinal.toFixed(2).replace('.', ',')}
-                  </>
-                )}
-              </Button>
-              
+              {/* PIX QR CODE */}
+              {pixData && (
+                <div className="border border-emerald-200 bg-emerald-50 rounded-xl p-5 text-center space-y-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                    <span className="text-sm font-semibold text-emerald-700">Aguardando pagamento Pix...</span>
+                  </div>
+                  {pixData.qrCodeBase64 && (
+                    <img
+                      src={`data:image/png;base64,${pixData.qrCodeBase64}`}
+                      alt="QR Code Pix"
+                      className="mx-auto w-48 h-48 rounded-lg border border-emerald-200"
+                    />
+                  )}
+                  <div>
+                    <p className="text-xs text-slate-600 mb-2">Ou copie o código Pix copia e cola:</p>
+                    <div className="flex gap-2">
+                      <Input readOnly value={pixData.qrCode} className="text-xs bg-white" />
+                      <Button variant="outline" size="icon" onClick={copyPixCode} className="shrink-0">
+                        {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    O acesso será liberado automaticamente após a confirmação do pagamento.
+                  </p>
+                </div>
+              )}
+
+              {/* GRÁTIS */}
+              {!pixData && valorFinal === 0 && (
+                <Button
+                  onClick={handleFreeCheckout}
+                  disabled={isFreeProcessing}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-semibold"
+                >
+                  {isFreeProcessing ? (
+                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processando...</>
+                  ) : (
+                    <><CheckCircle className="w-5 h-5 mr-2" />Confirmar (Grátis!)</>
+                  )}
+                </Button>
+              )}
+
+              {/* MP BRICK */}
+              {!pixData && valorFinal > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    Forma de pagamento
+                  </p>
+                  {checkoutConfig?.publicKey ? (
+                    <MercadoPagoBrick
+                      publicKey={checkoutConfig.publicKey}
+                      amount={valorFinal}
+                      payerEmail={email}
+                      payerCpf={cpf}
+                      onSubmit={handlePaymentSubmit}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center py-8 gap-2">
+                      <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
+                      <span className="text-sm text-slate-600">Carregando opções de pagamento...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <p className="text-center text-xs text-slate-500">
-                Ao continuar, você concorda com nossos <a href={createPageUrl('TermosDeUso')} className="underline">Termos de Uso</a>
+                Ao continuar, você concorda com nossos{' '}
+                <a href={createPageUrl('TermosDeUso')} className="underline">Termos de Uso</a>
               </p>
             </CardContent>
           </Card>
@@ -382,50 +410,38 @@ export default function Checkout() {
                   <div className="flex items-center gap-3">
                     <Newspaper className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">
-                        {getAnonymizedTitle(startup, index)}
-                      </p>
+                      <p className="font-semibold text-slate-800 text-sm">{getAnonymizedTitle(startup, index)}</p>
                       <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs mt-1">
                         {startup.match_percentage}% match
                       </Badge>
                     </div>
                   </div>
-                  <p className="font-semibold text-slate-800">
-                    R$ {valorPorStartup.toFixed(2).replace('.', ',')}
-                  </p>
+                  <p className="font-semibold text-slate-800">R$ {valorPorStartup.toFixed(2).replace('.', ',')}</p>
                 </div>
               ))}
-              
+
               <div className="border-t border-slate-200 pt-4 space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600">Subtotal ({quantidadeSelecionada} {quantidadeSelecionada === 1 ? 'solução' : 'soluções'})</span>
-                  <span className="text-slate-900">
-                    R$ {(quantidadeSelecionada * valorPorStartup).toFixed(2).replace('.', ',')}
-                  </span>
+                  <span className="text-slate-900">R$ {(quantidadeSelecionada * valorPorStartup).toFixed(2).replace('.', ',')}</span>
                 </div>
-                
                 {primeiraGratis && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-emerald-600 font-semibold">🎁 Primeira solução GRÁTIS</span>
                     <span className="text-emerald-600 font-semibold">- R$ {valorPorStartup.toFixed(2).replace('.', ',')}</span>
                   </div>
                 )}
-                
                 {descontoCincoSolucoes > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-emerald-600 font-semibold">🎉 Desconto 5 soluções</span>
                     <span className="text-emerald-600 font-semibold">- R$ {descontoCincoSolucoes.toFixed(2).replace('.', ',')}</span>
                   </div>
                 )}
-                
                 <div className="flex justify-between items-center text-xl font-bold pt-2">
                   <span>Total:</span>
-                  <span className="text-emerald-600">
-                    R$ {valorFinal.toFixed(2).replace('.', ',')}
-                  </span>
+                  <span className="text-emerald-600">R$ {valorFinal.toFixed(2).replace('.', ',')}</span>
                 </div>
-                
-                {quantidadeSelecionada === 1 && (
+                {quantidadeSelecionada === 1 && primeiraGratis && (
                   <p className="text-xs text-emerald-600 text-center mt-2">
                     🎉 Sua primeira solução é totalmente gratuita!
                   </p>
