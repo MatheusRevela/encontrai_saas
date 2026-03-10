@@ -27,6 +27,9 @@ ${i + 1}. **${s.nome} (ID: ${s.id})**
    - Modelo de Negócio: ${s.modelo_negocio || 'N/A'}
    - Descrição: ${s.descricao}
    - Tags: ${(s.tags || []).map(tag => tag.normalize('NFC')).join(', ') || 'N/A'}
+   - Rating de Mercado: ${s.avaliacao_qualitativa?.rating_final || 'N/A'} (escala CCC- a AAA)
+   - Satisfação de Clientes: ${s.satisfaction_score ?? 80}%
+   - Casos de Sucesso: ${s.casos_de_sucesso || 0}
 `).join('\n')}
 
 ### PROCESSO DE ANÁLISE E SELEÇÃO (SEGUIR RIGOROSAMENTE)
@@ -43,6 +46,7 @@ Para cada startup pré-selecionada, calcule um \`match_percentage\` (0 a 100) co
 - **Adequação ao Perfil do Cliente (35%):** É compatível com o porte (PME/PF), maturidade, contexto e orçamento implícito?
 - **Custo-Benefício e ROI (15%):** O valor gerado justifica claramente o investimento? Para PMEs, priorize ROI tangível e mensurável.
 - **Facilidade de Implementação (5%):** É simples e rápida de adotar para este perfil?
+- **Credibilidade da Solução (bônus até +5pts):** Startups com rating AAA/AA/A e alto satisfaction_score têm preferência em empates. O rating (CCC- a AAA) reflete avaliação de especialistas sobre equipe, tração, modelo e qualidade comercial. Ratings mais altos indicam soluções mais confiáveis e com maior histórico de sucesso com clientes.
 
 **IMPORTANTE:** Se houver insights contextuais ou filtros aplicados, dê peso adicional a startups que se alinham com esses critérios.
 
