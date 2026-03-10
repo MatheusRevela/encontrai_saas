@@ -58,6 +58,13 @@ export default function Sucesso() {
       }
 
       const transacaoAtual = transacoes[0];
+
+      // Para checkout adicional, registrar quais IDs são novos para exibir só esses
+      if (transacaoAtual.is_adicional_checkout && transacaoAtual.adicional_startups_count > 0) {
+        const todasDesbloqueadas = transacaoAtual.startups_desbloqueadas || [];
+        const novasIds = todasDesbloqueadas.slice(-transacaoAtual.adicional_startups_count).map(s => s.startup_id);
+        setStartupsNovasIds(novasIds);
+      }
       
       // Se não está pago ainda, tentar verificar o status no Mercado Pago
       if (transacaoAtual.status_pagamento !== 'pago') {
