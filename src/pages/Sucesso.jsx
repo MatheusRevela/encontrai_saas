@@ -149,17 +149,14 @@ export default function Sucesso() {
     );
   }
 
-  if (!transacao?.startups_desbloqueadas?.length) {
+  if (transacao?.status_pagamento === 'pago' && !transacao?.startups_desbloqueadas?.length) {
+    // Pagamento confirmado mas startups ainda não propagaram — aguardar
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="text-center p-8">
-            <p className="text-amber-600 mb-4">Nenhuma solução desbloqueada encontrada.</p>
-            <Link to={createPageUrl('MinhasBuscas')}>
-              <Button variant="outline">Voltar às Minhas Buscas</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Desbloqueando suas soluções...</p>
+        </div>
       </div>
     );
   }
