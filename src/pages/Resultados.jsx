@@ -213,7 +213,7 @@ export default function Resultados() {
         throw new Error('Transação não encontrada');
       }
       
-      const todasStartups = await base44.entities.Startup.filter({ ativo: true });
+      const todasStartups = await StartupRepo.getAtivas();
 
       if (todasStartups.length === 0) {
         throw new Error('Nenhuma startup ativa encontrada na base de dados.');
@@ -227,12 +227,9 @@ export default function Resultados() {
       // Excluir startups já compradas pelo usuário em sessões anteriores
       let idsJaComprados = [];
       try {
-        const user = await base44.auth.me();
+        const user = await UserRepo.me();
         if (user) {
-          const comprasAnteriores = await base44.entities.Transacao.filter({
-            created_by: user.email,
-            status_pagamento: 'pago'
-          });
+          const comprasAnteriores = await TransacaoRepo.getPagasByUser(user.email);
           idsJaComprados = comprasAnteriores.flatMap(t =>
             (t.startups_desbloqueadas || []).map(s => s.startup_id)
           );
