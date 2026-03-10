@@ -24,7 +24,7 @@ import { motion } from 'framer-motion';
 import BuscaLoadingAnimation from '../components/common/BuscaLoadingAnimation';
 import BuscaInterativa from '../components/busca/BuscaInterativa';
 import FiltrosAvancados from '../components/busca/FiltrosAvancados';
-import { buildMatchingPrompt, buildMatchingJsonSchema } from '../components/utils/promptBuilder';
+import { buildMatchingPrompt, buildMatchingJsonSchema, prefiltrarStartups } from '../components/utils/promptBuilder';
 
 export default function Resultados() {
   const [selectedStartups, setSelectedStartups] = useState([]);
