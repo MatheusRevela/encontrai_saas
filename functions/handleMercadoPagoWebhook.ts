@@ -148,16 +148,6 @@ Deno.serve(async (req) => {
             return new Response('Already processed', { status: 200, headers: corsHeaders });
         }
 
-        const newStatus = payment.status === 'approved' ? 'pago' :
-            payment.status === 'in_process' ? 'processando' :
-            payment.status === 'rejected' ? 'cancelado' : 'pendente';
-
-        await base44.asServiceRole.entities.Transacao.update(transaction.id, {
-            mp_payment_id: payment.id.toString(),
-            mp_payment_status: payment.status,
-            status_pagamento: newStatus
-        });
-
         if (payment.status === 'approved') {
             const tipoTransacao = payment.metadata?.tipo;
 
@@ -185,7 +175,11 @@ Deno.serve(async (req) => {
                     if (indexExistente >= 0) similaresDesbloqueadas[indexExistente] = novoRegistro;
                     else similaresDesbloqueadas.push(novoRegistro);
 
+                    // Atualiza status e similares em uma única chamada atômica
                     await base44.asServiceRole.entities.Transacao.update(transaction.id, {
+                        mp_payment_id: payment.id.toString(),
+                        mp_payment_status: payment.status,
+                        status_pagamento: 'pago',
                         similares_desbloqueadas: similaresDesbloqueadas
                     });
                 }
@@ -202,12 +196,27 @@ Deno.serve(async (req) => {
                     logo_url: s.logo_url, avaliacao_qualitativa: s.avaliacao_qualitativa
                 }));
 
+                // Atualiza status e startups_desbloqueadas em uma única chamada atômica
+                // Isso evita race condition: polling detecta 'pago' só depois que startups já estão desbloqueadas
                 await base44.asServiceRole.entities.Transacao.update(transaction.id, {
+                    mp_payment_id: payment.id.toString(),
+                    mp_payment_status: payment.status,
+                    status_pagamento: 'pago',
                     startups_desbloqueadas: unlockedStartups
                 });
 
                 await sendSuccessEmail(base44, transaction, unlockedStartups);
             }
+        } else {
+            // Para status não-aprovado, apenas atualiza o status
+            const newStatus = payment.status === 'in_process' ? 'processando' :
+                payment.status === 'rejected' ? 'cancelado' : 'pendente';
+
+            await base44.asServiceRole.entities.Transacao.update(transaction.id, {
+                mp_payment_id: payment.id.toString(),
+                mp_payment_status: payment.status,
+                status_pagamento: newStatus
+            });
         }
 
         return new Response('OK', { status: 200, headers: corsHeaders });
