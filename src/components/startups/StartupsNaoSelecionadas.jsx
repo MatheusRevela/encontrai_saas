@@ -20,6 +20,7 @@ import { motion } from 'framer-motion';
 export default function StartupsNaoSelecionadas({ transacao }) {
   const [selectedStartups, setSelectedStartups] = useState([]);
   const [processandoPagamento, setProcessandoPagamento] = useState(false);
+  const navigate = useNavigate();
 
   // Filtrar startups que foram sugeridas mas NÃO foram selecionadas/desbloqueadas
   const startupsNaoDesbloqueadas = (transacao?.startups_sugeridas || []).filter(sugerida => {
