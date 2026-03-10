@@ -412,6 +412,22 @@ export default function Sucesso() {
           </motion.div>
         )}
 
+        {/* Link para ver todas quando é checkout adicional */}
+        {startupsNovasIds && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mb-8 text-center"
+          >
+            <Link to={createPageUrl(`DetalhesBusca?id=${transacao.id}`)}>
+              <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+                Ver todas as {transacao.startups_desbloqueadas.length} soluções desta busca →
+              </Button>
+            </Link>
+          </motion.div>
+        )}
+
         {/* Seção de Avaliação */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
