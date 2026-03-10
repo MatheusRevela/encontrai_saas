@@ -82,12 +82,15 @@ Deno.serve(async (req) => {
         if (searchData.results && searchData.results.length > 0) {
             const approvedPayment = searchData.results[0];
 
-            // Buscar APENAS as startups necessárias (não full table scan)
-            const startups = await base44.asServiceRole.entities.Startup.filter({
-                id: { $in: transacao.startups_selecionadas || [] }
-            });
+            // APPEND: só desbloquear as que ainda não foram desbloqueadas
+            const jaDesbloquedosIds = new Set((transacao.startups_desbloqueadas || []).map(s => s.startup_id));
+            const novosIds = (transacao.startups_selecionadas || []).filter(id => !jaDesbloquedosIds.has(id));
 
-            const unlockedStartups = startups.map(s => ({
+            const startups = novosIds.length > 0
+                ? await base44.asServiceRole.entities.Startup.filter({ id: { $in: novosIds } })
+                : [];
+
+            const novasDesbloqueadas = startups.map(s => ({
                 startup_id: s.id,
                 nome: s.nome,
                 descricao: s.descricao,
@@ -102,9 +105,11 @@ Deno.serve(async (req) => {
                 logo_url: s.logo_url
             }));
 
+            const todasDesbloqueadas = [...(transacao.startups_desbloqueadas || []), ...novasDesbloqueadas];
+
             await base44.asServiceRole.entities.Transacao.update(transacao.id, {
                 status_pagamento: 'pago',
-                startups_desbloqueadas: unlockedStartups,
+                startups_desbloqueadas: todasDesbloqueadas,
                 mp_payment_id: String(approvedPayment.id),
                 mp_payment_status: approvedPayment.status
             });
