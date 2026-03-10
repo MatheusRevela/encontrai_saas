@@ -39,6 +39,9 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
 
   useEffect(() => {
     carregarSimilares();
+    // Pré-carregar config do checkout e email do usuário
+    base44.auth.me().then(u => { if (u?.email) setEmail(u.email); }).catch(() => {});
+    base44.functions.invoke('getCheckoutConfig', {}).then(r => setCheckoutConfig(r?.data)).catch(() => {});
   }, [startupOriginal.startup_id, transacaoId]);
 
   const carregarSimilares = async () => {
