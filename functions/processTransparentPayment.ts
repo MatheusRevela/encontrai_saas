@@ -22,11 +22,17 @@ const calcularValor = (quantidade, isNovoUsuario, isAdicional) => {
 const unlockAndNotify = async (base44, transaction, emailCliente, nomeCliente) => {
     if (!transaction.startups_selecionadas?.length) return;
 
+    // Identificar apenas as startups ainda não desbloqueadas
+    const jaDesbloquedosIds = new Set((transaction.startups_desbloqueadas || []).map(s => s.startup_id));
+    const novosIds = transaction.startups_selecionadas.filter(id => !jaDesbloquedosIds.has(id));
+
+    if (novosIds.length === 0) return;
+
     const startups = await base44.asServiceRole.entities.Startup.filter({
-        id: { $in: transaction.startups_selecionadas }
+        id: { $in: novosIds }
     });
 
-    const unlockedStartups = startups.map(s => ({
+    const novasDesbloqueadas = startups.map(s => ({
         startup_id: s.id, nome: s.nome, descricao: s.descricao,
         categoria: s.categoria, vertical_atuacao: s.vertical_atuacao,
         modelo_negocio: s.modelo_negocio, site: s.site, email: s.email,
@@ -34,16 +40,19 @@ const unlockAndNotify = async (base44, transaction, emailCliente, nomeCliente) =
         logo_url: s.logo_url, avaliacao_qualitativa: s.avaliacao_qualitativa
     }));
 
+    // APPEND às já desbloqueadas (não substitui)
+    const todasDesbloqueadas = [...(transaction.startups_desbloqueadas || []), ...novasDesbloqueadas];
+
     await base44.asServiceRole.entities.Transacao.update(transaction.id, {
-        startups_desbloqueadas: unlockedStartups
+        startups_desbloqueadas: todasDesbloqueadas
     });
 
-    if (emailCliente) {
-        const corpo = `Olá ${nomeCliente || 'Cliente'},\n\nSeu pagamento foi confirmado! Aqui estão os contatos:\n\n${unlockedStartups.map(s => `🏢 ${s.nome}\n${s.email ? `📧 ${s.email}` : ''}\n${s.whatsapp ? `📱 ${s.whatsapp}` : ''}\n${s.site ? `🌐 ${s.site}` : ''}\n---`).join('\n')}\n\nAcesse: ${ALLOWED_ORIGIN}/DetalhesBusca?id=${transaction.id}`;
+    if (emailCliente && novasDesbloqueadas.length > 0) {
+        const corpo = `Olá ${nomeCliente || 'Cliente'},\n\nSeu pagamento foi confirmado! Aqui estão os contatos:\n\n${novasDesbloqueadas.map(s => `🏢 ${s.nome}\n${s.email ? `📧 ${s.email}` : ''}\n${s.whatsapp ? `📱 ${s.whatsapp}` : ''}\n${s.site ? `🌐 ${s.site}` : ''}\n---`).join('\n')}\n\nAcesse: ${ALLOWED_ORIGIN}/DetalhesBusca?id=${transaction.id}`;
         try {
             await base44.asServiceRole.integrations.Core.SendEmail({
                 to: emailCliente,
-                subject: `🎉 Suas ${unlockedStartups.length} solução${unlockedStartups.length > 1 ? 'ões' : ''} ${unlockedStartups.length > 1 ? 'foram' : 'foi'} desbloqueada${unlockedStartups.length > 1 ? 's' : ''}!`,
+                subject: `🎉 Suas ${novasDesbloqueadas.length} solução${novasDesbloqueadas.length > 1 ? 'ões' : ''} ${novasDesbloqueadas.length > 1 ? 'foram' : 'foi'} desbloqueada${novasDesbloqueadas.length > 1 ? 's' : ''}!`,
                 body: corpo
             });
         } catch (e) {
