@@ -17,6 +17,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Parâmetros obrigatórios faltando' }, { status: 400 });
     }
 
+    // Rate limiting: máx 8 chamadas LLM por usuário por hora
+    const kv = await Deno.openKv();
+    const hourBucket = Math.floor(Date.now() / (1000 * 60 * 60));
+    const rlKey = ['rl', 'gerarSimilares', user.email, hourBucket];
+    const { value: callCount } = await kv.get(rlKey);
+    if ((callCount || 0) >= 8) {
+      return Response.json({
+        error: 'Limite de chamadas atingido. Aguarde alguns minutos e tente novamente.'
+      }, { status: 429 });
+    }
+    await kv.set(rlKey, (callCount || 0) + 1, { expireIn: 3600000 });
+
     const transacao = await base44.asServiceRole.entities.Transacao.get(transacao_id);
     if (!transacao) {
       return Response.json({ error: 'Transação não encontrada' }, { status: 404 });

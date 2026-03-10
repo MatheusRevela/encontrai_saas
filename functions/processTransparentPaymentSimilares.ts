@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ⚠️ Preço de similares — específico para este fluxo (valor diferente de calcularPreco.ts)
 const PRECO_SIMILAR = 4.00;
-const ALLOWED_ORIGIN = 'https://encontrai.com';
+const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') || 'https://encontrai.com';
 const corsHeaders = {
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',

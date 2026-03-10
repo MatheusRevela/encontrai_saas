@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-const ALLOWED_ORIGIN = 'https://encontrai.com';
+const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') || 'https://encontrai.com';
 const corsHeaders = {
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         await base44.entities.Transacao.update(transacao.id, {
             cliente_email: email.trim(),
             cliente_nome: nomeCliente,
-            cliente_cpf: cpfLimpo,
+            // LGPD: CPF não é persistido em banco — enviado apenas inline ao MP
             status_pagamento: 'processando'
         });
 
