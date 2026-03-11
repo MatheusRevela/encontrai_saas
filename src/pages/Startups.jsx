@@ -384,21 +384,19 @@ export default function Startups() {
 • Cadastro manual: ${dados.por_origem.manual}
 • Importação CSV: ${dados.por_origem.csv_import}
 
-⭐ AVALIAÇÕES DE ESPECIALISTA:
+🏅 RATING QUALITATIVO (C a AAA):
 • Avaliadas: ${dados.avaliacoes_especialista.avaliadas}
 • Não avaliadas: ${dados.avaliacoes_especialista.nao_avaliadas}
-• 5 estrelas: ${dados.avaliacoes_especialista.por_nota.cinco_estrelas}
-• 4 estrelas: ${dados.avaliacoes_especialista.por_nota.quatro_estrelas}
-• 3 estrelas: ${dados.avaliacoes_especialista.por_nota.tres_estrelas}
-• 2 estrelas: ${dados.avaliacoes_especialista.por_nota.duas_estrelas}
-• 1 estrela: ${dados.avaliacoes_especialista.por_nota.uma_estrela}
+• Faixa Alta (A a AAA): ${dados.avaliacoes_especialista.por_faixa?.alto ?? 'N/A'}
+• Faixa Média (B a BBB+): ${dados.avaliacoes_especialista.por_faixa?.medio ?? 'N/A'}
+• Faixa Baixa (C a CCC+): ${dados.avaliacoes_especialista.por_faixa?.baixo ?? 'N/A'}
 
 ⚠️ POSSÍVEIS PROBLEMAS:
 • Problema de RLS: ${dados.possivel_problema_rls ? 'SIM' : 'NÃO'}
 • Startups ocultas: ${dados.diferenca_rls}
 
 📝 ÚLTIMAS 10 CRIADAS:
-${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'}) - ${s.avaliacao_especialista ? s.avaliacao_especialista + '⭐' : 'não avaliada'} - ${new Date(s.created_date).toLocaleDateString()}`).join('\n')}
+${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'}) - ${s.rating ? 'Rating: ' + s.rating : 'não avaliada'} - ${new Date(s.created_date).toLocaleDateString()}`).join('\n')}
       `;
 
       toast.success(`Diagnóstico: ${dados.ativas} ativas / ${dados.inativas} inativas de ${dados.total_completo} total`);
