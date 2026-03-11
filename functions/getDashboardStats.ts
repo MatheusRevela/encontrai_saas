@@ -22,11 +22,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Buscar dados em paralelo
+    // Buscar dados em paralelo com limites para evitar timeout de CPU
     const [usersData, transacoesData, startupsData] = await Promise.all([
-      base44.asServiceRole.entities.User.list(),
-      base44.asServiceRole.entities.Transacao.list('-created_date'),
-      base44.asServiceRole.entities.Startup.list()
+      base44.asServiceRole.entities.User.list('-created_date', 500),
+      base44.asServiceRole.entities.Transacao.list('-created_date', 1000),
+      base44.asServiceRole.entities.Startup.list('-created_date', 2000)
     ]);
 
     // Calcular stats principais

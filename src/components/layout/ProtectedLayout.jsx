@@ -125,9 +125,21 @@ export default function ProtectedLayout({ children, pageName }) {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const userData = await base44.auth.me();
-        setUser(userData);
-        setIsLoading(false);
+        // Tenta usar cache do sessionStorage para evitar chamada de rede em toda navegação
+        const CACHE_KEY = 'encontrai_user_cache';
+        const cached = sessionStorage.getItem(CACHE_KEY);
+        let userData;
+
+        if (cached) {
+          userData = JSON.parse(cached);
+          setUser(userData);
+          setIsLoading(false);
+        } else {
+          userData = await base44.auth.me();
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+          setUser(userData);
+          setIsLoading(false);
+        }
         
         // 🎯 ROLE-BASED HOMEPAGE
         if (location.pathname === '/' || location.pathname === '/index') {
@@ -148,7 +160,8 @@ export default function ProtectedLayout({ children, pageName }) {
           navigate(createPageUrl('DashboardUsuario'), { replace: true });
         }
       } catch (e) {
-        // Usuário não autenticado - redireciona imediatamente
+        // Usuário não autenticado - limpa cache e redireciona
+        sessionStorage.removeItem('encontrai_user_cache');
         setIsLoading(false);
         const publicUrl = createPageUrl('Home');
         window.location.replace(publicUrl);
