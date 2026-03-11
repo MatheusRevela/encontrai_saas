@@ -84,62 +84,62 @@ export default function EstruturaAprendizado() {
   // Mutations
   const createMacroMutation = useMutation({
     mutationFn: (data) => base44.entities.Macrocaixa.create(data),
-    onSuccess: () => queryClient.invalidateQueries(['macrocaixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['macrocaixas'] })
   });
 
   const updateMacroMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Macrocaixa.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['macrocaixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['macrocaixas'] })
   });
 
   const deleteMacroMutation = useMutation({
     mutationFn: (id) => base44.entities.Macrocaixa.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['macrocaixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['macrocaixas'] })
   });
 
   const createCaixaMutation = useMutation({
     mutationFn: (data) => base44.entities.Caixa.create(data),
-    onSuccess: () => queryClient.invalidateQueries(['caixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['caixas'] })
   });
 
   const updateCaixaMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Caixa.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['caixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['caixas'] })
   });
 
   const deleteCaixaMutation = useMutation({
     mutationFn: (id) => base44.entities.Caixa.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['caixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['caixas'] })
   });
 
   const createMicroMutation = useMutation({
     mutationFn: (data) => base44.entities.Microcaixa.create(data),
-    onSuccess: () => queryClient.invalidateQueries(['microcaixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['microcaixas'] })
   });
 
   const updateMicroMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Microcaixa.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['microcaixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['microcaixas'] })
   });
 
   const deleteMicroMutation = useMutation({
     mutationFn: (id) => base44.entities.Microcaixa.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['microcaixas'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['microcaixas'] })
   });
 
   const createConteudoMutation = useMutation({
     mutationFn: (data) => base44.entities.Conteudo.create(data),
-    onSuccess: () => queryClient.invalidateQueries(['conteudos'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['conteudos'] })
   });
 
   const updateConteudoMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Conteudo.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['conteudos'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['conteudos'] })
   });
 
   const deleteConteudoMutation = useMutation({
     mutationFn: (id) => base44.entities.Conteudo.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['conteudos'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['conteudos'] })
   });
 
   const toggleMacro = (id) => {

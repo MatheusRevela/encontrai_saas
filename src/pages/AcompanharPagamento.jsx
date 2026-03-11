@@ -63,13 +63,7 @@ export default function AcompanharPagamento() {
   const finalizarTransacao = () => {
     // A confirmação do pagamento e desbloqueio de startups é feita 100% pelo backend via webhook.
     // O frontend apenas redireciona para a página de sucesso.
-    navigate(createPageUrl("Sucesso"), {
-      state: { 
-        sessionId,
-        startups,
-        valorPago: valorTotal
-      }
-    });
+    navigate(createPageUrl(`Sucesso?sessionId=${sessionId}`));
   };
 
   const getStatusInfo = () => {
@@ -80,7 +74,9 @@ export default function AcompanharPagamento() {
           icon: <Clock className="w-8 h-8 text-amber-500" />,
           title: 'Aguardando Pagamento',
           description: 'Sua cobrança foi gerada. Clique no link para pagar via Mercado Pago.',
-          color: 'amber'
+          cardClass: 'bg-amber-50 border-amber-200',
+          titleClass: 'text-amber-900',
+          descClass: 'text-amber-700'
         };
       case 'approved':
       case 'pago':
@@ -88,7 +84,9 @@ export default function AcompanharPagamento() {
           icon: <CheckCircle className="w-8 h-8 text-emerald-500" />,
           title: 'Pagamento Confirmado!',
           description: 'Seu pagamento foi aprovado. Redirecionando para os contatos...',
-          color: 'emerald'
+          cardClass: 'bg-emerald-50 border-emerald-200',
+          titleClass: 'text-emerald-900',
+          descClass: 'text-emerald-700'
         };
       case 'rejected':
       case 'cancelled':
@@ -96,14 +94,18 @@ export default function AcompanharPagamento() {
           icon: <AlertCircle className="w-8 h-8 text-red-500" />,
           title: 'Pagamento Não Aprovado',
           description: 'O pagamento foi recusado. Faça uma nova busca para tentar novamente.',
-          color: 'red'
+          cardClass: 'bg-red-50 border-red-200',
+          titleClass: 'text-red-900',
+          descClass: 'text-red-700'
         };
       default:
         return {
           icon: <Clock className="w-8 h-8 text-slate-500" />,
           title: 'Verificando Status...',
           description: 'Aguarde enquanto verificamos seu pagamento.',
-          color: 'slate'
+          cardClass: 'bg-slate-50 border-slate-200',
+          titleClass: 'text-slate-900',
+          descClass: 'text-slate-700'
         };
     }
   };
@@ -138,15 +140,15 @@ export default function AcompanharPagamento() {
         </div>
 
         {/* Status Card */}
-        <Card className={`border-0 shadow-xl bg-${statusInfo.color}-50 border-${statusInfo.color}-200 mb-8`}>
+        <Card className={`border-0 shadow-xl ${statusInfo.cardClass} mb-8`}>
           <CardContent className="p-8 text-center">
             <div className="mb-4">
               {statusInfo.icon}
             </div>
-            <h2 className={`text-2xl font-bold text-${statusInfo.color}-900 mb-2`}>
+            <h2 className={`text-2xl font-bold ${statusInfo.titleClass} mb-2`}>
               {statusInfo.title}
             </h2>
-            <p className={`text-${statusInfo.color}-700 mb-6`}>
+            <p className={`${statusInfo.descClass} mb-6`}>
               {statusInfo.description}
             </p>
             
