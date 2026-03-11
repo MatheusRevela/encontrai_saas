@@ -93,7 +93,7 @@ export default function StartupCard({ startup, onEdit, onDelete, onToggleStatus,
             )}
             
             <p className="text-xs text-purple-700 mt-1">
-              Baseado em: equipe, investimentos, fundadores, funcionários e carteira de clientes
+              Equipe · Tese e Modelo · Tração · Qualidade Comercial
             </p>
           </div>
         </CardHeader>

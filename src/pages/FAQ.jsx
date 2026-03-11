@@ -20,8 +20,8 @@ const faqs = [
   },
   {
     icon: Star,
-    question: "O que é a avaliação de especialista que vocês fazem?",
-    answer: "Cada startup é avaliada individualmente por especialistas de mercado em uma escala de 1 a 5 estrelas. Consideramos fatores como qualidade da equipe, investimentos recebidos, experiência dos fundadores, quantidade de funcionários e qualidade da carteira de clientes. Essa avaliação complementa nosso algoritmo de IA, oferecendo uma perspectiva humana especializada sobre a real capacidade de execução de cada empresa."
+    question: "O que é o Rating Qualitativo que vocês fazem?",
+    answer: "Cada startup é avaliada individualmente por especialistas de mercado em um sistema de rating que vai de C a AAA (similar ao rating de crédito de mercado). A avaliação considera quatro blocos: Equipe (tempo de mercado, experiência com captação e histórico empreendedor), Tese e Modelo de Negócios (escalabilidade e barreira de entrada), Tração (sinais públicos e provas sociais) e Qualidade Comercial (fluidez de navegação e clareza das informações). Esse rating complementa nosso algoritmo de IA, oferecendo uma perspectiva humana especializada sobre a real capacidade de execução de cada empresa."
   },
   {
     icon: CreditCard,

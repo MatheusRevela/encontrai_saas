@@ -51,16 +51,17 @@ Deno.serve(async (req) => {
     };
     console.log(`📝 Por origem - Manual: ${porOrigem.manual}, CSV: ${porOrigem.csv_import}`);
     
-    // 5. Verificar avaliações de especialista
+    // 5. Verificar avaliações qualitativas (rating C a AAA)
+    const ratingsAltos = ['AAA', 'AA+', 'AA', 'AA-', 'A'];
+    const ratingsMedios = ['BBB+', 'BBB', 'BBB-', 'BB', 'B+', 'B', 'B-'];
+    const ratingsBaixos = ['CCC+', 'CCC', 'CCC-', 'CC', 'C'];
     const avaliacoes = {
-      avaliadas: todasStartups.filter(s => s.avaliacao_especialista && s.avaliacao_especialista > 0).length,
-      nao_avaliadas: todasStartups.filter(s => !s.avaliacao_especialista || s.avaliacao_especialista === 0).length,
-      por_nota: {
-        cinco_estrelas: todasStartups.filter(s => s.avaliacao_especialista === 5).length,
-        quatro_estrelas: todasStartups.filter(s => s.avaliacao_especialista === 4).length,
-        tres_estrelas: todasStartups.filter(s => s.avaliacao_especialista === 3).length,
-        duas_estrelas: todasStartups.filter(s => s.avaliacao_especialista === 2).length,
-        uma_estrela: todasStartups.filter(s => s.avaliacao_especialista === 1).length
+      avaliadas: todasStartups.filter(s => s.avaliacao_qualitativa?.rating_final).length,
+      nao_avaliadas: todasStartups.filter(s => !s.avaliacao_qualitativa?.rating_final).length,
+      por_faixa: {
+        alto: todasStartups.filter(s => ratingsAltos.includes(s.avaliacao_qualitativa?.rating_final)).length,
+        medio: todasStartups.filter(s => ratingsMedios.includes(s.avaliacao_qualitativa?.rating_final)).length,
+        baixo: todasStartups.filter(s => ratingsBaixos.includes(s.avaliacao_qualitativa?.rating_final)).length
       }
     };
     
@@ -72,7 +73,7 @@ Deno.serve(async (req) => {
         nome: s.nome,
         ativo: s.ativo,
         origem: s.origem_criacao || 'manual',
-        avaliacao: s.avaliacao_especialista || 0,
+        rating: s.avaliacao_qualitativa?.rating_final || null,
         created_date: s.created_date
       }));
 
@@ -105,6 +106,7 @@ Deno.serve(async (req) => {
       ativas: relatorio.ativas,
       avaliadas: relatorio.avaliacoes_especialista.avaliadas
     });
+    // avaliadas = avaliacao_qualitativa presente
 
     return new Response(JSON.stringify(relatorio), {
       status: 200,
