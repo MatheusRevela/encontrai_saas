@@ -29,8 +29,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log("🔍 BUSCA AVANÇADA POR STARTUPS PERDIDAS...");
-    
     const resultados = {
       encontradas: [],
       fontes_verificadas: []

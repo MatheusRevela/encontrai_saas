@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '@/functions/getDashboardStats';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
@@ -7,36 +8,17 @@ import AbandonedCartFunnel from '../components/growth/AbandonedCartFunnel';
 import FeedbackStream from '../components/growth/FeedbackStream';
 
 export default function Growth() {
-  const [metrics, setMetrics] = useState({
-    conversion_rate: 0,
-    avg_time_to_convert: 0,
-    cart_abandonment_rate: 0,
-    returning_users: 0
+  const { data, isLoading } = useQuery({
+    queryKey: ['dashboard-stats-growth'],
+    queryFn: () => getDashboardStats({}),
   });
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadMetrics();
-  }, []);
-
-  const loadMetrics = async () => {
-    setIsLoading(true);
-    try {
-      const res = await getDashboardStats({});
-      const gm = res.data?.growthMetrics;
-      if (gm) {
-        setMetrics({
-          conversion_rate: gm.conversion_rate ?? 0,
-          avg_time_to_convert: gm.avg_time_to_convert ?? 0,
-          cart_abandonment_rate: gm.cart_abandonment_rate ?? 0,
-          returning_users: gm.returning_users ?? 0
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao carregar métricas:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const gm = data?.data?.growthMetrics;
+  const metrics = {
+    conversion_rate: gm?.conversion_rate ?? 0,
+    avg_time_to_convert: gm?.avg_time_to_convert ?? 0,
+    cart_abandonment_rate: gm?.cart_abandonment_rate ?? 0,
+    returning_users: gm?.returning_users ?? 0,
   };
 
   if (isLoading) {

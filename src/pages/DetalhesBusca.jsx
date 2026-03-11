@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -57,68 +58,47 @@ const ProximosPassosCard = () => (
 export default function DetalhesBusca() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [busca, setBusca] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [startupsCompletas, setStartupsCompletas] = useState({});
+  const transactionId = searchParams.get('id');
 
-  useEffect(() => {
-    const transactionId = searchParams.get('id');
-    if (!transactionId) {
-      setError("ID da busca não fornecido.");
-      setIsLoading(false);
-      return;
-    }
+  const { data: busca, isLoading, error } = useQuery({
+    queryKey: ['transacao', transactionId],
+    queryFn: () => base44.entities.Transacao.get(transactionId),
+    enabled: !!transactionId,
+  });
 
-    const loadBusca = async () => {
-      setIsLoading(true);
-      try {
-        const data = await base44.entities.Transacao.get(transactionId);
-        if (!data) {
-          setError("Busca não encontrada ou você não tem permissão para acessá-la.");
-        } else {
-          setBusca(data);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar busca:", err);
-        setError("Ocorreu um erro ao carregar os detalhes da sua busca.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadBusca();
-  }, [searchParams]);
+  const { data: startupsCompletas = {} } = useQuery({
+    queryKey: ['startup-ratings', busca?.id],
+    queryFn: async () => {
+      const ratings = {};
+      const sem = busca.startups_desbloqueadas?.filter(s => !s.avaliacao_qualitativa) || [];
+      await Promise.all(sem.map(async (startup) => {
+        const s = await base44.entities.Startup.get(startup.startup_id);
+        if (s?.avaliacao_qualitativa) ratings[startup.startup_id] = s.avaliacao_qualitativa;
+      }));
+      return ratings;
+    },
+    enabled: !!busca?.startups_desbloqueadas?.length,
+  });
 
-  useEffect(() => {
-    if (busca?.startups_desbloqueadas) {
-      const buscarRatings = async () => {
-        const ratings = {};
-        for (const startup of busca.startups_desbloqueadas) {
-          if (!startup.avaliacao_qualitativa) {
-            try {
-              const startupCompleta = await base44.entities.Startup.get(startup.startup_id);
-              if (startupCompleta?.avaliacao_qualitativa) {
-                ratings[startup.startup_id] = startupCompleta.avaliacao_qualitativa;
-              }
-            } catch (err) {
-              console.error('Erro ao buscar startup:', err);
-            }
-          }
-        }
-        setStartupsCompletas(ratings);
-      };
-      buscarRatings();
-    }
-  }, [busca]);
+  if (!transactionId) {
+    return (
+      <div className="p-8 text-center text-red-600">
+        <p>ID da busca não fornecido.</p>
+        <Button variant="outline" onClick={() => navigate(createPageUrl('MinhasBuscas'))} className="mt-4">
+          Voltar para Minhas Buscas
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="p-8 text-center"><Loader2 className="w-8 h-8 mx-auto animate-spin text-emerald-600" /></div>;
   }
 
-  if (error) {
+  if (error || !busca) {
     return (
       <div className="p-8 text-center text-red-600">
-        <p>{error}</p>
+        <p>{error ? "Ocorreu um erro ao carregar os detalhes da sua busca." : "Busca não encontrada ou você não tem permissão para acessá-la."}</p>
         <Button variant="outline" onClick={() => navigate(createPageUrl('MinhasBuscas'))} className="mt-4">
           Voltar para Minhas Buscas
         </Button>

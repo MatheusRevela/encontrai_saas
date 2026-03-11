@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import {
   ArrowRight,
   Lightbulb,
@@ -69,7 +70,7 @@ export default function Buscar() {
 
     } catch (error) {
       console.error("Erro ao iniciar busca:", error);
-      alert("Ocorreu um erro ao iniciar sua busca. Por favor, tente novamente.");
+      toast.error("Ocorreu um erro ao iniciar sua busca. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
