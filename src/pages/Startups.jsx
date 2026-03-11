@@ -421,30 +421,13 @@ ${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'})
           falhas = []
         } = response.data;
 
-        let alertMessage = `🧹 Verificação de Duplicatas Concluída!\n\n`;
-        alertMessage += `📊 ${totalProcessado} startups verificadas no total.\n`;
-        alertMessage += `🔗 ${duplicatasEncontradas} duplicatas encontradas com base no site.\n`;
-        alertMessage += `🔌 ${desativadas} startups duplicadas foram desativadas com sucesso.\n\n`;
-
-        if (falhas.length > 0) {
-          alertMessage += `⚠️ Falhas durante a desativação:\n${falhas.slice(0, 10).map(f => `• ${f.nome}: ${f.erro}`).join('\n')}\n`;
-        }
+        if (falhas.length > 0) console.warn('Falhas na verificação de duplicatas:', falhas);
 
         if (duplicatasEncontradas === 0) {
-          alertMessage += "✨ Sua base de dados está limpa, sem duplicatas!";
-        } else {
-          alertMessage += "\n🔍 Ativando filtro para mostrar todas as duplicatas restantes...";
-          setFilters(prev => ({
-            ...prev,
-            showDuplicatesOnly: true,
-            sortBy: 'site_asc'
-          }));
-        }
-
-        if (duplicatasEncontradas === 0) {
-          toast.success('Base de dados limpa — sem duplicatas!');
+          toast.success(`Base de dados limpa! ${totalProcessado} startups verificadas, sem duplicatas.`);
         } else {
           toast.info(`${duplicatasEncontradas} duplicatas encontradas, ${desativadas} desativadas.`);
+          setFilters(prev => ({ ...prev, showDuplicatesOnly: true }));
         }
         await loadStartups();
       }
@@ -481,16 +464,6 @@ ${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'})
     try {
       const response = await processMLFeedback();
       if (response.data) {
-        let alertMessage = `🧠 Otimização da IA Concluída!\n\n`;
-        alertMessage += `${response.data.message}\n\n`;
-        alertMessage += `📈 ${response.data.updatedCount} startups tiveram seus scores atualizados.\n\n`;
-
-        if (response.data.topPerformers && response.data.topPerformers.length > 0) {
-          alertMessage += `⭐ TOP 5 AVALIADAS:\n`;
-          response.data.topPerformers.forEach(p => {
-            alertMessage += `• ${p.nome} - Nota: ${p.rating.toFixed(2)} (${p.evaluations} avaliações)\n`;
-          });
-        }
         toast.success(`IA otimizada! ${response.data.updatedCount} startups atualizadas.`);
         await loadStartups();
       }
