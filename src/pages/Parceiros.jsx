@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 import { 
   Plus, 
   Edit, 
@@ -77,7 +78,7 @@ export default function PartnersPage() {
       setShowForm(false);
     } catch (error) {
       console.error("Erro ao salvar parceiro:", error);
-      alert("Erro ao salvar. O código pode já estar em uso.");
+      toast.error("Erro ao salvar. O código pode já estar em uso.");
     } finally {
       setIsSaving(false);
     }
@@ -100,7 +101,7 @@ export default function PartnersPage() {
       await loadData();
     } catch (error) {
       console.error("Erro ao excluir parceiro:", error);
-      alert("Erro ao excluir parceiro.");
+      toast.error("Erro ao excluir parceiro.");
     }
   };
 
@@ -110,7 +111,7 @@ export default function PartnersPage() {
       await loadData();
     } catch (error) {
       console.error("Erro ao alterar status:", error);
-      alert("Erro ao alterar status do parceiro.");
+      toast.error("Erro ao alterar status do parceiro.");
     }
   };
 

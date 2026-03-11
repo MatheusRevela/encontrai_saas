@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Download, Loader2, Hammer, FileText, Play, Pause, RotateCcw, CheckCircle, XCircle, History, Database } from 'lucide-react';
 import { searchSingleStartupSite } from '@/functions/searchSingleStartupSite';
 import { base44 } from '@/api/base44Client';
+import { useRef } from 'react';
 
 export default function Ferramentas() {
   const [file, setFile] = useState(null);
@@ -17,6 +18,7 @@ export default function Ferramentas() {
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -108,6 +110,7 @@ export default function Ferramentas() {
 
     setIsProcessing(true);
     setIsPaused(false);
+    isPausedRef.current = false;
     setError('');
 
     // Atualiza status do lote
@@ -118,9 +121,9 @@ export default function Ferramentas() {
     
     for (let i = startFrom; i < startupNames.length; i++) {
       // Verifica se foi pausado
-      if (isPaused) {
+      if (isPausedRef.current) {
         console.log('⏸️ Processamento pausado pelo usuário');
-        await BatchSearch.update(currentBatch.id, { 
+        await base44.entities.BatchSearch.update(currentBatch.id, { 
           status: 'pausado', 
           processadas: i 
         });
@@ -213,7 +216,7 @@ export default function Ferramentas() {
     }
 
     // Se chegou até aqui sem pausar, finalizou
-    if (!isPaused) {
+    if (!isPausedRef.current) {
       setCurrentIndex(startupNames.length);
       setIsProcessing(false);
       await base44.entities.BatchSearch.update(currentBatch.id, { 
@@ -227,12 +230,14 @@ export default function Ferramentas() {
   };
 
   const pauseProcessing = () => {
+    isPausedRef.current = true;
     setIsPaused(true);
     setIsProcessing(false);
     console.log('⏸️ Processamento pausado');
   };
 
   const resetProcessing = () => {
+    isPausedRef.current = false;
     setIsProcessing(false);
     setIsPaused(false);
     setCurrentIndex(0);

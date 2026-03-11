@@ -19,6 +19,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export default function LaboratorioStartups() {
@@ -62,7 +63,7 @@ export default function LaboratorioStartups() {
       
       if (response.data) {
         const { labId, total_registros } = response.data;
-        alert(`✅ Arquivo processado com sucesso!\n📊 ${total_registros} startups encontradas no CSV`);
+        toast.success(`Arquivo processado! ${total_registros} startups encontradas no CSV.`);
         setFile(null);
         await loadLabs();
         setShowUploadDialog(false);
@@ -73,7 +74,7 @@ export default function LaboratorioStartups() {
       }
     } catch (error) {
       console.error("Erro no upload:", error);
-      alert(`Erro no upload: ${error.response?.data?.error || error.message}`);
+      toast.error(`Erro no upload: ${error.response?.data?.error || error.message}`);
     } finally {
       setIsUploading(false);
     }
@@ -111,9 +112,9 @@ export default function LaboratorioStartups() {
         
         if (concluido || status === 'concluido' || status === 'pausado') {
           if (status === 'concluido') {
-             alert(`✅ Laboratório processado completamente!\n📊 ${processados} startups processadas\n✅ ${criados} criadas com sucesso\n❌ ${erros} com erros`);
+             toast.success(`Laboratório concluído! ${criados} startups criadas, ${erros} erros.`);
           } else if (status === 'pausado') {
-             alert(`⏸️ Laboratório pausado!\n📊 ${processados} startups processadas até agora.`);
+             toast.info(`Laboratório pausado. ${processados} processadas até agora.`);
           }
           break;
         }
@@ -122,7 +123,7 @@ export default function LaboratorioStartups() {
       }
     } catch (error) {
       console.error("Erro ao processar laboratório:", error);
-      alert(`Erro: ${error.response?.data?.error || error.message}`);
+      toast.error(`Erro: ${error.response?.data?.error || error.message}`);
     } finally {
       setIsProcessing(false);
       setActiveLabId(null);
@@ -135,18 +136,18 @@ export default function LaboratorioStartups() {
       await loadLabs();
     } catch (error) {
       console.error("Erro ao excluir laboratório:", error);
-      alert("Erro ao excluir laboratório.");
+      toast.error("Erro ao excluir laboratório.");
     }
   };
 
   const handleCleanup = async () => {
     try {
       const response = await base44.functions.invoke('cleanupRecentImports');
-      alert(response.data.message);
+      toast.success(response.data.message);
       await loadLabs();
     } catch (error) {
       console.error("Erro na limpeza:", error);
-      alert(`Erro: ${error.response?.data?.error || error.message}`);
+      toast.error(`Erro: ${error.response?.data?.error || error.message}`);
     }
   };
 

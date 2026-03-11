@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Startup } from "@/entities/Startup";
+import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
+const Startup = base44.entities.Startup;
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Building2, Trash2, ChevronLeft, ChevronRight, BrainCircuit } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -215,12 +217,11 @@ export default function Startups() {
   const loadStartups = useCallback(async () => {
     setIsLoading(true);
     try {
-      const timestamp = Date.now();
-      const data = await Startup.list(`-created_date?_t=${timestamp}`);
+      const data = await Startup.list('-created_date');
       setAllStartups(data);
     } catch (error) {
       console.error('Erro ao carregar startups:', error);
-      alert('Erro ao carregar startups.');
+      toast.error('Erro ao carregar startups.');
     } finally {
       setIsLoading(false);
     }
@@ -233,7 +234,7 @@ export default function Startups() {
       await loadStartups();
     } catch (error) {
       console.error("Erro ao atualizar status da startup:", error);
-      alert('Erro ao atualizar startup.');
+      toast.error('Erro ao atualizar startup.');
     } finally {
       setIsProcessing(false);
     }
@@ -249,7 +250,7 @@ export default function Startups() {
       await loadStartups();
     } catch (error) {
       console.error("Erro ao excluir startup:", error);
-      alert('Erro ao excluir startup.');
+      toast.error('Erro ao excluir startup.');
     } finally {
       setIsProcessing(false);
     }
@@ -314,7 +315,7 @@ export default function Startups() {
       }, 100);
     } catch (error) {
       console.error("Erro ao salvar startup:", error);
-      alert('Erro ao salvar startup.');
+      toast.error('Erro ao salvar startup.');
     } finally {
       setIsProcessing(false);
     }
@@ -363,7 +364,7 @@ export default function Startups() {
       const response = await diagnosticoStartups();
       
       if (!response.data) {
-        alert('Erro: Resposta vazia do servidor');
+        toast.error('Erro: Resposta vazia do servidor');
         return;
       }
 
@@ -400,18 +401,11 @@ export default function Startups() {
 ${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'}) - ${s.avaliacao_especialista ? s.avaliacao_especialista + '⭐' : 'não avaliada'} - ${new Date(s.created_date).toLocaleDateString()}`).join('\n')}
       `;
 
-      alert(relatorio);
+      toast.success(`Diagnóstico: ${dados.ativas} ativas / ${dados.inativas} inativas de ${dados.total_completo} total`);
+      console.info('[Diagnóstico]', relatorio);
     } catch (error) {
       console.error('Erro no diagnóstico:', error);
-      
-      let errorMessage = 'Erro ao executar diagnóstico.';
-      if (error.response?.data?.details) {
-        errorMessage += ` Detalhes: ${error.response.data.details}`;
-      } else if (error.message) {
-        errorMessage += ` Erro: ${error.message}`;
-      }
-      
-      alert(errorMessage + '\n\nVerifique o console para mais detalhes.');
+      toast.error(`Erro ao executar diagnóstico: ${error.message}`);
     }
   };
 
@@ -447,12 +441,16 @@ ${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'})
           }));
         }
 
-        alert(alertMessage);
+        if (duplicatasEncontradas === 0) {
+          toast.success('Base de dados limpa — sem duplicatas!');
+        } else {
+          toast.info(`${duplicatasEncontradas} duplicatas encontradas, ${desativadas} desativadas.`);
+        }
         await loadStartups();
       }
     } catch (error) {
       console.error('Erro ao verificar duplicatas:', error);
-      alert('Erro ao verificar duplicatas. Tente novamente.');
+      toast.error('Erro ao verificar duplicatas. Tente novamente.');
     } finally {
       setIsCheckingExistence(false);
     }
@@ -468,11 +466,11 @@ ${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'})
     setIsDeletingInactive(true);
     try {
       const response = await deleteInactiveStartups();
-      alert(response.data.message);
+      toast.success(response.data.message);
       await loadStartups();
     } catch (error) {
       console.error('Erro ao excluir startups inativas:', error);
-      alert(`Ocorreu um erro: ${error.response?.data?.error || error.message}`);
+      toast.error(`Ocorreu um erro: ${error.response?.data?.error || error.message}`);
     } finally {
       setIsDeletingInactive(false);
     }
@@ -493,12 +491,12 @@ ${dados.mais_recentes.map(s => `• ${s.nome} (${s.ativo ? 'ativa' : 'inativa'})
             alertMessage += `• ${p.nome} - Nota: ${p.rating.toFixed(2)} (${p.evaluations} avaliações)\n`;
           });
         }
-        alert(alertMessage);
+        toast.success(`IA otimizada! ${response.data.updatedCount} startups atualizadas.`);
         await loadStartups();
       }
     } catch (error) {
       console.error('Erro ao processar feedback:', error);
-      alert('Ocorreu um erro ao otimizar a IA. Tente novamente.');
+      toast.error('Ocorreu um erro ao otimizar a IA. Tente novamente.');
     } finally {
       setIsProcessingFeedback(false);
     }

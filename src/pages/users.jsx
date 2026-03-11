@@ -16,6 +16,7 @@ import {
   TrendingUp, Eye, DollarSign, MessageCircle, Clock
 } from 'lucide-react';
 import { formatDateBrasiliaShort } from '../components/utils/dateUtils';
+import { toast } from 'sonner';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -168,7 +169,7 @@ export default function UsersPage() {
       setEditingUser(null);
     } catch (error) {
       console.error("Erro ao editar usuário:", error);
-      alert("Erro ao editar usuário. Tente novamente.");
+      toast.error("Erro ao editar usuário. Tente novamente.");
     } finally {
       setIsEditing(false);
     }
@@ -180,7 +181,7 @@ export default function UsersPage() {
       await loadData();
     } catch (error) {
       console.error("Erro ao alterar status:", error);
-      alert("Erro ao alterar status do usuário.");
+      toast.error("Erro ao alterar status do usuário.");
     }
   };
 
@@ -191,7 +192,7 @@ export default function UsersPage() {
       await loadData();
     } catch (error) {
       console.error("Erro ao excluir usuário:", error);
-      alert("Erro ao excluir usuário. Tente novamente.");
+      toast.error("Erro ao excluir usuário. Tente novamente.");
     } finally {
       setIsDeleting(false);
     }
@@ -220,11 +221,11 @@ export default function UsersPage() {
         });
       }
 
-      alert(`Email enviado para ${recipients.length} usuários com sucesso!`);
+      toast.success(`Email enviado para ${recipients.length} usuários com sucesso!`);
       setEmailData({ subject: '', body: '', recipients: 'all' });
     } catch (error) {
       console.error("Erro ao enviar emails:", error);
-      alert("Erro ao enviar emails. Tente novamente.");
+      toast.error("Erro ao enviar emails. Tente novamente.");
     } finally {
       setIsSendingEmail(false);
     }
