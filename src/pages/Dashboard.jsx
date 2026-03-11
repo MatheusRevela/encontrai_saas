@@ -78,8 +78,9 @@ export default function Dashboard() {
       const { data } = await base44.functions.invoke('getDashboardStats');
       return data;
     },
-    staleTime: 2 * 60 * 1000, // Cache por 2 minutos
-    refetchInterval: 5 * 60 * 1000 // Atualizar a cada 5 minutos
+    staleTime: 10 * 60 * 1000,      // Cache por 10 minutos
+    refetchOnWindowFocus: false,     // Não refetchar ao voltar para a aba
+    refetchInterval: false,          // Sem polling automático
   });
 
   // React Query: Buscar dados analíticos
@@ -89,7 +90,9 @@ export default function Dashboard() {
       const { data } = await base44.functions.invoke('getAnalyticsData');
       return data;
     },
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const analyticsData = analyticsResponse?.data || {
