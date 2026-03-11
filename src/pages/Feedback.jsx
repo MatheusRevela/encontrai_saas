@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Star, Send, AlertCircle, Building2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Feedback() {
@@ -88,7 +89,7 @@ export default function Feedback() {
     // Validar se todas as startups foram avaliadas
     const todasAvaliadas = avaliacoes.every(av => av.avaliacao > 0);
     if (!todasAvaliadas) {
-      alert('Por favor, avalie todas as soluções antes de continuar.');
+      toast.warning('Por favor, avalie todas as soluções antes de continuar.');
       return;
     }
 
@@ -107,7 +108,7 @@ export default function Feedback() {
       navigate(createPageUrl('MinhasBuscas'));
     } catch (error) {
       console.error('Erro ao enviar feedback:', error);
-      alert('Erro ao enviar feedback. Tente novamente.');
+      toast.error('Erro ao enviar feedback. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }

@@ -16,6 +16,7 @@ import CategoryDemandChart from '../components/analytics/CategoryDemandChart';
 import ROIChart from '../components/analytics/ROIChart';
 import RegionHeatMap from '../components/analytics/RegionHeatMap';
 import ReportExporter from '../components/analytics/ReportExporter';
+import { toast } from 'sonner';
 import {
   Users,
   DollarSign,
@@ -131,11 +132,11 @@ export default function Dashboard() {
       return data;
     },
     onSuccess: (data) => {
-      alert(data.message);
+      toast.success(data.message);
     },
     onError: (error) => {
       console.error('Erro ao enviar follow-ups:', error);
-      alert('Ocorreu um erro ao enviar os e-mails.');
+      toast.error('Ocorreu um erro ao enviar os e-mails.');
     }
   });
 
@@ -146,11 +147,11 @@ export default function Dashboard() {
       return data;
     },
     onSuccess: (data) => {
-      alert(data.message || 'Otimização concluída!');
+      toast.success(data.message || 'Otimização concluída!');
     },
     onError: (error) => {
       console.error('Erro ao otimizar IA:', error);
-      alert('Ocorreu um erro ao processar o feedback.');
+      toast.error('Ocorreu um erro ao processar o feedback.');
     }
   });
 

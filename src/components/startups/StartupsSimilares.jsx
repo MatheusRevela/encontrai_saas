@@ -18,6 +18,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import MercadoPagoBrick from '../checkout/MercadoPagoBrick';
 
@@ -131,7 +132,7 @@ export default function StartupsSimilares({ startupOriginal, transacaoId }) {
 
   const handleIniciarCheckout = () => {
     if (selectedSimilares.length === 0) {
-      alert('Selecione pelo menos uma startup similar para desbloquear.');
+      toast.warning('Selecione pelo menos uma startup similar para desbloquear.');
       return;
     }
     setShowCheckout(true);

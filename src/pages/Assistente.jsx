@@ -135,8 +135,21 @@ RESPONDA EM JSON:`,
   const handleFinalSubmit = async (finalSummary, profile) => {
     try {
       const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const rawReferral = localStorage.getItem('referral_code');
-      const referralCode = rawReferral && /^[A-Za-z0-9_-]{3,20}$/.test(rawReferral) ? rawReferral : undefined;
+      let referralCode;
+      try {
+        const raw = localStorage.getItem('referral_code');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const expired = !parsed.ts || (Date.now() - parsed.ts > 30 * 24 * 60 * 60 * 1000);
+          if (!expired && /^[A-Za-z0-9_-]{3,20}$/.test(parsed.code)) {
+            referralCode = parsed.code;
+          } else {
+            localStorage.removeItem('referral_code');
+          }
+        }
+      } catch {
+        localStorage.removeItem('referral_code');
+      }
       
       await base44.entities.Transacao.create({
         session_id: sessionId,
@@ -166,7 +179,7 @@ RESPONDA EM JSON:`,
   };
 
   return (
-    <div className="flex flex-col h-screen-minus-header bg-slate-50">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50">
       <div className="flex-grow p-6 md:p-8 overflow-y-auto">
         <div className="w-full max-w-4xl mx-auto space-y-6">
           <AnimatePresence>

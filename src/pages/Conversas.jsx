@@ -93,8 +93,7 @@ export default function Conversas() {
         setIsLoading(false);
         return;
       }
-      const timestamp = Date.now();
-      const data = await base44.entities.Transacao.list(`-created_date?_t=${timestamp}`);
+      const data = await base44.entities.Transacao.list('-created_date');
       setConversas(data || []);
     } catch (error) {
       console.error("Erro ao carregar conversas:", error);

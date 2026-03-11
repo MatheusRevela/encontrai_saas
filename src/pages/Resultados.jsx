@@ -24,8 +24,9 @@ import {
 import { motion } from 'framer-motion';
 import BuscaLoadingAnimation from '../components/common/BuscaLoadingAnimation';
 import BuscaInterativa from '../components/busca/BuscaInterativa';
-import FiltrosAvancados from '../components/busca/FiltrosAvancados';
 import { buildMatchingPrompt, buildMatchingJsonSchema, prefiltrarStartups } from '../components/utils/promptBuilder';
+import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 export default function Resultados() {
   const [selectedStartups, setSelectedStartups] = useState([]);
@@ -56,20 +57,6 @@ export default function Resultados() {
     lastGeracaoRef.current = agora;
     return fn();
   }, []);
-
-  // Verificar se é novo usuário — via endpoint calcularPreco (fonte única de verdade de pricing)
-  const { data: precoDados } = useQuery({
-    queryKey: ['precoInfo', selectedStartups.length, sessionId],
-    queryFn: async () => {
-      if (!transacao?.id) return null;
-      const quantidade = selectedStartups.length > 0 ? selectedStartups.length : 1;
-      const res = await calcularPreco({ quantidade, isAdicional: false, transacao_id: transacao.id });
-      return res.data;
-    },
-    enabled: !!transacao?.id,
-    staleTime: 10 * 60 * 1000,
-  });
-  const isNovoUsuario = precoDados?.is_novo_usuario ?? transacao?.is_first_purchase ?? true;
 
   // React Query: Buscar transação E gerar sugestões se necessário
   const { data: transacao, isLoading, error } = useQuery({
@@ -200,6 +187,20 @@ export default function Resultados() {
     retry: 1,
   });
 
+  // Verificar se é novo usuário — via endpoint calcularPreco (fonte única de verdade de pricing)
+  const { data: precoDados } = useQuery({
+    queryKey: ['precoInfo', selectedStartups.length, sessionId],
+    queryFn: async () => {
+      if (!transacao?.id) return null;
+      const quantidade = selectedStartups.length > 0 ? selectedStartups.length : 1;
+      const res = await calcularPreco({ quantidade, isAdicional: false, transacao_id: transacao.id });
+      return res.data;
+    },
+    enabled: !!transacao?.id,
+    staleTime: 10 * 60 * 1000,
+  });
+  const isNovoUsuario = precoDados?.is_novo_usuario ?? transacao?.is_first_purchase ?? true;
+
   // React Query: Mutation para gerar sugestões
   const gerarSugestoesMutation = useMutation({
     mutationFn: async (dadosAnalise) => {
@@ -324,7 +325,7 @@ export default function Resultados() {
         await gerarSugestoesMutation.mutateAsync(dadosAnalise);
       } catch (error) {
         console.error('❌ Erro ao completar análise:', error);
-        alert(`Erro ao processar análise: ${error.message}`);
+        toast.error(`Erro ao processar análise: ${error.message}`);
         setMostrarBuscaInterativa(true);
       } finally {
         setGerandoSugestoes(false);
@@ -346,7 +347,7 @@ export default function Resultados() {
       });
     } catch (error) {
       console.error('Erro ao selecionar startup:', error);
-      alert('Erro ao selecionar startup. Tente novamente.');
+      toast.error('Erro ao selecionar startup. Tente novamente.');
     }
   };
 
@@ -371,13 +372,13 @@ export default function Resultados() {
     },
     onError: (error) => {
       console.error('Erro ao prosseguir para checkout:', error);
-      alert(`Erro ao prosseguir: ${error.message}`);
+      toast.error(`Erro ao prosseguir: ${error.message}`);
     }
   });
 
   const handleProceedToCheckout = async () => {
     if (selectedStartups.length === 0) {
-      alert('Selecione pelo menos uma startup para continuar.');
+      toast.warning('Selecione pelo menos uma startup para continuar.');
       return;
     }
     await checkoutMutation.mutateAsync();
@@ -640,12 +641,12 @@ export default function Resultados() {
               </div>
               <Button
                 onClick={handleProceedToCheckout}
-                disabled={selectedStartups.length === 0 || checkoutMutation.isLoading}
+                disabled={selectedStartups.length === 0 || checkoutMutation.isPending}
                 size="lg"
                 className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
               >
                 <ArrowRight className="w-5 h-5 mr-2" />
-                {checkoutMutation.isLoading ? 'Processando...' : 'Prosseguir para o Pagamento'}
+                {checkoutMutation.isPending ? 'Processando...' : 'Prosseguir para o Pagamento'}
               </Button>
             </div>
           </div>

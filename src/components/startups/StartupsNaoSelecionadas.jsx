@@ -15,6 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
 export default function StartupsNaoSelecionadas({ transacao }) {
@@ -43,7 +44,7 @@ export default function StartupsNaoSelecionadas({ transacao }) {
 
   const handleDesbloquearAdicionais = async () => {
     if (selectedStartups.length === 0) {
-      alert('Selecione pelo menos uma solução para desbloquear.');
+      toast.warning('Selecione pelo menos uma solução para desbloquear.');
       return;
     }
 
@@ -74,7 +75,7 @@ export default function StartupsNaoSelecionadas({ transacao }) {
       navigate(createPageUrl(`Checkout?sessionId=${transacao.session_id}`));
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
-      alert('Erro ao processar. Tente novamente.');
+      toast.error('Erro ao processar. Tente novamente.');
     } finally {
       setProcessandoPagamento(false);
     }
