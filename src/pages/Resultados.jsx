@@ -31,7 +31,6 @@ import { toast } from 'sonner';
 export default function Resultados() {
   const [selectedStartups, setSelectedStartups] = useState([]);
   const [mostrarBuscaInterativa, setMostrarBuscaInterativa] = useState(false);
-  const [analiseEnriquecida, setAnaliseEnriquecida] = useState(null);
   const [gerandoSugestoes, setGerandoSugestoes] = useState(false);
   const [filtros, setFiltros] = useState({
     categorias: [],
