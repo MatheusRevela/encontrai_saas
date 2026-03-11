@@ -179,6 +179,7 @@ export default function ProtectedLayout({ children, pageName }) {
   }
 
   const handleLogout = async () => {
+    sessionStorage.removeItem('encontrai_user_cache');
     await base44.auth.logout(createPageUrl('Home'));
   };
 
