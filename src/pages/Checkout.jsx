@@ -172,6 +172,9 @@ export default function Checkout() {
     return `${categoryMap[startup.categoria] || 'Solução'} #${index + 1}`;
   };
 
+  // is_first_purchase é persistido pelo calcularPreco ao passar pela página de Resultados
+  const isNovoUsuario = transacao?.is_first_purchase ?? true;
+
   const isAdicionalCheckout = transacao?.is_adicional_checkout || false;
   const adicionalCount = transacao?.adicional_startups_count || 0;
 
