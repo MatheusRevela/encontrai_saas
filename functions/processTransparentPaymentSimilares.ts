@@ -36,7 +36,16 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: false, error: 'Estas similares já foram desbloqueadas.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        const valorTotal = parseFloat((similaresSelecionadas.length * PRECO_SIMILAR).toFixed(2));
+        // FIX: Validar que os IDs de similares realmente existem na base — evita injeção de IDs arbitrários
+        if (similaresSelecionadas.length > 10) {
+            return new Response(JSON.stringify({ error: 'Máximo de 10 similares por vez' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        const startupsValidadas = await base44.asServiceRole.entities.Startup.filter({ id: { $in: similaresSelecionadas }, ativo: true });
+        if (startupsValidadas.length !== similaresSelecionadas.length) {
+            return new Response(JSON.stringify({ error: 'Uma ou mais startups inválidas' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        const valorTotal = parseFloat((startupsValidadas.length * PRECO_SIMILAR).toFixed(2));
         const cpfLimpo = cpf.replace(/\D/g, '');
         const nomeCliente = user?.full_name || email.split('@')[0];
 
@@ -103,8 +112,9 @@ Deno.serve(async (req) => {
 
             // Send email
             try {
+                // Email sempre para o usuário autenticado — nunca para email arbitrário do payload (anti-spam)
                 await base44.asServiceRole.integrations.Core.SendEmail({
-                    to: email.trim(),
+                    to: user.email,
                     subject: `✅ Startups similares desbloqueadas!`,
                     body: `Olá ${nomeCliente},\n\nSuas startups similares foram desbloqueadas!\n\n${similaresData.map(s => `🏢 ${s.nome}\n${s.email ? `📧 ${s.email}` : ''}\n${s.whatsapp ? `📱 ${s.whatsapp}` : ''}\n${s.site ? `🌐 ${s.site}` : ''}\n---`).join('\n')}\n\nAcesse: ${ALLOWED_ORIGIN}/DetalhesBusca?id=${transacaoId}`
                 });

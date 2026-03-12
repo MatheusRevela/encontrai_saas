@@ -116,9 +116,9 @@ Deno.serve(async (req) => {
             status_pagamento: 'processando'
         });
 
-        // Caso GRÁTIS
-        if (valorTotal === 0 || paymentFormData.payment_method_id === 'free') {
-            await unlockAndNotify(base44, transacao, email.trim(), nomeCliente);
+        // Caso GRÁTIS — decisão APENAS pelo valor calculado no servidor, nunca pelo payload do cliente
+        if (valorTotal === 0) {
+            await unlockAndNotify(base44, transacao, user.email, nomeCliente);
             await base44.entities.Transacao.update(transacao.id, { status_pagamento: 'pago' });
             return new Response(JSON.stringify({ success: true, status: 'approved' }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
@@ -159,7 +159,8 @@ Deno.serve(async (req) => {
 
         if (payment.status === 'approved') {
             // Primeiro desbloqueia as startups, depois marca como pago (atômico via unlockAndNotify)
-            await unlockAndNotify(base44, transacao, email.trim(), nomeCliente);
+            // Email sempre vai para o usuário autenticado — nunca para o email informado pelo cliente (anti-spam)
+            await unlockAndNotify(base44, transacao, user.email, nomeCliente);
             // unlockAndNotify já salvou startups_desbloqueadas; agora atualiza status
             await base44.entities.Transacao.update(transacao.id, {
                 mp_payment_id: payment.id.toString(),

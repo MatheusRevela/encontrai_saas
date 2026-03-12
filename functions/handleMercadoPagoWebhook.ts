@@ -159,6 +159,15 @@ Deno.serve(async (req) => {
                 const similaresSelecionadas = JSON.parse(payment.metadata?.similares_selecionadas || '[]');
 
                 if (startupOriginalId && similaresSelecionadas.length > 0) {
+                    // FIX idempotência para similares: verificar se este payment já foi processado
+                    const jaProcessado = transaction.similares_desbloqueadas?.some(
+                        s => s.startup_original_id === startupOriginalId && s.mp_payment_id === payment.id.toString()
+                    );
+                    if (jaProcessado) {
+                        console.log('Similares já processadas para payment:', payment.id, '- webhook duplicado ignorado');
+                        return new Response('Already processed', { status: 200, headers: corsHeaders });
+                    }
+
                     const startupsCompletas = await base44.asServiceRole.entities.Startup.filter({
                         id: { $in: similaresSelecionadas }
                     });
@@ -173,7 +182,8 @@ Deno.serve(async (req) => {
 
                     const similaresDesbloqueadas = [...(transaction.similares_desbloqueadas || [])];
                     const indexExistente = similaresDesbloqueadas.findIndex(s => s.startup_original_id === startupOriginalId);
-                    const novoRegistro = { startup_original_id: startupOriginalId, startups_similares: similaresData, pago_em: new Date().toISOString() };
+                    // Inclui mp_payment_id no registro para idempotência
+                    const novoRegistro = { startup_original_id: startupOriginalId, startups_similares: similaresData, pago_em: new Date().toISOString(), mp_payment_id: payment.id.toString() };
 
                     if (indexExistente >= 0) similaresDesbloqueadas[indexExistente] = novoRegistro;
                     else similaresDesbloqueadas.push(novoRegistro);
