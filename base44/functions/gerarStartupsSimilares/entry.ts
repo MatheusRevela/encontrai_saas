@@ -33,7 +33,11 @@ Deno.serve(async (req) => {
     if (!transacao) {
       return Response.json({ error: 'Transação não encontrada' }, { status: 404 });
     }
-
+    // Verificar ownership — usuário só pode acessar suas próprias transações
+    if (transacao.created_by && transacao.created_by !== user.email) {
+      return Response.json({ error: 'Acesso negado' }, { status: 403 });
+    }
+    
     // ✅ CACHE: Verificar similares já geradas (pagas ou preview) nas últimas 24h
     const similarExistente = transacao.similares_desbloqueadas?.find(
       s => s.startup_original_id === startup_id
