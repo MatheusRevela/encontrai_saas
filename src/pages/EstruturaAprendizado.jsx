@@ -2,6 +2,14 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from 'react-markdown';
+import DOMPurify from 'dompurify';
+
+const SAFE_MD_COMPONENTS = {
+  code: ({ className, children, ...props }) => {
+    const safeClass = className ? DOMPurify.sanitize(className, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) : undefined;
+    return <code className={safeClass} {...props}>{children}</code>;
+  }
+};
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -265,7 +273,7 @@ export default function EstruturaAprendizado() {
                             {expandedConteudos[cont.id] && cont.corpo && (
                               <CardContent className="pt-0 bg-slate-50">
                                 <div className="prose prose-sm max-w-none text-slate-700 p-4 bg-white rounded-lg">
-                                  <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                  <ReactMarkdown components={SAFE_MD_COMPONENTS}>{cont.corpo}</ReactMarkdown>
                                 </div>
                               </CardContent>
                             )}
@@ -347,7 +355,7 @@ export default function EstruturaAprendizado() {
                                       {expandedConteudos[cont.id] && cont.corpo && (
                                         <CardContent className="pt-0 bg-slate-50">
                                           <div className="prose prose-sm max-w-none text-slate-700 p-4 bg-white rounded-lg">
-                                            <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                            <ReactMarkdown components={SAFE_MD_COMPONENTS}>{cont.corpo}</ReactMarkdown>
                                           </div>
                                         </CardContent>
                                       )}
@@ -421,7 +429,7 @@ export default function EstruturaAprendizado() {
                                                 {expandedConteudos[cont.id] && cont.corpo && (
                                                   <CardContent className="pt-0 bg-slate-50">
                                                     <div className="prose prose-sm max-w-none text-slate-700 p-4 bg-white rounded-lg">
-                                                      <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                                      <ReactMarkdown components={SAFE_MD_COMPONENTS}>{cont.corpo}</ReactMarkdown>
                                                     </div>
                                                   </CardContent>
                                                 )}
@@ -618,7 +626,7 @@ export default function EstruturaAprendizado() {
                         {expandedConteudos[cont.id] && cont.corpo && (
                           <CardContent className="pt-0 pb-2 px-3">
                             <div className="prose prose-sm max-w-none text-slate-700">
-                              <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                              <ReactMarkdown components={SAFE_MD_COMPONENTS}>{cont.corpo}</ReactMarkdown>
                             </div>
                           </CardContent>
                         )}
@@ -773,7 +781,7 @@ export default function EstruturaAprendizado() {
                                 {expandedConteudos[cont.id] && cont.corpo && (
                                   <CardContent className="pt-0 pb-2 px-3">
                                     <div className="prose prose-sm max-w-none text-slate-700">
-                                      <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                      <ReactMarkdown components={SAFE_MD_COMPONENTS}>{cont.corpo}</ReactMarkdown>
                                     </div>
                                   </CardContent>
                                 )}
@@ -912,7 +920,7 @@ export default function EstruturaAprendizado() {
                                         {expandedConteudos[cont.id] && cont.corpo && (
                                           <CardContent className="pt-0 pb-2 px-3">
                                             <div className="prose prose-sm max-w-none text-slate-700">
-                                              <ReactMarkdown>{cont.corpo}</ReactMarkdown>
+                                              <ReactMarkdown components={SAFE_MD_COMPONENTS}>{cont.corpo}</ReactMarkdown>
                                             </div>
                                           </CardContent>
                                         )}
