@@ -125,20 +125,24 @@ export default function ProtectedLayout({ children, pageName }) {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        // Tenta usar cache do sessionStorage para evitar chamada de rede em toda navegação
+        // Tenta usar cache do sessionStorage para evitar chamada de rede em toda navegação        
         const CACHE_KEY = 'encontrai_user_cache';
+        const CACHE_TTL = 8 * 60 * 60 * 1000; // 8 horas
         const cached = sessionStorage.getItem(CACHE_KEY);
+        const cachedTime = sessionStorage.getItem(CACHE_KEY + '_ts');
+        const isExpired = !cachedTime || (Date.now() - Number(cachedTime)) > CACHE_TTL;
         let userData;
 
-        if (cached) {
+        if (cached && !isExpired) {
           userData = JSON.parse(cached);
           setUser(userData);
           setIsLoading(false);
         } else {
-          userData = await base44.auth.me();
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify(userData));
-          setUser(userData);
-          setIsLoading(false);
+        userData = await base44.auth.me();
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+        sessionStorage.setItem(CACHE_KEY + '_ts', Date.now().toString());
+        setUser(userData);
+        setIsLoading(false);
         }
         
         // 🎯 ROLE-BASED HOMEPAGE
