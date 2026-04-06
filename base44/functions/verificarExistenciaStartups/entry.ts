@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
         }
 
         console.log("🧹 Iniciando verificação de duplicatas de startups...");
-        const allStartups = await base44.asServiceRole.entities.Startup.list();
+        const allStartups = await base44.asServiceRole.entities.Startup.list(null, 2000);
 
         const startupsBySite = new Map();
         allStartups.forEach(startup => {

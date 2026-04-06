@@ -18,28 +18,28 @@ Deno.serve(async (req) => {
         const user = await base44.auth.me();
 
         if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
         }
 
         const { transacao_id, startup_original_id, similares_selecionadas } = await req.json();
 
         if (!transacao_id || !startup_original_id || !similares_selecionadas?.length) {
-            return Response.json({ error: 'Parâmetros obrigatórios faltando' }, { status: 400 });
+            return Response.json({ error: 'Parâmetros obrigatórios faltando' }, { status: 400, headers: corsHeaders });
         }
 
         const MP_ACCESS_TOKEN = Deno.env.get('MP_ACCESS_TOKEN');
         if (!MP_ACCESS_TOKEN) {
-            return Response.json({ error: 'Mercado Pago não configurado' }, { status: 500 });
+            return Response.json({ error: 'Mercado Pago não configurado' }, { status: 500, headers: corsHeaders });
         }
 
         const transacao = await base44.asServiceRole.entities.Transacao.get(transacao_id);
         if (!transacao) {
-            return Response.json({ error: 'Transação não encontrada' }, { status: 404 });
+            return Response.json({ error: 'Transação não encontrada' }, { status: 404, headers: corsHeaders });
         }
 
         // 🔒 Verificar ownership — usuário deve ser dono da transação
         if (transacao.created_by && transacao.created_by !== user.email) {
-            return Response.json({ error: 'Acesso negado' }, { status: 403 });
+            return Response.json({ error: 'Acesso negado' }, { status: 403, headers: corsHeaders });
         }
 
         const quantidadeSelecionada = similares_selecionadas.length;
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
         if (!mpResponse.ok) {
             const errorData = await mpResponse.text();
             console.error('Erro Mercado Pago:', errorData);
-            return Response.json({ error: 'Erro ao criar pagamento' }, { status: 500 });
+            return Response.json({ error: 'Erro ao criar pagamento' }, { status: 500, headers: corsHeaders });
         }
 
         const mpData = await mpResponse.json();
@@ -108,6 +108,6 @@ Deno.serve(async (req) => {
 
     } catch (error) {
         console.error('Erro ao processar pagamento de similares:', error.message);
-        return Response.json({ error: 'Erro interno' }, { status: 500 });
+        return Response.json({ error: 'Erro interno' }, { status: 500, headers: corsHeaders });
     }
 });

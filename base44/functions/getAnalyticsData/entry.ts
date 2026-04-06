@@ -1,22 +1,28 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': 'https://encontrai.com',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
-      return Response.json({ error: 'Não autorizado' }, { status: 401 });
+      return Response.json({ error: 'Não autorizado' }, { status: 401, headers: corsHeaders });
     }
 
     if (user.role !== 'admin') {
-      return Response.json({ error: 'Acesso negado' }, { status: 403 });
+      return Response.json({ error: 'Acesso negado' }, { status: 403, headers: corsHeaders });
     }
 
-    // Buscar transações (todas para admin, apenas do usuário para user)
-    const transacoes = user.role === 'admin'
-      ? await base44.asServiceRole.entities.Transacao.list('-created_date', 1000)
-      : await base44.entities.Transacao.filter({ created_by: user.email }, '-created_date', 500);
+    // Admin only — buscar todas as transações
+    const transacoes = await base44.asServiceRole.entities.Transacao.list('-created_date', 1000);
 
     // Buscar startups para mapeamento de categorias
     const startups = await base44.asServiceRole.entities.Startup.list('', 5000);
@@ -119,13 +125,13 @@ Deno.serve(async (req) => {
         regions,
         summary
       }
-    });
+    }, { headers: corsHeaders });
 
   } catch (error) {
     console.error('Erro ao buscar dados analíticos:', error);
     return Response.json(
       { error: 'Erro ao processar dados analíticos', details: error.message },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 });
