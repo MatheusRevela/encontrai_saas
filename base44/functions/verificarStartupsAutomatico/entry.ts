@@ -66,14 +66,15 @@ Deno.serve(async (req) => {
 
     console.log(`🔍 Iniciando verificação automática de startups... (agendada: ${isScheduled})`);
 
-    // Busca startups com site, ordenadas pelas verificadas há mais tempo (oldest-first)
-    const todasStartups = await base44.asServiceRole.entities.Startup.list();
+    // Busca TODAS as startups com site (limite alto para cobrir o banco inteiro)
+    const todasStartups = await base44.asServiceRole.entities.Startup.list(null, 2000);
     const comSite = todasStartups
       .filter(s => s.site && s.site.trim() !== '')
       .sort((a, b) => {
+        // Nunca verificadas (null) vêm primeiro, depois as mais antigas
         const ta = a.ultima_verificacao ? new Date(a.ultima_verificacao).getTime() : 0;
         const tb = b.ultima_verificacao ? new Date(b.ultima_verificacao).getTime() : 0;
-        return ta - tb; // mais antigas primeiro
+        return ta - tb;
       })
       .slice(0, BATCH_SIZE);
 
