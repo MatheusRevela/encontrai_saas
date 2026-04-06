@@ -30,8 +30,8 @@ export default function Analytics() {
         return;
       }
       const [transacoesData, startupsData] = await Promise.all([
-        base44.entities.Transacao.list('-created_date'),
-        base44.entities.Startup.list()
+        base44.entities.Transacao.list('-created_date', 1000),
+        base44.entities.Startup.list(null, 2000)
       ]);
       setTransacoes(transacoesData || []);
       setStartups(startupsData || []);

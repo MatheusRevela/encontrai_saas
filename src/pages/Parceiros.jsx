@@ -48,9 +48,9 @@ export default function PartnersPage() {
     setIsLoading(true);
     try {
       const [partnersData, usersData, transactionsData] = await Promise.all([
-        base44.entities.Partner.list('-created_date'),
-        base44.entities.User.list('-created_date'),
-        base44.entities.Transacao.list('-created_date')
+        base44.entities.Partner.list('-created_date', 200),
+        base44.entities.User.list('-created_date', 500),
+        base44.entities.Transacao.list('-created_date', 1000)
       ]);
       setPartners(partnersData || []);
       setUsers(usersData || []);

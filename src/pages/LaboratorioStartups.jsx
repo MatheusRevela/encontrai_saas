@@ -40,7 +40,7 @@ export default function LaboratorioStartups() {
   const loadLabs = async () => {
     setIsLoading(true);
     try {
-      const data = await base44.entities.StartupLab.list('-created_date');
+      const data = await base44.entities.StartupLab.list('-created_date', 100);
       setLabs(data || []);
     } catch (error) {
       console.error("Erro ao carregar laboratórios:", error);

@@ -29,8 +29,9 @@ export default function LandingPage() {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const refCode = urlParams.get('ref');
-        if (refCode) {
-            localStorage.setItem('referral_code', refCode);
+        if (refCode && /^[A-Za-z0-9_-]{3,20}$/.test(refCode)) {
+            // Salvar como objeto JSON com timestamp (compatível com pages/Buscar)
+            localStorage.setItem('referral_code', JSON.stringify({ code: refCode, ts: Date.now() }));
             const newUrl = window.location.pathname;
             window.history.replaceState({}, '', newUrl);
         }
