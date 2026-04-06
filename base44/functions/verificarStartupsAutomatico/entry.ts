@@ -45,7 +45,7 @@ async function verificarSite(url) {
 // Pausa para não sobrecarregar (rate limiting)
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-const BATCH_SIZE = 60; // máximo por execução (evita timeout)
+const BATCH_SIZE = 100; // 100 por dia
 
 Deno.serve(async (req) => {
   try {
