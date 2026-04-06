@@ -34,18 +34,25 @@ async function checkUrl(url, timeoutMs) {
   }
 }
 
+// Verificação única sem retry — mais rápido e evita timeout da função
 async function verificarSite(url) {
-  const r1 = await checkUrl(url, 15000);
-  if (r1.online) return { ...r1, tentativas: 1 };
-  await new Promise(r => setTimeout(r, 3000));
-  const r2 = await checkUrl(url, 20000);
-  return { ...r2, tentativas: 2 };
+  const r = await checkUrl(url, 8000);
+  return { ...r, tentativas: 1 };
 }
 
-// Pausa para não sobrecarregar (rate limiting)
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+// Executa até `concurrency` verificações em paralelo
+async function verificarEmParalelo(startups, concurrency, processarStartup) {
+  const results = [];
+  for (let i = 0; i < startups.length; i += concurrency) {
+    const lote = startups.slice(i, i + concurrency);
+    const lotResults = await Promise.all(lote.map(s => processarStartup(s)));
+    results.push(...lotResults);
+  }
+  return results;
+}
 
-const BATCH_SIZE = 100; // 100 por dia
+const BATCH_SIZE = 30;   // 30 por execução diária (paralelo de 5 = ~50s total)
+const CONCURRENCY = 5;  // 5 verificações simultâneas
 
 Deno.serve(async (req) => {
   try {
@@ -90,9 +97,7 @@ Deno.serve(async (req) => {
       timestamp: new Date().toISOString(),
     };
 
-    for (let i = 0; i < comSite.length; i++) {
-      const startup = comSite[i];
-
+    await verificarEmParalelo(comSite, CONCURRENCY, async (startup) => {
       try {
         const check = await verificarSite(startup.site);
         const falhasAnteriores = startup.status_verificacao?.falhas_consecutivas ?? 0;
@@ -102,8 +107,8 @@ Deno.serve(async (req) => {
         const obs = check.online
           ? `Online (HTTP ${check.status}) em ${check.elapsed}ms`
           : (check.error === 'timeout'
-              ? `Timeout após ${check.tentativas} tentativa(s)`
-              : `HTTP ${check.status ?? 'erro'}: ${check.error} após ${check.tentativas} tentativa(s)`);
+              ? `Timeout (${check.tentativas} tentativa)`
+              : `HTTP ${check.status ?? 'erro'}: ${check.error}`);
 
         const updateData = {
           ultima_verificacao: new Date().toISOString(),
@@ -117,22 +122,17 @@ Deno.serve(async (req) => {
           },
         };
 
-        let desativada = false;
-        let reativada = false;
-
         if (!check.online && novasFalhas >= 2 && !protegida && startup.ativo !== false) {
           updateData.ativo = false;
-          desativada = true;
           resultados.desativadas++;
           resultados.erros.push({ id: startup.id, nome: startup.nome, site: startup.site, motivo: obs, falhas: novasFalhas });
-          console.warn(`❌ Desativada: ${startup.nome} (${startup.site}) — ${obs}`);
+          console.warn(`❌ Desativada: ${startup.nome} — ${obs}`);
         }
 
         if (check.online && startup.ativo === false && !protegida) {
           updateData.ativo = true;
-          reativada = true;
           resultados.reativadas++;
-          console.log(`✅ Reativada: ${startup.nome} (${startup.site})`);
+          console.log(`✅ Reativada: ${startup.nome}`);
         }
 
         if (check.online) resultados.online++;
@@ -140,19 +140,11 @@ Deno.serve(async (req) => {
 
         await base44.asServiceRole.entities.Startup.update(startup.id, updateData);
 
-        // Log de progresso a cada 10
-        if ((i + 1) % 10 === 0) {
-          console.log(`⏳ Progresso: ${i + 1}/${comSite.length}`);
-        }
-
-        // Pausa de 500ms entre cada verificação para não sobrecarregar
-        if (i < comSite.length - 1) await sleep(500);
-
       } catch (err) {
         console.error(`Erro ao verificar ${startup.nome}:`, err.message);
         resultados.erros.push({ id: startup.id, nome: startup.nome, site: startup.site, motivo: `Erro interno: ${err.message}` });
       }
-    }
+    });
 
     console.log(`✅ Verificação concluída:`, {
       total: resultados.total,
