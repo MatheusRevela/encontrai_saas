@@ -123,7 +123,8 @@ export default function Resultados() {
 
         const matchingResult = await base44.integrations.Core.InvokeLLM({
           prompt,
-          response_json_schema: buildMatchingJsonSchema()
+          response_json_schema: buildMatchingJsonSchema(),
+          model: 'claude_opus_4_7'
         });
 
         if (!matchingResult.matches || matchingResult.matches.length === 0) {
@@ -244,7 +245,8 @@ export default function Resultados() {
 
       const matchingResult = await base44.integrations.Core.InvokeLLM({
         prompt,
-        response_json_schema: buildMatchingJsonSchema()
+        response_json_schema: buildMatchingJsonSchema(),
+        model: 'claude_opus_4_7'
       });
 
       if (!matchingResult.matches || matchingResult.matches.length === 0) {

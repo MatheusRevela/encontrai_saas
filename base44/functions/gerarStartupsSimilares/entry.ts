@@ -159,6 +159,7 @@ No resumo_match use apenas "Esta solução", "A plataforma", "O sistema" — NUN
 
     const resultado = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
+      model: 'claude_opus_4_7',
       response_json_schema: {
         type: 'object',
         properties: {
